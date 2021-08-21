@@ -2,12 +2,28 @@ from .pitch import (
     make_pitches,
     transpose,
     accumulative_transposition,
-    copied_transposition
+    copied_transposition,
+    reduceMod,
+    random_walk,
+    consecutive_multiplication,
 )
 
 from .segmentmaker import(
     make_score_template,
-    # write_time_signatures,
+    attach,
+    write_time_signatures,
+    write_text_span,
+    change_notehead,
+    pitched_notehead_change,
+    write_markup,
+    render_file,
+    get_top_level_components_from_leaves,
+    beam_meter,
+    rewrite_meter_without_splitting,
+    beam_score_without_splitting,
+    write_slur,
+    annotate_leaves,
+    append_rhythm_selections,
 )
 
 __all__ = [
@@ -16,5 +32,21 @@ __all__ = [
     "accumulative_transposition",
     "copied_transposition",
     "make_score_template",
-    # "write_time_signatures",
+    "reduceMod",
+    "random_walk",
+    "attach",
+    "write_time_signatures",
+    "write_text_span",
+    "consecutive_multiplication",
+    "change_notehead",
+    "pitched_notehead_change",
+    "write_markup",
+    "render_file",
+    "get_top_level_components_from_leaves",
+    "beam_meter",
+    "rewrite_meter_without_splitting",
+    "beam_score_without_splitting",
+    "write_slur",
+    "annotate_leaves",
+    "append_rhythm_selections",
 ]
