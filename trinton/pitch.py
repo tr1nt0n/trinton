@@ -1,5 +1,6 @@
 import abjad
 import evans
+from itertools import islice
 
 def make_pitches(pitch_list):
     out = []
@@ -70,3 +71,10 @@ def consecutive_multiplication(notes, mult):
             return
     pc_set = [a*b for a, b in zip(notes, multipliers)]
     return pc_set
+
+def rotated_sequence(pitch_list, start_index):
+    result = []
+    rotated_list = pitch_list[start_index:] + pitch_list[:start_index]
+    for pitch in rotated_list:
+        result.append(pitch)
+    return result

@@ -6,6 +6,7 @@ from .pitch import (
     reduceMod,
     random_walk,
     consecutive_multiplication,
+    rotated_sequence,
 )
 
 from .segmentmaker import(
@@ -49,4 +50,5 @@ __all__ = [
     "write_slur",
     "annotate_leaves",
     "append_rhythm_selections",
+    "rotated_sequence",
 ]
