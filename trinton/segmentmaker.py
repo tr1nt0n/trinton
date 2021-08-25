@@ -1,5 +1,6 @@
 import abjad
 import evans
+import trinton
 import pathlib
 import os
 
@@ -299,7 +300,6 @@ def write_time_signatures(ts, target):
         target.append(skip)
 
 def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding):
-    import trinton
     start_text_span = abjad.StartTextSpan(
         left_text=abjad.Markup(begin_text),
         right_text=abjad.Markup(end_text),
@@ -318,7 +318,6 @@ def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding)
     )
 
 def write_slur(voice, start_slur, stop_slur):
-    import trinton
     for leaf in start_slur:
         trinton.attach(
             voice,
@@ -347,7 +346,6 @@ def pitched_notehead_change(voice, pitches, notehead):
                 abjad.tweak(leaf.note_head).style = notehead
 
 def write_markup(voice, leaf, string, down):
-    import trinton
     if down == True:
         markup = abjad.Markup(string, direction=abjad.Down)
         trinton.attach(

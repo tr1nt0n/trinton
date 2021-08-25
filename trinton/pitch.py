@@ -1,5 +1,7 @@
 import abjad
 import evans
+import trinton
+import random
 from itertools import islice
 
 def make_pitches(pitch_list):
@@ -21,7 +23,6 @@ def reduceMod(l, m):
     return out
 
 def accumulative_transposition(list, trans, iter):
-    import trinton
     out = []
     temp_trans = trans
     for _ in list:
@@ -35,7 +36,6 @@ def accumulative_transposition(list, trans, iter):
     return out
 
 def copied_transposition(motive, transpositions):
-    import trinton
     out = []
     for _ in transpositions:
         new_list = trinton.transpose(motive, _)
@@ -44,8 +44,6 @@ def copied_transposition(motive, transpositions):
     return out
 
 def random_walk(chord, seed):
-    import trinton
-    import random
     random.seed(seed)
     random_walk = []
     random_walk.append(-1 if random.random() < 0.5 else 1)
