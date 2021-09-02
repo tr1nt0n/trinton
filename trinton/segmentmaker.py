@@ -368,7 +368,52 @@ def annotate_leaves(score, prototype=abjad.Leaf):
         else:
             abjad.Label(voice).with_indices()
 
-def append_rhythm_selections(stack, durations, voice_name, score):
+def make_rhythm_selections(stack, durations):
+    selections = stack(durations)
+    return selections
+
+def append_rhythm_selections(voice, score, selections):
+    relevant_voice = score[voice]
+    relevant_voice.append(selections)
+
+def make_and_append_rhythm_selections(score, voice_name, stack, durations):
     selections = stack(durations)
     relevant_voice = score[voice_name]
     relevant_voice.append(selections)
+
+def append_rests(score, voice, rests):
+    for rest in rests:
+        score[voice].append(rest)
+
+def handwrite(score, voice, durations, pitch_list):
+    stack = rmakers.stack(
+        rmakers.NoteRhythmMaker(),
+    )
+
+    sel = trinton.make_rhythm_selections(
+        stack=stack,
+        durations=durations,
+    )
+
+    container = abjad.Container(sel)
+
+    if pitch_list is not None:
+        handler = evans.PitchHandler(
+            pitch_list=pitch_list,
+            forget=False
+        )
+
+        handler(abjad.select(container[:]).leaves())
+
+        trinton.append_rhythm_selections(
+            voice=voice,
+            score=score,
+            selections=container[:]
+        )
+
+    else:
+        trinton.append_rhythm_selections(
+            voice=voice,
+            score=score,
+            selections=container[:]
+        )

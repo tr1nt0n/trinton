@@ -2,7 +2,6 @@ import abjad
 import evans
 import trinton
 import random
-from itertools import islice
 
 def make_pitches(pitch_list):
     out = []

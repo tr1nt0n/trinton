@@ -24,7 +24,11 @@ from .segmentmaker import(
     beam_score_without_splitting,
     write_slur,
     annotate_leaves,
+    make_rhythm_selections,
     append_rhythm_selections,
+    make_and_append_rhythm_selections,
+    append_rests,
+    handwrite,
 )
 
 __all__ = [
@@ -51,4 +55,8 @@ __all__ = [
     "annotate_leaves",
     "append_rhythm_selections",
     "rotated_sequence",
+    "make_rhythm_selections",
+    "append_rests",
+    "make_and_append_rhythm_selections",
+    "handwrite",
 ]
