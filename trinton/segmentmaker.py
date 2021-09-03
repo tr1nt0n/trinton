@@ -418,7 +418,7 @@ def handwrite(score, voice, durations, pitch_list):
             selections=container[:]
         )
 
-def write_trill_span(score, voice, start_leaf, stop_leaf):
+def write_trill_span(score, voice, pitch, start_leaf, stop_leaf):
     trinton.attach(
         voice=score[voice],
         leaves=start_leaf,
