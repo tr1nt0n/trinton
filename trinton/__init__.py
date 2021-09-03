@@ -7,6 +7,7 @@ from .pitch import (
     random_walk,
     consecutive_multiplication,
     rotated_sequence,
+    countList,
 )
 
 from .segmentmaker import(
@@ -29,6 +30,8 @@ from .segmentmaker import(
     make_and_append_rhythm_selections,
     append_rests,
     handwrite,
+    write_trill_span,
+    repeats,
 )
 
 __all__ = [
@@ -59,4 +62,7 @@ __all__ = [
     "append_rests",
     "make_and_append_rhythm_selections",
     "handwrite",
+    "write_trill_span",
+    "repeats",
+    "countList"
 ]

@@ -417,3 +417,28 @@ def handwrite(score, voice, durations, pitch_list):
             score=score,
             selections=container[:]
         )
+
+def write_trill_span(score, voice, start_leaf, stop_leaf):
+    trinton.attach(
+        voice=score[voice],
+        leaves=start_leaf,
+        attachment=abjad.StartTrillSpan(pitch=pitch),
+    )
+    trinton.attach(
+        voice=score[voice],
+        leaves=stop_leaf,
+        attachment=abjad.StopTrillSpan(),
+    )
+
+def repeats(score, start_leaf, stop_leaf):
+    trinton.attach(
+        voice=score,
+        leaves=start_leaf,
+        attachment=abjad.BarLine(".|:")
+    )
+
+    trinton.attach(
+        voice=score,
+        leaves=stop_leaf,
+        attachment=abjad.BarLine(":|.")
+    )

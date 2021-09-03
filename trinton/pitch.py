@@ -75,3 +75,7 @@ def rotated_sequence(pitch_list, start_index):
     for pitch in rotated_list:
         result.append(pitch)
     return result
+
+def countList(lst1, lst2):
+    return [sub[item] for item in range(len(lst2))
+    for sub in [lst1, lst2]]
