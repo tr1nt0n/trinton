@@ -442,3 +442,39 @@ def repeats(score, start_leaf, stop_leaf):
         leaves=stop_leaf,
         attachment=abjad.BarLine(":|.")
     )
+
+def tuplet_brackets(score, all_staves):
+    new_brackets = evans.NoteheadBracketMaker()
+
+    for staff in all_staves:
+        new_brackets(score[staff])
+
+def write_startmarkups(score, voices, markups):
+    for voice, markup in zip(voices, markups):
+        start_markup = abjad.StartMarkup(markup=markup)
+
+        trinton.attach(
+            voice=score[voice],
+            leaves=[0],
+            attachment=start_markup,
+        )
+
+def write_marginmarkups(score, voices, markups):
+    for voice, markup in zip(voices, markups):
+        margin_markup = abjad.MarginMarkup(markup=markup)
+
+        trinton.attach(
+            voice=score[voice],
+            leaves=[0],
+            attachment=margin_markup,
+        )
+
+def transparent_accidentals(score, voice, leaves):
+    if leaves == all:
+        for leaf in abjad.select(score[voice]).leaves(pitched=True):
+            abjad.tweak(leaf.note_head).Accidental.transparent=True
+
+    else:
+        for leaf in leaves:
+            sel = abjad.select(score[voice]).leaf(leaf)
+            abjad.tweak(sel.note_head).Accidental.transparent=True

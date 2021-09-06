@@ -32,6 +32,10 @@ from .segmentmaker import(
     handwrite,
     write_trill_span,
     repeats,
+    tuplet_brackets,
+    write_startmarkups,
+    write_marginmarkups,
+    transparent_accidentals,
 )
 
 __all__ = [
@@ -65,4 +69,8 @@ __all__ = [
     "write_trill_span",
     "repeats",
     "countList"
+    "tuplet_brackets",
+    "write_startmarkups",
+    "write_marginmarkups",
+    "transparent_accidentals",
 ]
