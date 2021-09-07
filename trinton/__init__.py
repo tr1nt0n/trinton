@@ -36,6 +36,9 @@ from .segmentmaker import(
     write_startmarkups,
     write_marginmarkups,
     transparent_accidentals,
+    rewrite_meter,
+    beam_score,
+    unmeasured_stem_tremolo,
 )
 
 __all__ = [
@@ -73,4 +76,7 @@ __all__ = [
     "write_startmarkups",
     "write_marginmarkups",
     "transparent_accidentals",
+    "rewrite_meter",
+    "beam_score",
+    "unmeasured_stem_tremolo",
 ]

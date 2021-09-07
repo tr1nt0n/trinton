@@ -227,6 +227,8 @@ def rewrite_meter_without_splitting(target):
             assert voice_dur == sig_dur, (voice_dur, sig_dur)
             shards = abjad.select(voice[:]).leaves().group_by_measure()
             for i, shard in enumerate(shards):
+                if voice.name == "violin 1 voice":
+                    print(i)
                 if not all(
                     isinstance(leaf, (abjad.Rest, abjad.MultimeasureRest, abjad.Skip))
                     for leaf in abjad.select(shard).leaves()
@@ -257,7 +259,6 @@ def rewrite_meter_without_splitting(target):
 
 def render_file(score, segment_path, build_path, segment_name, includes):
         print("Rendering file ...")
-        abjad.SegmentMaker.comment_measure_numbers(score)
         score_block = abjad.Block(name="score")
         score_block.items.append(score)
         score_file = abjad.LilyPondFile(
@@ -479,3 +480,115 @@ def transparent_accidentals(score, voice, leaves):
         for leaf in leaves:
             sel = abjad.select(score[voice]).leaf(leaf)
             abjad.tweak(sel.note_head).Accidental.transparent=True
+
+def rewrite_meter(target):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in abjad.select(target["Staff Group"]).components(abjad.Voice):
+        voice_dur = abjad.get.duration(voice)
+        time_signatures = sigs#[:-1]
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        shards = abjad.mutate.split(voice[:], durations)
+        for i, shard in enumerate(shards):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )
+
+def beam_score(target):
+    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    print("Beaming meter ...")
+    for voice in abjad.iterate(target["Staff Group"]).components(abjad.Voice):
+        for i, shard in enumerate(abjad.mutate.split(voice[:], sigs)):
+            met = abjad.Meter(sigs[i].pair)
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(sigs[i].pair).depthwise_offset_inventory
+                )
+            ]
+            if sigs[i].denominator == 4:
+                beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-1][0],
+                    include_rests=False,
+                    # include_rests=False,
+                )
+            else:
+                beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-2][0],
+                    include_rests=False,
+                    # include_rests=False,
+                )
+    for trem in abjad.select(target).components(abjad.TremoloContainer):
+        if abjad.StartBeam() in abjad.get.indicators(trem[0]):
+            abjad.detach(abjad.StartBeam(), trem[0])
+        if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
+            abjad.detach(abjad.StopBeam(), trem[-1])
+
+def unmeasured_stem_tremolo(selections):
+    for leaf in selections:
+        if leaf.written_duration == abjad.Duration(1, 64):
+            abjad.attach(abjad.StemTremolo(512), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 32):
+            abjad.attach(abjad.StemTremolo(256), leaf)
+
+        elif leaf.written_duration == abjad.Duration(3, 32):
+            abjad.attach(abjad.StemTremolo(256), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 16):
+            abjad.attach(abjad.StemTremolo(128), leaf)
+
+        elif leaf.written_duration == abjad.Duration(3, 16):
+            abjad.attach(abjad.StemTremolo(64), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 8):
+            abjad.attach(abjad.StemTremolo(64), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 4):
+            abjad.attach(abjad.StemTremolo(32), leaf)
+
+        elif leaf.written_duration == abjad.Duration(3, 8):
+            abjad.attach(abjad.StemTremolo(32), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 2):
+            abjad.attach(abjad.StemTremolo(32), leaf)
+
+        elif leaf.written_duration == abjad.Duration(3, 4):
+            abjad.attach(abjad.StemTremolo(32), leaf)
+
+        elif leaf.written_duration == abjad.Duration(1, 1):
+            abjad.attach(abjad.StemTremolo(32), leaf)
