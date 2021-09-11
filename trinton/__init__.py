@@ -39,6 +39,7 @@ from .segmentmaker import(
     rewrite_meter,
     beam_score,
     unmeasured_stem_tremolo,
+    attach_multiple,
 )
 
 __all__ = [
@@ -79,4 +80,5 @@ __all__ = [
     "rewrite_meter",
     "beam_score",
     "unmeasured_stem_tremolo",
+    "attach_multiple",
 ]

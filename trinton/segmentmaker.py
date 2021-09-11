@@ -333,12 +333,12 @@ def write_slur(voice, start_slur, stop_slur):
             abjad.StopPhrasingSlur()
         )
 
-def change_notehead(voice, leafs, notehead):
-    if leafs == all:
+def change_notehead(voice, leaves, notehead):
+    if leaves == all:
         for _ in abjad.select(voice).leaves(pitched=True):
             abjad.tweak(_.note_head).style = notehead
     else:
-        for _ in leafs:
+        for _ in leaves:
             abjad.tweak(abjad.select(voice).leaf(_).note_head).style = notehead
 
 def pitched_notehead_change(voice, pitches, notehead):
@@ -592,3 +592,11 @@ def unmeasured_stem_tremolo(selections):
 
         elif leaf.written_duration == abjad.Duration(1, 1):
             abjad.attach(abjad.StemTremolo(32), leaf)
+
+def attach_multiple(score, voice, attachments, leaves):
+    for attachment in attachments:
+        trinton.attach(
+            voice=score[voice],
+            leaves=leaves,
+            attachment=attachments,
+        )
