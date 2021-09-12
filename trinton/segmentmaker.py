@@ -598,5 +598,5 @@ def attach_multiple(score, voice, attachments, leaves):
         trinton.attach(
             voice=score[voice],
             leaves=leaves,
-            attachment=attachments,
+            attachment=attachment,
         )
