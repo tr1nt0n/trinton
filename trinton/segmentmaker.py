@@ -289,10 +289,14 @@ def attach(voice, leaves, attachment):
     if leaves == all:
         for leaf in abjad.select(voice).leaves(pitched=True):
             abjad.attach(attachment, leaf)
+    elif leaves == "all ties":
+        for leaf in abjad.select(voice).logical_ties(pitched=True).leaves():
+            abjad.attach(attachment, leaf)
     else:
         for number in leaves:
             sel = abjad.select(voice).leaf(number)
             abjad.attach(attachment, sel)
+
 
 def write_time_signatures(ts, target):
     for pair in ts:
@@ -315,6 +319,24 @@ def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding)
     )
     trinton.attach(
         voice,
+        stop_leaf,
+        abjad.StopTextSpan()
+    )
+
+def tempo_ramp_span(score, voice, begin_text, end_text, start_leaf, stop_leaf, padding):
+    start_text_span = abjad.StartTextSpan(
+        left_text=abjad.Markup(begin_text),
+        right_text=abjad.Markup(end_text),
+        style="dashed-line-with-arrow",
+    )
+    abjad.tweak(start_text_span).padding = padding
+    trinton.attach(
+        score[voice],
+        start_leaf,
+        start_text_span,
+    )
+    trinton.attach(
+        score[voice],
         stop_leaf,
         abjad.StopTextSpan()
     )
