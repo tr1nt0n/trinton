@@ -41,6 +41,8 @@ from .segmentmaker import(
     unmeasured_stem_tremolo,
     attach_multiple,
     tempo_ramp_span,
+    make_leaf_selection,
+    glissando,
 )
 
 __all__ = [
@@ -83,4 +85,6 @@ __all__ = [
     "unmeasured_stem_tremolo",
     "attach_multiple",
     "tempo_ramp_span",
+    "make_leaf_selection",
+    "glissando"
 ]

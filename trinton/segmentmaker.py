@@ -289,9 +289,6 @@ def attach(voice, leaves, attachment):
     if leaves == all:
         for leaf in abjad.select(voice).leaves(pitched=True):
             abjad.attach(attachment, leaf)
-    elif leaves == "all ties":
-        for leaf in abjad.select(voice).logical_ties(pitched=True).leaves():
-            abjad.attach(attachment, leaf)
     else:
         for number in leaves:
             sel = abjad.select(voice).leaf(number)
@@ -622,3 +619,25 @@ def attach_multiple(score, voice, attachments, leaves):
             leaves=leaves,
             attachment=attachment,
         )
+
+def make_leaf_selection(score, voice, leaves):
+    selection = []
+    for leaf in leaves:
+        sel = abjad.select(score[voice]).leaf(leaf)
+        selection.append(sel)
+    return selection
+
+def glissando(score, voice, start_gliss, stop_gliss):
+    for gliss1, gliss2 in zip(start_gliss, stop_gliss):
+        leaves = list(range(gliss1, gliss2+1))
+    sel = make_leaf_selection(
+        score=score,
+        voice=voice,
+        leaves=leaves
+    )
+    abjad.glissando(
+        sel,
+        hide_middle_note_heads=True,
+        allow_repeats=True,
+        allow_ties=True,
+    )
