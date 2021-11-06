@@ -8,6 +8,7 @@ from .pitch import (
     consecutive_multiplication,
     rotated_sequence,
     countList,
+    durational_pitch_association,
 )
 
 from .segmentmaker import(
@@ -86,5 +87,6 @@ __all__ = [
     "attach_multiple",
     "tempo_ramp_span",
     "make_leaf_selection",
-    "glissando"
+    "glissando",
+    "durational_pitch_association",
 ]
