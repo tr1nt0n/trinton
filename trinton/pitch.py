@@ -81,20 +81,17 @@ def countList(lst1, lst2):
     for sub in [lst1, lst2]]
 
 def durational_pitch_association(score, voice, selection, durations, pitch_lists, forget):
-    for leaf in selection:
-        for duration, pitch_list in zip(durations, pitch_lists):
-
+    for duration, pitch_list in zip(durations, pitch_lists):
+        for leaf in selection:
             if leaf.written_duration == duration:
-                container = abjad.Container()
                 container.append(leaf)
-
-                handler = evans.PitchHandler(
-                    pitch_list=pitch_list,
-                    forget=forget,
-                )
-                handler(container)
-
-                score[voice].append(container)
-                
             else:
                 pass
+
+        handler = evans.PitchHandler(
+            pitch_list=pitch_list,
+            forget=forget,
+        )
+        handler(container)
+
+        score[voice].append(container)
