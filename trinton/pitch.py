@@ -83,9 +83,9 @@ def countList(lst1, lst2):
 def durational_pitch_association(selection, durations, pitch_lists, forget):
     for duration, pitch_list in zip(durations, pitch_lists):
         sel = []
-        for leaf in selection:
-            if leaf.written_duration == duration:
-                sel.append(leaf)
+        for tie in selection:
+            if tie.written_duration == duration:
+                sel.append(tie)
             else:
                 pass
 
