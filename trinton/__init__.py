@@ -6,8 +6,6 @@ from .pitch import (
     reduceMod,
     random_walk,
     consecutive_multiplication,
-    rotated_sequence,
-    countList,
     durational_pitch_association,
 )
 
@@ -44,6 +42,11 @@ from .segmentmaker import(
     tempo_ramp_span,
     make_leaf_selection,
     glissando,
+)
+
+from .sequence import(
+    rotated_sequence,
+    countList,
 )
 
 __all__ = [

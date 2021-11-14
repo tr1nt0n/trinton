@@ -69,17 +69,6 @@ def consecutive_multiplication(notes, mult):
     pc_set = [a*b for a, b in zip(notes, multipliers)]
     return pc_set
 
-def rotated_sequence(pitch_list, start_index):
-    result = []
-    rotated_list = pitch_list[start_index:] + pitch_list[:start_index]
-    for pitch in rotated_list:
-        result.append(pitch)
-    return result
-
-def countList(lst1, lst2):
-    return [sub[item] for item in range(len(lst2))
-    for sub in [lst1, lst2]]
-
 def durational_pitch_association(selection, durations, pitch_lists, forget):
     for duration, pitch_list in zip(durations, pitch_lists):
         sel = []
