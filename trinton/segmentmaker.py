@@ -561,7 +561,6 @@ def beam_score(target):
                     meter=met,
                     offset_depth=inventories[-1][0],
                     include_rests=False,
-                    # include_rests=False,
                 )
             else:
                 beam_meter(
@@ -569,7 +568,6 @@ def beam_score(target):
                     meter=met,
                     offset_depth=inventories[-2][0],
                     include_rests=False,
-                    # include_rests=False,
                 )
     for trem in abjad.select(target).components(abjad.TremoloContainer):
         if abjad.StartBeam() in abjad.get.indicators(trem[0]):
