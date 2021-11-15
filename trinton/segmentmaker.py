@@ -641,3 +641,10 @@ def glissando(score, voice, start_gliss, stop_gliss):
         allow_repeats=True,
         allow_ties=True,
     )
+
+def ottava(score, voice, start_ottava, stop_ottava, octave):
+    for start, stop in zip(start_ottava, stop_ottava):
+        va = abjad.Ottava(n=octave)
+        abjad.attach(ottava, abjad.select(score[voice]).leaf(start))
+        va = abjad.Ottava(n=0, format_slot="after")
+        abjad.attach(ottava, abjad.select(score[voice]).leaf(stop))

@@ -42,11 +42,13 @@ from .segmentmaker import(
     tempo_ramp_span,
     make_leaf_selection,
     glissando,
+    ottava,
 )
 
 from .sequence import(
     rotated_sequence,
     countList,
+    primes_odds_evens,
 )
 
 __all__ = [
@@ -92,4 +94,6 @@ __all__ = [
     "make_leaf_selection",
     "glissando",
     "durational_pitch_association",
+    "primes_odds_evens",
+    "ottava",
 ]
