@@ -561,6 +561,7 @@ def beam_score(target):
                     meter=met,
                     offset_depth=inventories[-1][0],
                     include_rests=False,
+                    #test
                 )
             else:
                 beam_meter(
