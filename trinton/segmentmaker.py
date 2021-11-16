@@ -561,7 +561,6 @@ def beam_score(target):
                     meter=met,
                     offset_depth=inventories[-1][0],
                     include_rests=False,
-                    #test
                 )
             else:
                 beam_meter(
@@ -647,3 +646,16 @@ def ottava(score, voice, start_ottava, stop_ottava, octave):
         abjad.attach(va, abjad.select(score[voice]).leaf(start))
         va = abjad.Ottava(n=0, format_slot="after")
         abjad.attach(va, abjad.select(score[voice]).leaf(stop))
+
+def beam_runs_by_selection(score, voice, start_beam, stop_beam, beam_rests):
+    selection = []
+    for start, stop, in zip(start_beam, stop_beam):
+        sel = make_leaf_selection(
+            score=score,
+            voice=voice,
+            leaves=list(range(start, stop+1))
+        )
+        selection.append(sel)
+
+    for sel in selection:
+        abjad.beam(sel, beam_rests=beam_rests)

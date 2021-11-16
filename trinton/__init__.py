@@ -43,6 +43,7 @@ from .segmentmaker import(
     make_leaf_selection,
     glissando,
     ottava,
+    beam_runs_by_selection,
 )
 
 from .sequence import(
@@ -96,4 +97,5 @@ __all__ = [
     "durational_pitch_association",
     "primes_odds_evens",
     "ottava",
+    "beam_runs_by_selection",
 ]
