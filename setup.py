@@ -23,5 +23,5 @@ if __name__ == "__main__":
         name="trinton",
         packages=["trinton"],
         platforms="Any",
-        url="https://github.com/trintonprater/trinton.git",
+        url="https://github.com/tr1nt0n/trinton.git",
     )
