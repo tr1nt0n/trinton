@@ -659,3 +659,17 @@ def beam_runs_by_selection(score, voice, start_beam, stop_beam, beam_rests):
 
     for sel in selection:
         abjad.beam(sel, beam_rests=beam_rests)
+
+def ficta(score, voice, start_ficta, stop_ficta):
+    for start, stop, in zip(start_ficta, stop_ficta):
+        trinton.attach(
+            voice=score[voice],
+            leaves=[start],
+            attachment=abjad.LilyPondLiteral(r"\set suggestAccidentals = ##t", format_slot="absolute_before")
+        )
+
+        trinton.attach(
+            voice=score[voice],
+            leaves=[stop],
+            attachment=abjad.LilyPondLiteral(r"\set suggestAccidentals = ##f", format_slot="absolute_after")
+        )

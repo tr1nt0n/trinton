@@ -44,6 +44,7 @@ from .segmentmaker import(
     glissando,
     ottava,
     beam_runs_by_selection,
+    ficta,
 )
 
 from .sequence import(
@@ -98,4 +99,5 @@ __all__ = [
     "primes_odds_evens",
     "ottava",
     "beam_runs_by_selection",
+    "ficta",
 ]
