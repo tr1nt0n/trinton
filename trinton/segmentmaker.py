@@ -308,7 +308,7 @@ def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding)
         right_text=abjad.Markup(end_text),
         style="dashed-line-with-arrow",
     )
-    abjad.tweak(start_text_span).staff_padding = padding
+    abjad.tweak(start_text_span).padding = padding
     trinton.attach(
         voice,
         start_leaf,
@@ -316,24 +316,6 @@ def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding)
     )
     trinton.attach(
         voice,
-        stop_leaf,
-        abjad.StopTextSpan()
-    )
-
-def tempo_ramp_span(score, voice, begin_text, end_text, start_leaf, stop_leaf, padding):
-    start_text_span = abjad.StartTextSpan(
-        left_text=abjad.Markup(begin_text),
-        right_text=abjad.Markup(end_text),
-        style="dashed-line-with-arrow",
-    )
-    abjad.tweak(start_text_span).padding = padding
-    trinton.attach(
-        score[voice],
-        start_leaf,
-        start_text_span,
-    )
-    trinton.attach(
-        score[voice],
         stop_leaf,
         abjad.StopTextSpan()
     )
