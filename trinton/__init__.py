@@ -44,6 +44,7 @@ from .segmentmaker import(
     ottava,
     beam_runs_by_selection,
     ficta,
+    extract_parts
 )
 
 from .sequence import(
@@ -98,4 +99,5 @@ __all__ = [
     "ottava",
     "beam_runs_by_selection",
     "ficta",
+    "extract_parts"
 ]

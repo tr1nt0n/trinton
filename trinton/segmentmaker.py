@@ -655,3 +655,24 @@ def ficta(score, voice, start_ficta, stop_ficta):
             leaves=[stop],
             attachment=abjad.LilyPondLiteral(r"\set suggestAccidentals = ##f", format_slot="absolute_after")
         )
+
+def extract_parts(score):
+        print("Extracting parts ...")
+        for count, staff in enumerate(
+            abjad.iterate(score["Staff Group"]).components(abjad.Staff)
+        ):
+            t = rf"\tag #'voice{count + 1}"
+            literal = abjad.LilyPondLiteral(t, format_slot="before")
+            container = abjad.Container()
+            abjad.attach(literal, container)
+            abjad.mutate.wrap(staff, container)
+        for count, group in enumerate(
+            abjad.iterate(score["Staff Group"]).components(
+                abjad.StaffGroup
+            )
+        ):
+            t = rf"\tag #'group{count + 1}"
+            literal = abjad.LilyPondLiteral(t, format_slot="before")
+            container = abjad.Container()
+            abjad.attach(literal, container)
+            abjad.mutate.wrap(group, container)
