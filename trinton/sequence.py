@@ -3,6 +3,7 @@ import evans
 import trinton
 import random
 
+
 def rotated_sequence(pitch_list, start_index):
     result = []
     rotated_list = pitch_list[start_index:] + pitch_list[:start_index]
@@ -10,16 +11,17 @@ def rotated_sequence(pitch_list, start_index):
         result.append(pitch)
     return result
 
+
 def countList(lst1, lst2):
-    return [sub[item] for item in range(len(lst2))
-    for sub in [lst1, lst2]]
+    return [sub[item] for item in range(len(lst2)) for sub in [lst1, lst2]]
+
 
 def primes_odds_evens(lst):
     odds = []
     evens = []
     final = []
     for number in lst:
-        if(number%2==0):
+        if number % 2 == 0:
             evens.append(number)
 
         else:

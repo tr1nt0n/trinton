@@ -3,11 +3,13 @@ import evans
 import trinton
 import random
 
+
 def make_pitches(pitch_list):
     out = []
     for _ in pitch_list:
         out.append(abjad.namedpitch(_))
     return out
+
 
 def transpose(l, m):
     out = []
@@ -15,11 +17,13 @@ def transpose(l, m):
         out.append(_ + m)
     return out
 
+
 def reduceMod(l, m):
     out = []
     for _ in l:
         out.append(_ % m)
     return out
+
 
 def accumulative_transposition(list, trans, iter):
     out = []
@@ -34,6 +38,7 @@ def accumulative_transposition(list, trans, iter):
             out.append(_)
     return out
 
+
 def copied_transposition(motive, transpositions):
     out = []
     for _ in transpositions:
@@ -41,6 +46,7 @@ def copied_transposition(motive, transpositions):
         for x in new_list:
             out.append(x)
     return out
+
 
 def random_walk(chord, seed):
     random.seed(seed)
@@ -51,10 +57,9 @@ def random_walk(chord, seed):
         value = random_walk[i - 1] + movement
         random_walk.append(value)
     random_walk = [abs(x) for x in random_walk]
-    notes = [
-        chord[x] for x in trinton.reduceMod(random_walk, len(chord))
-    ]
+    notes = [chord[x] for x in trinton.reduceMod(random_walk, len(chord))]
     return notes
+
 
 def consecutive_multiplication(notes, mult):
     if isinstance(mult, (int, float)):
@@ -66,8 +71,9 @@ def consecutive_multiplication(notes, mult):
         except:
             print("WARNING: length of notes must equal length of mult.")
             return
-    pc_set = [a*b for a, b in zip(notes, multipliers)]
+    pc_set = [a * b for a, b in zip(notes, multipliers)]
     return pc_set
+
 
 def durational_pitch_association(selection, durations, pitch_lists, forget):
     for duration, pitch_list in zip(durations, pitch_lists):

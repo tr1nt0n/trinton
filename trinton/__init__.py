@@ -9,7 +9,7 @@ from .pitch import (
     durational_pitch_association,
 )
 
-from .segmentmaker import(
+from .segmentmaker import (
     make_score_template,
     attach,
     write_time_signatures,
@@ -44,10 +44,10 @@ from .segmentmaker import(
     ottava,
     beam_runs_by_selection,
     ficta,
-    extract_parts
+    extract_parts,
 )
 
-from .sequence import(
+from .sequence import (
     rotated_sequence,
     countList,
     primes_odds_evens,
@@ -83,8 +83,7 @@ __all__ = [
     "handwrite",
     "write_trill_span",
     "repeats",
-    "countList"
-    "tuplet_brackets",
+    "countList" "tuplet_brackets",
     "write_startmarkups",
     "write_marginmarkups",
     "transparent_accidentals",
@@ -99,5 +98,5 @@ __all__ = [
     "ottava",
     "beam_runs_by_selection",
     "ficta",
-    "extract_parts"
+    "extract_parts",
 ]
