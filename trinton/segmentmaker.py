@@ -669,3 +669,46 @@ def extract_parts(score):
         container = abjad.Container()
         abjad.attach(literal, container)
         abjad.mutate.wrap(group, container)
+
+
+def whiteout_empty_staves(score, voice, cutaway):
+    leaves = abjad.select(score[voice]).leaves()
+    shards = leaves.group_by_measure()
+    for i, shard in enumerate(shards):
+        if not all(isinstance(leaf, abjad.Rest) for leaf in shard):
+            continue
+        indicators = abjad.get.indicators(shard[0])
+        multiplier = abjad.get.duration(shard) / 2
+        invisible_rest = abjad.Rest(1, multiplier=(multiplier))
+        rest_literal = abjad.LilyPondLiteral(
+            r"\once \override Rest.transparent = ##t", "before"
+        )
+        abjad.attach(
+            rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
+        )
+        for indicator in indicators:
+            abjad.attach(
+                indicator, invisible_rest, tag=abjad.Tag("applying indicators")
+            )
+        multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
+        start_command = abjad.LilyPondLiteral(
+            r"\stopStaff \once \override Staff.StaffSymbol.line-count = #1 \startStaff",
+            format_slot="before",
+        )
+        stop_command = abjad.LilyPondLiteral(
+            r"\stopStaff \startStaff", format_slot="after"
+        )
+        if cutaway == True:
+            abjad.attach(
+                start_command, invisible_rest, tag=abjad.Tag("applying cutaway")
+            )
+            abjad.attach(
+                stop_command,
+                multimeasure_rest,
+                tag=abjad.Tag("applying cutaway"),
+            )
+            both_rests = [invisible_rest, multimeasure_rest]
+            abjad.mutate.replace(shard, both_rests[:])
+        else:
+            both_rests = [invisible_rest, multimeasure_rest]
+            abjad.mutate.replace(shard, both_rests[:])

@@ -45,6 +45,7 @@ from .segmentmaker import (
     beam_runs_by_selection,
     ficta,
     extract_parts,
+    whiteout_empty_staves,
 )
 
 from .sequence import (
@@ -99,4 +100,5 @@ __all__ = [
     "beam_runs_by_selection",
     "ficta",
     "extract_parts",
+    "whiteout_empty_staves",
 ]
