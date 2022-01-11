@@ -65,55 +65,6 @@ def get_top_level_components_from_leaves(leaves):
 
 
 def beam_meter(components, meter, offset_depth, include_rests=True):
-    r"""
-    .. container:: example
-        >>> pre_tuplet_notes = abjad.Staff("c'8 c'8 c'8")
-        >>> tuplet = abjad.Tuplet((2, 3), "c'8 r8 c'8")
-        >>> post_tuplet_notes = abjad.Staff("c'8 c'8 c'8")
-        >>> staff = abjad.Staff()
-        >>> for _ in [pre_tuplet_notes[:], tuplet, post_tuplet_notes[:]]:
-        ...     staff.append(_)
-        ...
-        >>> evans.beam_meter(components=staff[:], meter=abjad.Meter((4, 4)), offset_depth=1)
-        >>> score = abjad.Score([staff])
-        >>> moment = "#(ly:make-moment 1 25)"
-        >>> abjad.setting(score).proportional_notation_duration = moment
-        >>> file = abjad.LilyPondFile(
-        ...     items=[score],
-        ...     includes=["abjad.ily"],
-        ...     global_staff_size=16,
-        ... )
-        ...
-        >>> abjad.show(file) # doctest: +SKIP
-        .. docs::
-            >>> print(abjad.lilypond(staff))
-            \new Staff
-            {
-                \override Staff.Stem.stemlet-length = 0.75
-                c'8
-                [
-                \revert Staff.Stem.stemlet-length
-                c'8
-                ]
-                c'8
-                \times 2/3 {
-                    \override Staff.Stem.stemlet-length = 0.75
-                    c'8
-                    [
-                    r8
-                    \revert Staff.Stem.stemlet-length
-                    c'8
-                    ]
-                }
-                c'8
-                \override Staff.Stem.stemlet-length = 0.75
-                c'8
-                [
-                \revert Staff.Stem.stemlet-length
-                c'8
-                ]
-            }
-    """
     offsets = meter.depthwise_offset_inventory[offset_depth]
     offset_pairs = []
     for i, _ in enumerate(offsets[:-1]):
@@ -138,7 +89,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                     beam_rests=include_rests,
                     stemlet_length=0.75,
                     beam_lone_notes=False,
-                    selector=abjad.select().leaves(grace=False),
+                    selector=lambda _: abjad.Selection(_).leaves(grace=False),
                 )
         else:
             continue
@@ -172,7 +123,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                 beam_rests=include_rests,
                 stemlet_length=0.75,
                 beam_lone_notes=False,
-                selector=abjad.select().leaves(grace=False),
+                selector=lambda _: abjad.Selection(_).leaves(grace=False),
             )
 
 
@@ -267,7 +218,11 @@ def render_file(score, segment_path, build_path, segment_name, includes):
     print("Rendering file ...")
     score_block = abjad.Block(name="score")
     score_block.items.append(score)
-    score_file = abjad.LilyPondFile(items=[score_block], includes=includes)
+    assembled_includes = [f'\\include "{path}"' for path in includes]
+    assembled_includes.append(score_block)
+    score_file = abjad.LilyPondFile(
+        items=assembled_includes,
+    )
     directory = segment_path
     pdf_path = pathlib.Path(f"{directory}/illustration{segment_name}.pdf")
     ly_path = pathlib.Path(f"{directory}/illustration{segment_name}.ly")
@@ -276,16 +231,21 @@ def render_file(score, segment_path, build_path, segment_name, includes):
     if ly_path.exists():
         ly_path.unlink()
     print("Persisting ...")
-    abjad.persist.as_pdf(
+    abjad.persist.as_ly(
         score_file,
-        ly_path,
+        ly_path
     )
+    if ly_path.exists():
+        print("Rendering ...")
+        os.system(
+            f"run-lilypond {ly_path}"
+        )
     if pdf_path.exists():
         print("Opening ...")
         os.system(f"open {pdf_path}")
     with open(ly_path) as pointer_1:
         score_lines = pointer_1.readlines()
-        lines = score_lines[13:-1]
+        lines = score_lines[6:-1]
         with open(f"{build_path}/{segment_name}.ly", "w") as fp:
             fp.writelines(lines)
 
@@ -513,7 +473,7 @@ def beam_score(target):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
     print("Beaming meter ...")
-    for voice in abjad.iterate(target["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.iterate.components(target["Staff Group"], abjad.Voice):
         for i, shard in enumerate(abjad.mutate.split(voice[:], sigs)):
             met = abjad.Meter(sigs[i].pair)
             inventories = [
@@ -654,7 +614,7 @@ def ficta(score, voice, start_ficta, stop_ficta):
 def extract_parts(score):
     print("Extracting parts ...")
     for count, staff in enumerate(
-        abjad.iterate(score["Staff Group"]).components(abjad.Staff)
+        abjad.iterate.components(score["Staff Group"], abjad.Staff)
     ):
         t = rf"\tag #'voice{count + 1}"
         literal = abjad.LilyPondLiteral(t, format_slot="before")
@@ -662,7 +622,7 @@ def extract_parts(score):
         abjad.attach(literal, container)
         abjad.mutate.wrap(staff, container)
     for count, group in enumerate(
-        abjad.iterate(score["Staff Group"]).components(abjad.StaffGroup)
+        abjad.iterate.components(score["Staff Group"], abjad.StaffGroup)
     ):
         t = rf"\tag #'group{count + 1}"
         literal = abjad.LilyPondLiteral(t, format_slot="before")

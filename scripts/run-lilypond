@@ -1,0 +1,5 @@
+lilypond \
+    --include="/Users/trintonprater/abjad/docs/source/_stylesheets" \
+    --include="/Users/trintonprater/evans/lilypond" \
+    --include="/Users/trintonprater/baca/lilypond" \
+    $1
