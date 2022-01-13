@@ -672,3 +672,59 @@ def whiteout_empty_staves(score, voice, cutaway):
         else:
             both_rests = [invisible_rest, multimeasure_rest]
             abjad.mutate.replace(shard, both_rests[:])
+
+def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
+    pair = dict[multiphonic]
+    pitch_list, string = pair
+    handler = evans.PitchHandler(pitch_list=pitch_list, forget=False)
+    if markup is True:
+        for leaf in leaves:
+            sel = abjad.select(score[voice]).leaf(leaf)
+            handler(sel)
+            markup = abjad.Markup(
+                string,
+                direction=abjad.Up,
+            )
+            trinton.attach(voice=score[voice], leaves=[leaf], attachment=markup)
+    else:
+        for leaf in leaves:
+            sel = abjad.select(score[voice]).leaf(leaf)
+            handler(sel)
+
+def rewrite_meter_by_voice(score, voices):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in voices:
+        voice_dur = abjad.get.duration(voice)
+        time_signatures = sigs  # [:-1]
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        shards = abjad.mutate.split(voice[:], durations)
+        for i, shard in enumerate(shards):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )

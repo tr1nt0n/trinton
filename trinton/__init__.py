@@ -46,6 +46,8 @@ from .segmentmaker import (
     ficta,
     extract_parts,
     whiteout_empty_staves,
+    write_multiphonics,
+    rewrite_meter_by_voice,
 )
 
 from .sequence import (
@@ -101,4 +103,6 @@ __all__ = [
     "ficta",
     "extract_parts",
     "whiteout_empty_staves",
+    "write_multiphonics",
+    "rewrite_meter_by_voice",
 ]
