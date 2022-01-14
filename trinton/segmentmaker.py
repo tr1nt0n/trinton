@@ -231,15 +231,10 @@ def render_file(score, segment_path, build_path, segment_name, includes):
     if ly_path.exists():
         ly_path.unlink()
     print("Persisting ...")
-    abjad.persist.as_ly(
-        score_file,
-        ly_path
-    )
+    abjad.persist.as_ly(score_file, ly_path)
     if ly_path.exists():
         print("Rendering ...")
-        os.system(
-            f"run-lilypond {ly_path}"
-        )
+        os.system(f"run-lilypond {ly_path}")
     if pdf_path.exists():
         print("Opening ...")
         os.system(f"open {pdf_path}")
@@ -312,11 +307,11 @@ def write_markup(voice, leaf, string, down):
 
 
 def annotate_leaves(score, prototype=abjad.Leaf):
-    for voice in abjad.select(score).components(abjad.Voice):
+    for voice in abjad.Selection(score).components(abjad.Voice):
         if prototype is not None:
-            abjad.Label(voice).with_indices(prototype=prototype)
+            abjad.label.with_indices(voice, prototype=prototype)
         else:
-            abjad.Label(voice).with_indices()
+            abjad.label.with_indices(voice)
 
 
 def make_rhythm_selections(stack, durations):
@@ -673,6 +668,7 @@ def whiteout_empty_staves(score, voice, cutaway):
             both_rests = [invisible_rest, multimeasure_rest]
             abjad.mutate.replace(shard, both_rests[:])
 
+
 def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
     pair = dict[multiphonic]
     pitch_list, string = pair
@@ -690,6 +686,7 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
         for leaf in leaves:
             sel = abjad.select(score[voice]).leaf(leaf)
             handler(sel)
+
 
 def rewrite_meter_by_voice(score, voices):
     print("Rewriting meter ...")
