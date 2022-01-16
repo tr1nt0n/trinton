@@ -726,6 +726,7 @@ def rewrite_meter_by_voice(score, voices):
                     rewrite_tuplets=False,
                 )
 
+
 def make_fermata_measure(selection):
     duration = abjad.Duration((1, 4))
     skip = abjad.MultimeasureRest(1, multiplier=duration)
@@ -765,3 +766,29 @@ def make_fermata_measure(selection):
         abjad.attach(stop_command, temp_container[0])
     abjad.attach(transparent_command, temp_container[0])
     abjad.mutate.replace(original_leaves, temp_container[:])
+
+
+def populate_fermata_measures(score, voices, leaves, fermata_measures):
+    for voice in voices:
+        measures = abjad.Selection(score[voice]).leaves().group_by_measure()
+
+        if fermata_measures is not None:
+
+            for measure in fermata_measures:
+
+                trinton.make_fermata_measure(measures[measure])
+
+        else:
+            trinton.make_fermata_measure(measures[-1])
+
+    for voice, leaf in zip(voices, leaves):
+        if voice == "Global Context":
+            pass
+        else:
+            trinton.attach(
+                voice=score[voice],
+                leaves=[leaf],
+                attachment=abjad.Markup(
+                    r'\markup \huge { \musicglyph "scripts.ufermata" }'
+                ),
+            )

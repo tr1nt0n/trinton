@@ -49,6 +49,7 @@ from .segmentmaker import (
     write_multiphonics,
     rewrite_meter_by_voice,
     make_fermata_measure,
+    populate_fermata_measures,
 )
 
 from .sequence import (
@@ -106,5 +107,6 @@ __all__ = [
     "whiteout_empty_staves",
     "write_multiphonics",
     "rewrite_meter_by_voice",
-    "make_fermata_measure"
+    "make_fermata_measure",
+    "populate_fermata_measures",
 ]
