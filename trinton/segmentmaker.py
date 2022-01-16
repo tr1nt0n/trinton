@@ -544,7 +544,7 @@ def attach_multiple(score, voice, attachments, leaves):
 def make_leaf_selection(score, voice, leaves):
     selection = []
     for leaf in leaves:
-        sel = abjad.select(score[voice]).leaf(leaf)
+        sel = abjad.Selection(score[voice]).leaf(leaf)
         selection.append(sel)
     return selection
 
@@ -725,3 +725,43 @@ def rewrite_meter_by_voice(score, voices):
                     boundary_depth=inventories[-2][0],
                     rewrite_tuplets=False,
                 )
+
+def make_fermata_measure(selection):
+    duration = abjad.Duration((1, 4))
+    skip = abjad.MultimeasureRest(1, multiplier=duration)
+    transparent_command = abjad.LilyPondLiteral(
+        r"\once \override MultiMeasureRest.transparent = ##t",
+        format_slot="before",
+    )
+    temp_container = abjad.Container()
+    temp_container.append(skip)
+    original_leaves = selection.leaves()
+    if abjad.get.has_indicator(original_leaves[0], abjad.TimeSignature):
+        regular_rest = abjad.Rest(1, multiplier=duration / 2)
+        first_skip = abjad.Skip(1, multiplier=duration / 2)
+        temp_container = abjad.Container()
+        temp_container.extend([first_skip, regular_rest])
+        new_sig = abjad.TimeSignature((1, 4))
+        abjad.attach(new_sig, temp_container[0])
+        transparent_sig = abjad.LilyPondLiteral(
+            r"\once \override Score.TimeSignature.transparent = ##t",
+            format_slot="before",
+        )
+        transparent_rest = abjad.LilyPondLiteral(
+            r"\once \override Rest.transparent = ##t",
+            format_slot="before",
+        )
+        abjad.attach(transparent_sig, temp_container[0])
+        abjad.attach(transparent_rest, temp_container[1])
+    else:
+        start_command = abjad.LilyPondLiteral(
+            r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
+            format_slot="before",
+        )
+        stop_command = abjad.LilyPondLiteral(
+            r"\stopStaff \startStaff", format_slot="after"
+        )
+        abjad.attach(start_command, temp_container[0])
+        abjad.attach(stop_command, temp_container[0])
+    abjad.attach(transparent_command, temp_container[0])
+    abjad.mutate.replace(original_leaves, temp_container[:])
