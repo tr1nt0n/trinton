@@ -423,13 +423,13 @@ def transparent_accidentals(score, voice, leaves):
 
 def rewrite_meter(target):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.Selection(target["Global Context"]).leaves()]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.select(target["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.Selection(target["Staff Group"]).components(abjad.Voice):
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs  # [:-1]
         durations = [_.duration for _ in time_signatures]
@@ -688,17 +688,22 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
             handler(sel)
 
 
-def rewrite_meter_by_voice(score, voices):
+def rewrite_meter_by_voice(score, voice_indeces):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.Selection(score["Global Context"]).leaves()]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
+    voices = []
+    for voice in voice_indeces:
+        voices.append(
+            abjad.Selection(score["Staff Group"]).components(abjad.Voice)[voice]
+        )
     for voice in voices:
         voice_dur = abjad.get.duration(voice)
-        time_signatures = sigs  # [:-1]
+        time_signatures = sigs
         durations = [_.duration for _ in time_signatures]
         sig_dur = sum(durations)
         assert voice_dur == sig_dur, (voice_dur, sig_dur)
