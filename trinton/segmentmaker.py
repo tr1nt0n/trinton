@@ -529,19 +529,19 @@ def unmeasured_stem_tremolo(selections):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(7, 8):
-            abjad.attach(abjad.StemTremolo(32), leaf)
+                abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(1, 1):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(3, 2):
-            abjad.attach(abjad.StemTremolo(32), leaf)
+                abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(7, 4):
-            abjad.attach(abjad.StemTremolo(32), leaf)
+                abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(2, 1):
-            abjad.attach(abjad.StemTremolo(32), leaf)
+                abjad.attach(abjad.StemTremolo(32), leaf)
 
 
 def attach_multiple(score, voice, attachments, leaves):
@@ -798,13 +798,13 @@ def populate_fermata_measures(score, voices, leaves, fermata_measures):
         else:
             trinton.make_fermata_measure(measures[-1])
 
-    for voice, leaf in zip(voices, leaves):
+    for voice, l in zip(voices, leaves):
         if voice == "Global Context":
             pass
         else:
             trinton.attach(
                 voice=score[voice],
-                leaves=[leaf],
+                leaves=l,
                 attachment=abjad.Markup(
                     r'\markup \huge { \musicglyph "scripts.ufermata" }'
                 ),
