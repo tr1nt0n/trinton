@@ -2,6 +2,7 @@ import abjad
 import evans
 import trinton
 from abjadext import rmakers
+from fractions import Fraction
 import pathlib
 import os
 
@@ -529,19 +530,19 @@ def unmeasured_stem_tremolo(selections):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(7, 8):
-                abjad.attach(abjad.StemTremolo(32), leaf)
+            abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(1, 1):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(3, 2):
-                abjad.attach(abjad.StemTremolo(32), leaf)
+            abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(7, 4):
-                abjad.attach(abjad.StemTremolo(32), leaf)
+            abjad.attach(abjad.StemTremolo(32), leaf)
 
         elif leaf.written_duration == abjad.Duration(2, 1):
-                abjad.attach(abjad.StemTremolo(32), leaf)
+            abjad.attach(abjad.StemTremolo(32), leaf)
 
 
 def attach_multiple(score, voice, attachments, leaves):
@@ -564,13 +565,13 @@ def make_leaf_selection(score, voice, leaves):
 def glissando(score, voice, start_gliss, stop_gliss):
     for gliss1, gliss2 in zip(start_gliss, stop_gliss):
         leaves = list(range(gliss1, gliss2 + 1))
-    sel = make_leaf_selection(score=score, voice=voice, leaves=leaves)
-    abjad.glissando(
-        sel,
-        hide_middle_note_heads=True,
-        allow_repeats=True,
-        allow_ties=True,
-    )
+        sel = make_leaf_selection(score=score, voice=voice, leaves=leaves)
+        abjad.glissando(
+            sel,
+            hide_middle_note_heads=True,
+            allow_repeats=True,
+            allow_ties=True,
+        )
 
 
 def ottava(score, voice, start_ottava, stop_ottava, octave):
@@ -808,4 +809,29 @@ def populate_fermata_measures(score, voices, leaves, fermata_measures):
                 attachment=abjad.Markup(
                     r'\markup \huge { \musicglyph "scripts.ufermata" }'
                 ),
+            )
+
+
+def reduce_tuplets(score, voice, tuplets):
+    if tuplets == "all":
+        for tuplet in abjad.select(score[voice]).tuplets():
+            multiplier = Fraction(tuplet.multiplier)
+            num = multiplier.numerator
+            den = multiplier.denominator
+            tuple = (num, den)
+            new_markup = rf"{tuple[1]}:{tuple[0]}"
+            abjad.override(tuplet).TupletNumber.text = abjad.Markup(
+                rf"\markup \italic {new_markup}"
+            )
+
+    else:
+        for tuplet in tuplets:
+            sel = abjad.select(score[voice]).tuplet(tuplet)
+            multiplier = Fraction(sel.multiplier)
+            num = multiplier.numerator
+            den = multiplier.denominator
+            tuple = (num, den)
+            new_markup = rf"{tuple[1]}:{tuple[0]}"
+            abjad.override(sel).TupletNumber.text = abjad.Markup(
+                rf"\markup \italic {new_markup}"
             )

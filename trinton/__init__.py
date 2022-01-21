@@ -50,6 +50,7 @@ from .segmentmaker import (
     rewrite_meter_by_voice,
     make_fermata_measure,
     populate_fermata_measures,
+    reduce_tuplets,
 )
 
 from .sequence import (
@@ -109,4 +110,5 @@ __all__ = [
     "rewrite_meter_by_voice",
     "make_fermata_measure",
     "populate_fermata_measures",
+    "reduce_tuplets",
 ]
