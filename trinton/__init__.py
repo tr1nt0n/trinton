@@ -51,6 +51,7 @@ from .segmentmaker import (
     make_fermata_measure,
     populate_fermata_measures,
     reduce_tuplets,
+    write_hooked_spanner,
 )
 
 from .sequence import (
@@ -111,4 +112,5 @@ __all__ = [
     "make_fermata_measure",
     "populate_fermata_measures",
     "reduce_tuplets",
+    "write_hooked_spanner",
 ]
