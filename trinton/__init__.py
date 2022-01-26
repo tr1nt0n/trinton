@@ -60,6 +60,11 @@ from .sequence import (
     primes_odds_evens,
 )
 
+from .selectors import (
+    exclude_tuplets,
+    tuplets,
+)
+
 __all__ = [
     "make_pitches",
     "transpose",
@@ -113,4 +118,6 @@ __all__ = [
     "populate_fermata_measures",
     "reduce_tuplets",
     "write_hooked_spanner",
+    "exclude_tuplets",
+    "tuplets",
 ]

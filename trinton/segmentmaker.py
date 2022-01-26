@@ -340,6 +340,7 @@ def make_and_append_rhythm_selections(score, voice_name, stack, durations):
     selections = stack(durations)
     relevant_voice = score[voice_name]
     relevant_voice.append(selections)
+    return selections
 
 
 def append_rests(score, voice, rests):
