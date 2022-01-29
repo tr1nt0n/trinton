@@ -52,6 +52,7 @@ from .segmentmaker import (
     populate_fermata_measures,
     reduce_tuplets,
     write_hooked_spanner,
+    fill_empty_staves_with_skips,
 )
 
 from .sequence import (
@@ -120,4 +121,5 @@ __all__ = [
     "write_hooked_spanner",
     "exclude_tuplets",
     "tuplets",
+    "fill_empty_staves_with_skips",
 ]

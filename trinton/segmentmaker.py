@@ -334,6 +334,7 @@ def make_rhythm_selections(stack, durations):
 def append_rhythm_selections(voice, score, selections):
     relevant_voice = score[voice]
     relevant_voice.append(selections)
+    return selections
 
 
 def make_and_append_rhythm_selections(score, voice_name, stack, durations):
@@ -692,6 +693,29 @@ def whiteout_empty_staves(score, voice, cutaway):
         else:
             both_rests = [invisible_rest, multimeasure_rest]
             abjad.mutate.replace(shard, both_rests[:])
+
+def fill_empty_staves_with_skips(voice):
+    leaves = abjad.select(voice).leaves()
+    shards = leaves.group_by_measure()
+    for i, shard in enumerate(shards):
+        if not all(isinstance(leaf, abjad.Rest) for leaf in shard):
+            continue
+        indicators = abjad.get.indicators(shard[0])
+        multiplier = abjad.get.duration(shard)
+        invisible_rest = abjad.Rest(1, multiplier=(multiplier))
+        rest_literal = abjad.LilyPondLiteral(
+            r"\once \override Rest.transparent = ##t", "before"
+        )
+        abjad.attach(
+            rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
+        )
+        for indicator in indicators:
+            abjad.attach(
+                indicator, invisible_rest, tag=abjad.Tag("applying indicators")
+            )
+
+        both_rests = [invisible_rest]
+        abjad.mutate.replace(shard, invisible_rest)
 
 
 def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
