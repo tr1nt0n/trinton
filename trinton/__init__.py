@@ -53,6 +53,7 @@ from .segmentmaker import (
     reduce_tuplets,
     write_hooked_spanner,
     fill_empty_staves_with_skips,
+    dashed_slur,
 )
 
 from .sequence import (
@@ -122,4 +123,5 @@ __all__ = [
     "exclude_tuplets",
     "tuplets",
     "fill_empty_staves_with_skips",
+    "dashed_slur",
 ]

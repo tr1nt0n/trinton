@@ -7,13 +7,15 @@ import pathlib
 import os
 
 
-def make_score_template(instruments, groups):
+def make_score_template(
+    instruments, groups, outer_staff="ChoirStaff", inner_staff="PianoStaff"
+):
     name_counts = {_.name: 1 for _ in instruments}
     sub_group_counter = 1
     score = abjad.Score(
         [
             abjad.Staff(name="Global Context", lilypond_type="TimeSignatureContext"),
-            abjad.StaffGroup(name="Staff Group", lilypond_type="ChoirStaff"),
+            abjad.StaffGroup(name="Staff Group", lilypond_type=outer_staff),
         ],
         name="Score",
     )
@@ -21,7 +23,7 @@ def make_score_template(instruments, groups):
     for item in grouped_voices:
         if isinstance(item, list):
             sub_group = abjad.StaffGroup(
-                name=f"sub group {sub_group_counter}", lilypond_type="PianoStaff"
+                name=f"sub group {sub_group_counter}", lilypond_type=inner_staff
             )
             sub_group_counter += 1
             for sub_item in item:
@@ -694,6 +696,7 @@ def whiteout_empty_staves(score, voice, cutaway):
             both_rests = [invisible_rest, multimeasure_rest]
             abjad.mutate.replace(shard, both_rests[:])
 
+
 def fill_empty_staves_with_skips(voice):
     leaves = abjad.select(voice).leaves()
     shards = leaves.group_by_measure()
@@ -871,3 +874,16 @@ def reduce_tuplets(score, voice, tuplets):
             abjad.override(sel).TupletNumber.text = abjad.Markup(
                 rf"\markup \italic {new_markup}"
             )
+
+
+def dashed_slur(start_selection, stop_selection):
+    abjad.attach(abjad.StartSlur(), start_selection)
+    abjad.attach(
+        abjad.LilyPondLiteral(r"\slurDashed", format_slot="absolute_before"),
+        start_selection,
+    )
+    abjad.attach(abjad.StopSlur(), stop_selection)
+    abjad.attach(
+        abjad.LilyPondLiteral(r"\slurSolid", format_slot="absolute_after"),
+        stop_selection,
+    )
