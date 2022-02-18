@@ -60,6 +60,7 @@ from .sequence import (
     rotated_sequence,
     countList,
     primes_odds_evens,
+    logistic_map,
 )
 
 from .selectors import (
@@ -124,4 +125,5 @@ __all__ = [
     "tuplets",
     "fill_empty_staves_with_skips",
     "dashed_slur",
+    "logistic_map",
 ]

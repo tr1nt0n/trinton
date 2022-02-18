@@ -2,7 +2,8 @@ import abjad
 import evans
 import trinton
 import random
-
+from random import randint
+import itertools
 
 def rotated_sequence(pitch_list, start_index):
     result = []
@@ -34,3 +35,24 @@ def primes_odds_evens(lst):
         final.append(number)
 
     return final
+
+def logistic_map(x, r, n, seed):
+    out = []
+
+    def logisticmap(x=x, r=r):
+
+        return x * r * (1 - x)
+
+    def iterate(n=n, x=x, r=r):
+
+        for i in range(1,n):
+            x = logisticmap(x, r)
+
+        return x
+
+    l = [int(_) for _ in str(iterate())]
+
+    for number in l:
+        out.append(number)
+
+    return out
