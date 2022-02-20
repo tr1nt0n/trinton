@@ -61,11 +61,14 @@ from .sequence import (
     countList,
     primes_odds_evens,
     logistic_map,
+    all_additions,
 )
 
 from .selectors import (
     exclude_tuplets,
     tuplets,
+    select_tuplets_by_annotation,
+    select_logical_ties_by_index,
 )
 
 __all__ = [
@@ -126,4 +129,7 @@ __all__ = [
     "fill_empty_staves_with_skips",
     "dashed_slur",
     "logistic_map",
+    "all_additions",
+    "select_tuplets_by_annotation",
+    "select_logical_ties_by_index",
 ]

@@ -39,3 +39,23 @@ def tuplets():
         return out
 
     return selector
+
+def select_tuplets_by_annotation(annotation):
+    def selector(argument):
+        top_level_components = trinton.get_top_level_components_from_leaves(argument)
+        tuplets = abjad.Selection(top_level_components).tuplets()
+
+        out = []
+
+        for tuplet in tuplets:
+            if abjad.get.annotation(tuplet, annotation) is True:
+                out.append(tuplet)
+
+        return abjad.Selection(out[:]).leaves()
+
+    return selector
+
+def select_logical_ties_by_index(indeces):
+    def selector(argument):
+        return abjad.Selection(argument).logical_ties().get(indeces)
+    return selector

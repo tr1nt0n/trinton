@@ -4,6 +4,7 @@ import trinton
 import random
 from random import randint
 import itertools
+from itertools import combinations
 
 def rotated_sequence(pitch_list, start_index):
     result = []
@@ -56,3 +57,6 @@ def logistic_map(x, r, n, seed):
         out.append(number)
 
     return out
+
+def all_additions(lst, s, pair_num):
+    return [pair for pair in combinations(lst, pair_num) if sum(pair) == s]
