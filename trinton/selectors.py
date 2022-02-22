@@ -59,3 +59,8 @@ def select_logical_ties_by_index(indeces):
     def selector(argument):
         return abjad.Selection(argument).logical_ties().get(indeces)
     return selector
+
+def select_leaves_by_index(indeces):
+    def selector(argument):
+        return abjad.Selection(argument).leaves().get(indeces)
+    return selector

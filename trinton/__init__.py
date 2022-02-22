@@ -54,6 +54,7 @@ from .segmentmaker import (
     write_hooked_spanner,
     fill_empty_staves_with_skips,
     dashed_slur,
+    rewrite_meter_by_measure,
 )
 
 from .sequence import (
@@ -69,6 +70,7 @@ from .selectors import (
     tuplets,
     select_tuplets_by_annotation,
     select_logical_ties_by_index,
+    select_leaves_by_index,
 )
 
 __all__ = [
@@ -132,4 +134,6 @@ __all__ = [
     "all_additions",
     "select_tuplets_by_annotation",
     "select_logical_ties_by_index",
+    "select_leaves_by_index",
+    "rewrite_meter_by_measure",
 ]

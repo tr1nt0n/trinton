@@ -351,7 +351,7 @@ def append_rests(score, voice, rests):
         score[voice].append(rest)
 
 
-def handwrite(score, voice, durations, pitch_list):
+def handwrite(score, voice, durations, pitch_list=None):
     stack = rmakers.stack(
         rmakers.NoteRhythmMaker(),
     )
@@ -825,7 +825,7 @@ def make_fermata_measure(selection):
     abjad.mutate.replace(original_leaves, temp_container[:])
 
 
-def populate_fermata_measures(score, voices, leaves, fermata_measures):
+def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
     for voice in voices:
         measures = abjad.Selection(score[voice]).leaves().group_by_measure()
 
@@ -887,3 +887,48 @@ def dashed_slur(start_selection, stop_selection):
         abjad.LilyPondLiteral(r"\slurSolid", format_slot="absolute_after"),
         stop_selection,
     )
+
+def rewrite_meter_by_measure(score, measures):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.Selection(score["Global Context"]).leaves()]
+    sigs = []
+    skips = []
+    for measure in measures:
+        skips.append(global_skips[measure - 1])
+    for skip in skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in abjad.Selection(score["Staff Group"]).components(abjad.Voice):
+        all_measures = abjad.Selection(voice).leaves().group_by_measure()
+        voice_sel = [all_measures[_ - 1] for _ in measures]
+        voice_dur = abjad.get.duration(voice_sel)
+        time_signatures = sigs  # [:-1]
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        all_shards = abjad.mutate.split(voice[:], durations)
+        shards = []
+        shards.append(all_shards[measures[0]-1:measures[-1]])
+        for i, shard in enumerate(shards[0]):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )
