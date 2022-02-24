@@ -932,3 +932,13 @@ def rewrite_meter_by_measure(score, measures):
                     boundary_depth=inventories[-2][0],
                     rewrite_tuplets=False,
                 )
+
+def unbeam_quarters(selections):
+    for leaf1, leaf2, leaf3 in zip(selections, selections[1:], trinton.rotated_sequence(selections, -1)):
+        if leaf1.written_duration >= abjad.Duration(1, 4):
+            abjad.detach(abjad.StartBeam, leaf1)
+            abjad.detach(abjad.StopBeam, leaf1)
+            if leaf2.written_duration < abjad.Duration(1, 4):
+                abjad.attach(abjad.StartBeam(), leaf2)
+            if leaf3.written_duration < abjad.Duration(1, 4):
+                abjad.attach(abjad.StopBeam(), leaf3)
