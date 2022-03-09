@@ -942,3 +942,16 @@ def unbeam_quarters(selections):
                 abjad.attach(abjad.StartBeam(), leaf2)
             if leaf3.written_duration < abjad.Duration(1, 4):
                 abjad.attach(abjad.StopBeam(), leaf3)
+
+def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGroup", inner_staff="GrandStaff",):
+    score = make_score_template(
+        instruments=instruments, groups=groups, outer_staff=outer_staff, inner_staff=inner_staff,
+    )
+
+    write_time_signatures(ts=time_signatures, target=score["Global Context"])
+
+    for voice in abjad.Selection(score["Staff Group"]).components(abjad.Voice):
+        for rest in [abjad.Rest((1, 1), multiplier=_) for _ in time_signatures]:
+            voice.append(rest)
+
+    return score

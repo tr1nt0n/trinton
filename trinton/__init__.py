@@ -56,6 +56,7 @@ from .segmentmaker import (
     dashed_slur,
     rewrite_meter_by_measure,
     unbeam_quarters,
+    make_empty_score,
 )
 
 from .sequence import (
@@ -138,4 +139,5 @@ __all__ = [
     "select_leaves_by_index",
     "rewrite_meter_by_measure",
     "unbeam_quarters",
+    "make_empty_score",
 ]
