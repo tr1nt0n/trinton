@@ -951,7 +951,7 @@ def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGro
     write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
     for voice in abjad.Selection(score["Staff Group"]).components(abjad.Voice):
-        for rest in [abjad.Rest((1, 1), multiplier=_) for _ in time_signatures]:
+        for rest in [abjad.MultimeasureRest((1, 1), multiplier=_) for _ in time_signatures]:
             voice.append(rest)
 
     return score
