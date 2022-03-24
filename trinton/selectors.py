@@ -4,7 +4,7 @@ import trinton
 
 def exclude_tuplets():
     def selector(argument):
-        selection = abjad.Selection(argument)
+        selection = abjad.select(argument)
 
         components = trinton.get_top_level_components_from_leaves(selection)
 
@@ -24,7 +24,7 @@ def exclude_tuplets():
 
 def tuplets():
     def selector(argument):
-        selection = abjad.Selection(argument)
+        selection = abjad.select(argument)
 
         components = trinton.get_top_level_components_from_leaves(selection)
 
@@ -44,7 +44,7 @@ def tuplets():
 def select_tuplets_by_annotation(annotation):
     def selector(argument):
         top_level_components = trinton.get_top_level_components_from_leaves(argument)
-        tuplets = abjad.Selection(top_level_components).tuplets()
+        tuplets = abjad.select.tuplets(top_level_components)
 
         out = []
 
@@ -52,21 +52,27 @@ def select_tuplets_by_annotation(annotation):
             if abjad.get.annotation(tuplet, annotation) is True:
                 out.append(tuplet)
 
-        return abjad.Selection(out[:]).leaves()
+        return abjad.select.leaves(out[:])
 
     return selector
 
 
-def select_logical_ties_by_index(indeces):
+def select_logical_ties_by_index(indices):
     def selector(argument):
-        return abjad.Selection(argument).logical_ties().get(indeces)
+        out = []
+        for index in indices:
+            out.append(abjad.select.logical_ties(argument)[index])
+        return out
 
     return selector
 
 
-def select_leaves_by_index(indeces):
+def select_leaves_by_index(indices):
     def selector(argument):
-        return abjad.Selection(argument).leaves().get(indeces)
+        out = []
+        for index in indices:
+            out.append(abjad.select.leaf(argument, index))
+        return out
 
     return selector
 

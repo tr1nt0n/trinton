@@ -82,7 +82,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
         for pair in offset_pairs
     ]
 
-    tup_list = [tup for tup in abjad.select(components).components(abjad.Tuplet)]
+    tup_list = [tup for tup in abjad.select.components(components, abjad.Tuplet)]
     for t in tup_list:
         if isinstance(abjad.get.parentage(t).components[1], abjad.Tuplet) is False:
             first_leaf = abjad.select(t).leaf(0)
@@ -92,13 +92,13 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                     beam_rests=include_rests,
                     stemlet_length=0.75,
                     beam_lone_notes=False,
-                    selector=lambda _: abjad.select(_).leaves(grace=False),
+                    selector=lambda _: abjad.select.leaves(_, grace=False),
                 )
         else:
             continue
 
     non_tup_list = []
-    for leaf in abjad.select(components).leaves():
+    for leaf in abjad.select.leaves(components):
         if isinstance(abjad.get.parentage(leaf).components[1], abjad.Tuplet) is False:
             non_tup_list.append(leaf)
 
@@ -107,18 +107,15 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
         beamed_groups.append([])
 
     for i, span in enumerate(offset_timespans):
-        for group in (
-            abjad.select(non_tup_list[:])
-            .leaves()
-            .group_by(
-                predicate=lambda x: abjad.get.timespan(x).happens_during_timespan(span)
-            )
+        for group in abjad.select.group_by(
+            abjad.select.leaves(non_tup_list[:]),
+            predicate=lambda x: abjad.get.timespan(x).happens_during_timespan(span),
         ):
             if abjad.get.timespan(group).happens_during_timespan(span) is True:
                 beamed_groups[i].append(group[:])
 
     for subgroup in beamed_groups:
-        subgrouper = abjad.select(subgroup).group_by_contiguity()
+        subgrouper = abjad.select.group_by_contiguity(subgroup)
         for beam_group in subgrouper:
             # if not all(isinstance(leaf, abjad.Rest) for leaf in beam_group)
             abjad.beam(
@@ -126,7 +123,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                 beam_rests=include_rests,
                 stemlet_length=0.75,
                 beam_lone_notes=False,
-                selector=lambda _: abjad.select(_).leaves(grace=False),
+                selector=lambda _: abjad.select.leaves(_, grace=False),
             )
 
 
@@ -250,11 +247,11 @@ def render_file(score, segment_path, build_path, segment_name, includes):
 
 def attach(voice, leaves, attachment):
     if leaves == all:
-        for leaf in abjad.select(voice).leaves(pitched=True):
+        for leaf in abjad.select.leaves(voice, pitched=True):
             abjad.attach(attachment, leaf)
     else:
         for number in leaves:
-            sel = abjad.select(voice).leaf(number)
+            sel = abjad.select.leaf(voice, number)
             abjad.attach(attachment, sel)
 
 
@@ -335,14 +332,16 @@ def make_rhythm_selections(stack, durations):
 
 def append_rhythm_selections(voice, score, selections):
     relevant_voice = score[voice]
-    relevant_voice.append(selections)
+    for selection in selections:
+        relevant_voice.append(selection)
     return selections
 
 
 def make_and_append_rhythm_selections(score, voice_name, stack, durations):
     selections = stack(durations)
     relevant_voice = score[voice_name]
-    relevant_voice.append(selections)
+    for selection in selections:
+        relevant_voice.append(selection)
     return selections
 
 
@@ -439,13 +438,13 @@ def transparent_accidentals(score, voice, leaves):
 
 def rewrite_meter(target):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.select(target["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs  # [:-1]
         durations = [_.duration for _ in time_signatures]
@@ -477,7 +476,7 @@ def rewrite_meter(target):
 
 
 def beam_score(target):
-    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
@@ -505,7 +504,7 @@ def beam_score(target):
                     offset_depth=inventories[-2][0],
                     include_rests=False,
                 )
-    for trem in abjad.select(target).components(abjad.TremoloContainer):
+    for trem in abjad.select.components(target, abjad.TremoloContainer):
         if abjad.StartBeam() in abjad.get.indicators(trem[0]):
             abjad.detach(abjad.StartBeam(), trem[0])
         if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
@@ -572,7 +571,7 @@ def attach_multiple(score, voice, attachments, leaves):
 def make_leaf_selection(score, voice, leaves):
     selection = []
     for leaf in leaves:
-        sel = abjad.select(score[voice]).leaf(leaf)
+        sel = abjad.select.leaf(score[voice], leaf)
         selection.append(sel)
     return selection
 
@@ -591,10 +590,13 @@ def glissando(score, voice, start_gliss, stop_gliss):
 
 def ottava(score, voice, start_ottava, stop_ottava, octave):
     for start, stop in zip(start_ottava, stop_ottava):
-        va = abjad.Ottava(n=octave)
-        abjad.attach(va, abjad.select(score[voice]).leaf(start))
-        va = abjad.Ottava(n=0, format_slot="after")
-        abjad.attach(va, abjad.select(score[voice]).leaf(stop))
+        start_va = abjad.Ottava(n=octave)
+        abjad.attach(start_va, abjad.select.leaf(score[voice], start))
+        stop_va = abjad.Ottava(n=0, site="after")
+        abjad.attach(
+            stop_va,
+            abjad.select.leaf(score[voice], stop),
+        )
 
 
 def beam_runs_by_selection(score, voice, start_beam, stop_beam, beam_rests):
@@ -621,7 +623,7 @@ def ficta(score, voice, start_ficta, stop_ficta):
             voice=score[voice],
             leaves=[start],
             attachment=abjad.LilyPondLiteral(
-                r"\set suggestAccidentals = ##t", format_slot="absolute_before"
+                r"\set suggestAccidentals = ##t", "absolute_before"
             ),
         )
 
@@ -629,7 +631,7 @@ def ficta(score, voice, start_ficta, stop_ficta):
             voice=score[voice],
             leaves=[stop],
             attachment=abjad.LilyPondLiteral(
-                r"\set suggestAccidentals = ##f", format_slot="absolute_after"
+                r"\set suggestAccidentals = ##f", "absolute_after"
             ),
         )
 
@@ -640,7 +642,7 @@ def extract_parts(score):
         abjad.iterate.components(score["Staff Group"], abjad.Staff)
     ):
         t = rf"\tag #'voice{count + 1}"
-        literal = abjad.LilyPondLiteral(t, format_slot="before")
+        literal = abjad.LilyPondLiteral(t, "before")
         container = abjad.Container()
         abjad.attach(literal, container)
         abjad.mutate.wrap(staff, container)
@@ -648,7 +650,7 @@ def extract_parts(score):
         abjad.iterate.components(score["Staff Group"], abjad.StaffGroup)
     ):
         t = rf"\tag #'group{count + 1}"
-        literal = abjad.LilyPondLiteral(t, format_slot="before")
+        literal = abjad.LilyPondLiteral(t, "before")
         container = abjad.Container()
         abjad.attach(literal, container)
         abjad.mutate.wrap(group, container)
@@ -676,11 +678,9 @@ def whiteout_empty_staves(score, voice, cutaway):
         multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
         start_command = abjad.LilyPondLiteral(
             r"\stopStaff \once \override Staff.StaffSymbol.line-count = #1 \startStaff",
-            format_slot="before",
+            "before",
         )
-        stop_command = abjad.LilyPondLiteral(
-            r"\stopStaff \startStaff", format_slot="after"
-        )
+        stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
         if cutaway == True:
             abjad.attach(
                 start_command, invisible_rest, tag=abjad.Tag("applying cutaway")
@@ -787,11 +787,11 @@ def make_fermata_measure(selection):
     skip = abjad.MultimeasureRest(1, multiplier=duration)
     transparent_command = abjad.LilyPondLiteral(
         r"\once \override MultiMeasureRest.transparent = ##t",
-        format_slot="before",
+        "before",
     )
     temp_container = abjad.Container()
     temp_container.append(skip)
-    original_leaves = selection.leaves()
+    original_leaves = abjad.select.leaves(selection)
     if abjad.get.has_indicator(original_leaves[0], abjad.TimeSignature):
         regular_rest = abjad.Rest(1, multiplier=duration / 2)
         first_skip = abjad.Skip(1, multiplier=duration / 2)
@@ -801,22 +801,20 @@ def make_fermata_measure(selection):
         abjad.attach(new_sig, temp_container[0])
         transparent_sig = abjad.LilyPondLiteral(
             r"\once \override Score.TimeSignature.transparent = ##t",
-            format_slot="before",
+            "before",
         )
         transparent_rest = abjad.LilyPondLiteral(
             r"\once \override Rest.transparent = ##t",
-            format_slot="before",
+            "before",
         )
         abjad.attach(transparent_sig, temp_container[0])
         abjad.attach(transparent_rest, temp_container[1])
     else:
         start_command = abjad.LilyPondLiteral(
             r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
-            format_slot="before",
+            "before",
         )
-        stop_command = abjad.LilyPondLiteral(
-            r"\stopStaff \startStaff", format_slot="after"
-        )
+        stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
         abjad.attach(start_command, temp_container[0])
         abjad.attach(stop_command, temp_container[0])
     abjad.attach(transparent_command, temp_container[0])
@@ -825,7 +823,7 @@ def make_fermata_measure(selection):
 
 def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
     for voice in voices:
-        measures = abjad.select(score[voice]).leaves().group_by_measure()
+        measures = abjad.select.group_by_measure(abjad.select.leaves(score[voice]))
 
         if fermata_measures is not None:
 
@@ -877,19 +875,19 @@ def reduce_tuplets(score, voice, tuplets):
 def dashed_slur(start_selection, stop_selection):
     abjad.attach(abjad.StartSlur(), start_selection)
     abjad.attach(
-        abjad.LilyPondLiteral(r"\slurDashed", format_slot="absolute_before"),
+        abjad.LilyPondLiteral(r"\slurDashed", "absolute_before"),
         start_selection,
     )
     abjad.attach(abjad.StopSlur(), stop_selection)
     abjad.attach(
-        abjad.LilyPondLiteral(r"\slurSolid", format_slot="absolute_after"),
+        abjad.LilyPondLiteral(r"\slurSolid", "absolute_after"),
         stop_selection,
     )
 
 
 def rewrite_meter_by_measure(score, measures):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
     sigs = []
     skips = []
     for measure in measures:
@@ -898,8 +896,8 @@ def rewrite_meter_by_measure(score, measures):
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.select(score["Staff Group"]).components(abjad.Voice):
-        all_measures = abjad.select(voice).leaves().group_by_measure()
+    for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
+        all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
         voice_sel = [all_measures[_ - 1] for _ in measures]
         voice_dur = abjad.get.duration(voice_sel)
         time_signatures = sigs  # [:-1]
