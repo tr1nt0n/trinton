@@ -64,3 +64,17 @@ def select_leaves_by_index(indeces):
     def selector(argument):
         return abjad.Selection(argument).leaves().get(indeces)
     return selector
+
+def patterned_leaf_index_selector(indices, period,):
+    def selector(argument):
+        out = []
+        index = []
+        pattern = abjad.Pattern(indices=indices, period=period)
+        leaves = abjad.select.leaves(argument)
+        for i in range(len(leaves)):
+            if pattern.matches_index(i, len(leaves)):
+                index.append(i)
+        for i in index:
+            out.append(leaves[i])
+        return out
+    return selector

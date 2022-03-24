@@ -57,8 +57,9 @@ from .segmentmaker import (
     rewrite_meter_by_measure,
     unbeam_quarters,
     make_empty_score,
-    rhythm_command,
-    group_selections
+    make_rhythms,
+    group_selections,
+    fuse_tuplet_rests,
 )
 
 from .sequence import (
@@ -75,6 +76,14 @@ from .selectors import (
     select_tuplets_by_annotation,
     select_logical_ties_by_index,
     select_leaves_by_index,
+    patterned_leaf_index_selector,
+)
+
+from .preprocessors import(
+    fuse_preprocessor,
+    fuse_quarters_preprocessor,
+    pure_quarters_preprocessor,
+    quarters_preprocessor,
 )
 
 __all__ = [
@@ -142,6 +151,12 @@ __all__ = [
     "rewrite_meter_by_measure",
     "unbeam_quarters",
     "make_empty_score",
-    "rhythm_command",
+    "make_rhythms",
     "group_selections",
+    "patterned_leaf_index_selector",
+    "fuse_preprocessor",
+    "fuse_quarters_preprocessor",
+    "pure_quarters_preprocessor",
+    "quarters_preprocessor",
+    "fuse_tuplet_rests",
 ]

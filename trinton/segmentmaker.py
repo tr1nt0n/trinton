@@ -321,7 +321,7 @@ def write_markup(voice, leaf, string, down):
 
 
 def annotate_leaves(score, prototype=abjad.Leaf):
-    for voice in abjad.select(score).components(abjad.Voice):
+    for voice in abjad.select.components(score, abjad.Voice):
         if prototype is not None:
             abjad.label.with_indices(voice, prototype=prototype)
         else:
@@ -951,7 +951,7 @@ def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGro
     write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
     for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-        for rest in [abjad.MultimeasureRest((1, 1), multiplier=_) for _ in time_signatures]:
+        for rest in [abjad.Skip((1, 1), multiplier=_) for _ in time_signatures]:
             voice.append(rest)
 
     return score
@@ -966,7 +966,7 @@ def group_selections(voice, leaves, groups=None):
         new_out = evans.Sequence(out).grouper(groups)
         return new_out
 
-def rhythm_command(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
+def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
     def rhythm_selections():
         if rewrite_meter is not None:
             stack = rmakers.stack(
@@ -1004,3 +1004,9 @@ def rhythm_command(selections, rmaker, commands, rewrite_meter=None, preprocesso
 
         else:
             abjad.mutate.replace([sel], rhythm_selections()([abjad.get.duration(sel)]))
+
+def fuse_tuplet_rests(voice):
+    for tuplet in abjad.select.tuplets(voice):
+        rests = abjad.select.rests(tuplet)
+        for rest_group in abjad.select.group_by_contiguity(rests):
+            abjad.mutate.fuse(rest_group)
