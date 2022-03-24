@@ -57,6 +57,8 @@ from .segmentmaker import (
     rewrite_meter_by_measure,
     unbeam_quarters,
     make_empty_score,
+    rhythm_command,
+    group_selections
 )
 
 from .sequence import (
@@ -140,4 +142,6 @@ __all__ = [
     "rewrite_meter_by_measure",
     "unbeam_quarters",
     "make_empty_score",
+    "rhythm_command",
+    "group_selections",
 ]

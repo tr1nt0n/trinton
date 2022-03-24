@@ -92,7 +92,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                     beam_rests=include_rests,
                     stemlet_length=0.75,
                     beam_lone_notes=False,
-                    selector=lambda _: abjad.Selection(_).leaves(grace=False),
+                    selector=lambda _: abjad.select(_).leaves(grace=False),
                 )
         else:
             continue
@@ -126,7 +126,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
                 beam_rests=include_rests,
                 stemlet_length=0.75,
                 beam_lone_notes=False,
-                selector=lambda _: abjad.Selection(_).leaves(grace=False),
+                selector=lambda _: abjad.select(_).leaves(grace=False),
             )
 
 
@@ -142,7 +142,7 @@ def beam_score_without_splitting(target):
         measures = abjad.select(voice[:]).leaves().group_by_measure()
         for i, shard in enumerate(measures):
             top_level_components = get_top_level_components_from_leaves(shard)
-            shard = abjad.Selection(top_level_components)
+            shard = abjad.select(top_level_components)
             met = abjad.Meter(sigs[i].pair)
             inventories = [
                 x
@@ -194,7 +194,7 @@ def rewrite_meter_without_splitting(target):
             ):
                 time_signature = sigs[i]
                 top_level_components = get_top_level_components_from_leaves(shard)
-                shard = abjad.Selection(top_level_components)
+                shard = abjad.select(top_level_components)
                 inventories = [
                     x
                     for x in enumerate(
@@ -321,7 +321,7 @@ def write_markup(voice, leaf, string, down):
 
 
 def annotate_leaves(score, prototype=abjad.Leaf):
-    for voice in abjad.Selection(score).components(abjad.Voice):
+    for voice in abjad.select(score).components(abjad.Voice):
         if prototype is not None:
             abjad.label.with_indices(voice, prototype=prototype)
         else:
@@ -439,13 +439,13 @@ def transparent_accidentals(score, voice, leaves):
 
 def rewrite_meter(target):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.Selection(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.Selection(target["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.select(target["Staff Group"]).components(abjad.Voice):
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs  # [:-1]
         durations = [_.duration for _ in time_signatures]
@@ -572,7 +572,7 @@ def attach_multiple(score, voice, attachments, leaves):
 def make_leaf_selection(score, voice, leaves):
     selection = []
     for leaf in leaves:
-        sel = abjad.Selection(score[voice]).leaf(leaf)
+        sel = abjad.select(score[voice]).leaf(leaf)
         selection.append(sel)
     return selection
 
@@ -742,7 +742,7 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
 
 def rewrite_meter_by_voice(score, voice_indeces):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.Selection(score["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
@@ -751,7 +751,7 @@ def rewrite_meter_by_voice(score, voice_indeces):
     voices = []
     for voice in voice_indeces:
         voices.append(
-            abjad.Selection(score["Staff Group"]).components(abjad.Voice)[voice]
+            abjad.select(score["Staff Group"]).components(abjad.Voice)[voice]
         )
     for voice in voices:
         voice_dur = abjad.get.duration(voice)
@@ -827,7 +827,7 @@ def make_fermata_measure(selection):
 
 def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
     for voice in voices:
-        measures = abjad.Selection(score[voice]).leaves().group_by_measure()
+        measures = abjad.select(score[voice]).leaves().group_by_measure()
 
         if fermata_measures is not None:
 
@@ -890,7 +890,7 @@ def dashed_slur(start_selection, stop_selection):
 
 def rewrite_meter_by_measure(score, measures):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.Selection(score["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
     sigs = []
     skips = []
     for measure in measures:
@@ -899,8 +899,8 @@ def rewrite_meter_by_measure(score, measures):
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.Selection(score["Staff Group"]).components(abjad.Voice):
-        all_measures = abjad.Selection(voice).leaves().group_by_measure()
+    for voice in abjad.select(score["Staff Group"]).components(abjad.Voice):
+        all_measures = abjad.select(voice).leaves().group_by_measure()
         voice_sel = [all_measures[_ - 1] for _ in measures]
         voice_dur = abjad.get.duration(voice_sel)
         time_signatures = sigs  # [:-1]
@@ -950,8 +950,57 @@ def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGro
 
     write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
-    for voice in abjad.Selection(score["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
         for rest in [abjad.MultimeasureRest((1, 1), multiplier=_) for _ in time_signatures]:
             voice.append(rest)
 
     return score
+
+def group_selections(voice, leaves, groups=None):
+    out = []
+    for leaf in leaves:
+        out.append(abjad.select.leaf(voice, leaf))
+    if groups is None:
+        return out
+    else:
+        new_out = evans.Sequence(out).grouper(groups)
+        return new_out
+
+def rhythm_command(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
+    def rhythm_selections():
+        if rewrite_meter is not None:
+            stack = rmakers.stack(
+                rmaker,
+                *commands,
+                rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+                rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+                rmakers.extract_trivial(),
+                rmakers.RewriteMeterCommand(
+                    boundary_depth=rewrite_meter,
+                    reference_meters=[
+                        abjad.Meter((4, 4))
+                    ],
+                ),
+                preprocessor=preprocessor,
+            )
+            return stack
+
+        else:
+            stack = rmakers.stack(
+                rmaker,
+                *commands,
+                rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+                rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+                rmakers.extract_trivial(),
+                preprocessor=preprocessor,
+            )
+            return stack
+
+    for sel in selections:
+        if type(sel) == list:
+            abjad.mutate.replace(sel, rhythm_selections()([abjad.get.duration(sel)]))
+
+        else:
+            abjad.mutate.replace([sel], rhythm_selections()([abjad.get.duration(sel)]))
