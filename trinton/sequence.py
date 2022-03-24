@@ -6,6 +6,7 @@ from random import randint
 import itertools
 from itertools import combinations
 
+
 def rotated_sequence(pitch_list, start_index):
     result = []
     rotated_list = pitch_list[start_index:] + pitch_list[:start_index]
@@ -37,6 +38,7 @@ def primes_odds_evens(lst):
 
     return final
 
+
 def logistic_map(x, r, n, seed):
     out = []
 
@@ -46,7 +48,7 @@ def logistic_map(x, r, n, seed):
 
     def iterate(n=n, x=x, r=r):
 
-        for i in range(1,n):
+        for i in range(1, n):
             x = logisticmap(x, r)
 
         return x
@@ -57,6 +59,7 @@ def logistic_map(x, r, n, seed):
         out.append(number)
 
     return out
+
 
 def all_additions(lst, s, pair_num):
     return [pair for pair in combinations(lst, pair_num) if sum(pair) == s]

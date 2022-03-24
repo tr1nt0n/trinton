@@ -40,6 +40,7 @@ def tuplets():
 
     return selector
 
+
 def select_tuplets_by_annotation(annotation):
     def selector(argument):
         top_level_components = trinton.get_top_level_components_from_leaves(argument)
@@ -55,17 +56,25 @@ def select_tuplets_by_annotation(annotation):
 
     return selector
 
+
 def select_logical_ties_by_index(indeces):
     def selector(argument):
         return abjad.Selection(argument).logical_ties().get(indeces)
+
     return selector
+
 
 def select_leaves_by_index(indeces):
     def selector(argument):
         return abjad.Selection(argument).leaves().get(indeces)
+
     return selector
 
-def patterned_leaf_index_selector(indices, period,):
+
+def patterned_leaf_index_selector(
+    indices,
+    period,
+):
     def selector(argument):
         out = []
         index = []
@@ -77,4 +86,5 @@ def patterned_leaf_index_selector(indices, period,):
         for i in index:
             out.append(leaves[i])
         return out
+
     return selector

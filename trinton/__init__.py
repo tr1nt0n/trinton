@@ -79,7 +79,7 @@ from .selectors import (
     patterned_leaf_index_selector,
 )
 
-from .preprocessors import(
+from .preprocessors import (
     fuse_preprocessor,
     fuse_quarters_preprocessor,
     pure_quarters_preprocessor,

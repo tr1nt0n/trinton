@@ -750,9 +750,7 @@ def rewrite_meter_by_voice(score, voice_indeces):
                 sigs.append(indicator)
     voices = []
     for voice in voice_indeces:
-        voices.append(
-            abjad.select(score["Staff Group"]).components(abjad.Voice)[voice]
-        )
+        voices.append(abjad.select(score["Staff Group"]).components(abjad.Voice)[voice])
     for voice in voices:
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs
@@ -888,6 +886,7 @@ def dashed_slur(start_selection, stop_selection):
         stop_selection,
     )
 
+
 def rewrite_meter_by_measure(score, measures):
     print("Rewriting meter ...")
     global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
@@ -909,7 +908,7 @@ def rewrite_meter_by_measure(score, measures):
         assert voice_dur == sig_dur, (voice_dur, sig_dur)
         all_shards = abjad.mutate.split(voice[:], durations)
         shards = []
-        shards.append(all_shards[measures[0]-1:measures[-1]])
+        shards.append(all_shards[measures[0] - 1 : measures[-1]])
         for i, shard in enumerate(shards[0]):
             time_signature = sigs[i]
             inventories = [
@@ -933,8 +932,11 @@ def rewrite_meter_by_measure(score, measures):
                     rewrite_tuplets=False,
                 )
 
+
 def unbeam_quarters(selections):
-    for leaf1, leaf2, leaf3 in zip(selections, selections[1:], trinton.rotated_sequence(selections, -1)):
+    for leaf1, leaf2, leaf3 in zip(
+        selections, selections[1:], trinton.rotated_sequence(selections, -1)
+    ):
         if leaf1.written_duration >= abjad.Duration(1, 4):
             abjad.detach(abjad.StartBeam, leaf1)
             abjad.detach(abjad.StopBeam, leaf1)
@@ -943,9 +945,19 @@ def unbeam_quarters(selections):
             if leaf3.written_duration < abjad.Duration(1, 4):
                 abjad.attach(abjad.StopBeam(), leaf3)
 
-def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGroup", inner_staff="GrandStaff",):
+
+def make_empty_score(
+    instruments,
+    groups,
+    time_signatures,
+    outer_staff="StaffGroup",
+    inner_staff="GrandStaff",
+):
     score = make_score_template(
-        instruments=instruments, groups=groups, outer_staff=outer_staff, inner_staff=inner_staff,
+        instruments=instruments,
+        groups=groups,
+        outer_staff=outer_staff,
+        inner_staff=inner_staff,
     )
 
     write_time_signatures(ts=time_signatures, target=score["Global Context"])
@@ -956,6 +968,7 @@ def make_empty_score(instruments, groups, time_signatures, outer_staff="StaffGro
 
     return score
 
+
 def group_selections(voice, leaves, groups=None):
     out = []
     for leaf in leaves:
@@ -965,6 +978,7 @@ def group_selections(voice, leaves, groups=None):
     else:
         new_out = evans.Sequence(out).grouper(groups)
         return new_out
+
 
 def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
     def rhythm_selections():
@@ -978,9 +992,7 @@ def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=
                 rmakers.extract_trivial(),
                 rmakers.RewriteMeterCommand(
                     boundary_depth=rewrite_meter,
-                    reference_meters=[
-                        abjad.Meter((4, 4))
-                    ],
+                    reference_meters=[abjad.Meter((4, 4))],
                 ),
                 preprocessor=preprocessor,
             )
@@ -1004,6 +1016,7 @@ def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=
 
         else:
             abjad.mutate.replace([sel], rhythm_selections()([abjad.get.duration(sel)]))
+
 
 def fuse_tuplet_rests(voice):
     for tuplet in abjad.select.tuplets(voice):
