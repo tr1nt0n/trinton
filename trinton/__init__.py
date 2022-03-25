@@ -77,6 +77,9 @@ from .selectors import (
     select_logical_ties_by_index,
     select_leaves_by_index,
     patterned_leaf_index_selector,
+    patterned_tie_index_selector,
+    group_leaves_by_measure,
+    group_logical_ties_by_measure,
 )
 
 from .preprocessors import (
@@ -159,4 +162,7 @@ __all__ = [
     "pure_quarters_preprocessor",
     "quarters_preprocessor",
     "fuse_tuplet_rests",
+    "patterned_tie_index_selector",
+    "group_leaves_by_measure",
+    "group_logical_ties_by_measure",
 ]

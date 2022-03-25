@@ -85,7 +85,7 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
     tup_list = [tup for tup in abjad.select.components(components, abjad.Tuplet)]
     for t in tup_list:
         if isinstance(abjad.get.parentage(t).components[1], abjad.Tuplet) is False:
-            first_leaf = abjad.select(t).leaf(0)
+            first_leaf = abjad.select.leaf(t, 0)
             if not hasattr(first_leaf._overrides, "Beam"):
                 abjad.beam(
                     t[:],
@@ -245,14 +245,23 @@ def render_file(score, segment_path, build_path, segment_name, includes):
             fp.writelines(lines)
 
 
-def attach(voice, leaves, attachment):
-    if leaves == all:
-        for leaf in abjad.select.leaves(voice, pitched=True):
-            abjad.attach(attachment, leaf)
+def attach(voice, leaves, attachment, direction=None):
+    if direction is not None:
+        if leaves == all:
+            for leaf in abjad.select.leaves(voice, pitched=True):
+                abjad.attach(attachment, leaf, direction=direction)
+        else:
+            for number in leaves:
+                sel = abjad.select.leaf(voice, number)
+                abjad.attach(attachment, sel, direction=direction)
     else:
-        for number in leaves:
-            sel = abjad.select.leaf(voice, number)
-            abjad.attach(attachment, sel)
+        if leaves == all:
+            for leaf in abjad.select.leaves(voice, pitched=True):
+                abjad.attach(attachment, leaf,)
+        else:
+            for number in leaves:
+                sel = abjad.select.leaf(voice, number)
+                abjad.attach(attachment, sel,)
 
 
 def write_time_signatures(ts, target):
@@ -294,11 +303,11 @@ def write_slur(voice, start_slur, stop_slur):
 
 def change_notehead(voice, leaves, notehead):
     if leaves == all:
-        for _ in abjad.select(voice).leaves(pitched=True):
+        for _ in abjad.select.leaves(voice, pitched=True):
             abjad.tweak(_.note_head).style = notehead
     else:
         for _ in leaves:
-            abjad.tweak(abjad.select(voice).leaf(_).note_head).style = notehead
+            abjad.tweak(abjad.select.leaf(voice, _).note_head).style = notehead
 
 
 def pitched_notehead_change(voice, pitches, notehead):
@@ -365,7 +374,7 @@ def handwrite(score, voice, durations, pitch_list=None):
     if pitch_list is not None:
         handler = evans.PitchHandler(pitch_list=pitch_list, forget=False)
 
-        handler(abjad.select(container[:]).leaves())
+        handler(abjad.select.leaves(container[:]))
 
         trinton.append_rhythm_selections(
             voice=voice, score=score, selections=container[:]
@@ -427,12 +436,12 @@ def write_marginmarkups(score, voices, markups):
 
 def transparent_accidentals(score, voice, leaves):
     if leaves == all:
-        for leaf in abjad.select(score[voice]).leaves(pitched=True):
+        for leaf in abjad.select.leaves(score[voice], pitched=True):
             abjad.tweak(leaf.note_head).Accidental.transparent = True
 
     else:
         for leaf in leaves:
-            sel = abjad.select(score[voice]).leaf(leaf)
+            sel = abjad.select.leaf(score[voice], leaf)
             abjad.tweak(sel.note_head).Accidental.transparent = True
 
 
@@ -559,13 +568,22 @@ def unmeasured_stem_tremolo(selections):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
 
-def attach_multiple(score, voice, attachments, leaves):
-    for attachment in attachments:
-        trinton.attach(
-            voice=score[voice],
-            leaves=leaves,
-            attachment=attachment,
-        )
+def attach_multiple(score, voice, attachments, leaves, direction=None):
+    if direction is not None:
+        for attachment in attachments:
+            trinton.attach(
+                voice=score[voice],
+                leaves=leaves,
+                attachment=attachment,
+                direction=direction,
+            )
+    else:
+        for attachment in attachments:
+            trinton.attach(
+                voice=score[voice],
+                leaves=leaves,
+                attachment=attachment,
+            )
 
 
 def make_leaf_selection(score, voice, leaves):
@@ -657,7 +675,7 @@ def extract_parts(score):
 
 
 def whiteout_empty_staves(score, voice, cutaway):
-    leaves = abjad.select(score[voice]).leaves()
+    leaves = abjad.select.leaves(score[voice])
     shards = leaves.group_by_measure()
     for i, shard in enumerate(shards):
         if not all(isinstance(leaf, abjad.Rest) for leaf in shard):
@@ -698,8 +716,8 @@ def whiteout_empty_staves(score, voice, cutaway):
 
 
 def fill_empty_staves_with_skips(voice):
-    leaves = abjad.select(voice).leaves()
-    shards = leaves.group_by_measure()
+    leaves = abjad.select.leaves(voice)
+    shards = abjad.select.group_by_measure(leaves)
     for i, shard in enumerate(shards):
         if not all(isinstance(leaf, abjad.Rest) for leaf in shard):
             continue
@@ -727,7 +745,7 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
     handler = evans.PitchHandler(pitch_list=pitch_list, forget=False)
     if markup is True:
         for leaf in leaves:
-            sel = abjad.select(score[voice]).leaf(leaf)
+            sel = abjad.select.leaf(score[voice], leaf)
             handler(sel)
             markup = abjad.Markup(
                 string,
@@ -736,13 +754,13 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
             trinton.attach(voice=score[voice], leaves=[leaf], attachment=markup)
     else:
         for leaf in leaves:
-            sel = abjad.select(score[voice]).leaf(leaf)
+            sel = abjad.select.leaf(score[voice], leaf)
             handler(sel)
 
 
 def rewrite_meter_by_voice(score, voice_indeces):
     print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select(score["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
@@ -750,7 +768,7 @@ def rewrite_meter_by_voice(score, voice_indeces):
                 sigs.append(indicator)
     voices = []
     for voice in voice_indeces:
-        voices.append(abjad.select(score["Staff Group"]).components(abjad.Voice)[voice])
+        voices.append(abjad.select.components(score["Staff Group"], abjad.Voice)[voice])
     for voice in voices:
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs
@@ -849,27 +867,23 @@ def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
 
 def reduce_tuplets(score, voice, tuplets):
     if tuplets == "all":
-        for tuplet in abjad.select(score[voice]).tuplets():
+        for tuplet in abjad.select.tuplets(score[voice]):
             multiplier = Fraction(tuplet.multiplier)
             num = multiplier.numerator
             den = multiplier.denominator
             tuple = (num, den)
             new_markup = rf"{tuple[1]}:{tuple[0]}"
-            abjad.override(tuplet).TupletNumber.text = abjad.Markup(
-                rf"\markup \italic {new_markup}"
-            )
+            abjad.override(tuplet).TupletNumber.text = rf"\markup \italic {new_markup}"
 
     else:
         for tuplet in tuplets:
-            sel = abjad.select(score[voice]).tuplet(tuplet)
+            sel = abjad.select.tuplet(score[voice], tuplet)
             multiplier = Fraction(sel.multiplier)
             num = multiplier.numerator
             den = multiplier.denominator
             tuple = (num, den)
             new_markup = rf"{tuple[1]}:{tuple[0]}"
-            abjad.override(sel).TupletNumber.text = abjad.Markup(
-                rf"\markup \italic {new_markup}"
-            )
+            abjad.override(sel).TupletNumber.text = rf"\markup \italic {new_markup}"
 
 
 def dashed_slur(start_selection, stop_selection):
