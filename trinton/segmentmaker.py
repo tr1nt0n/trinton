@@ -257,11 +257,17 @@ def attach(voice, leaves, attachment, direction=None):
     else:
         if leaves == all:
             for leaf in abjad.select.leaves(voice, pitched=True):
-                abjad.attach(attachment, leaf,)
+                abjad.attach(
+                    attachment,
+                    leaf,
+                )
         else:
             for number in leaves:
                 sel = abjad.select.leaf(voice, number)
-                abjad.attach(attachment, sel,)
+                abjad.attach(
+                    attachment,
+                    sel,
+                )
 
 
 def write_time_signatures(ts, target):

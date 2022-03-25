@@ -95,6 +95,7 @@ def patterned_leaf_index_selector(
 
     return selector
 
+
 def patterned_tie_index_selector(
     indices,
     period,
@@ -113,15 +114,21 @@ def patterned_tie_index_selector(
 
     return selector
 
+
 def group_leaves_by_measure(voice, pitched=None):
     def selector(argument):
         if pitched is not None:
-            return abjad.select.group_by_measure(abjad.select.leaves(voice, pitched=pitched))
+            return abjad.select.group_by_measure(
+                abjad.select.leaves(voice, pitched=pitched)
+            )
         else:
             return abjad.select.group_by_measure(abjad.select.leaves(voice))
+
     return selector
+
 
 def group_logical_ties_by_measure(voice):
     def selector(argument):
         return abjad.select.group_by_measure(abjad.select.logical_ties(voice))
+
     return selector
