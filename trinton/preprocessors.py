@@ -3,16 +3,13 @@ import baca
 import evans
 import trinton
 
-
 def fuse_preprocessor(groups):
     def preprocessor(divisions):
         divisions = abjad.sequence.partition_by_counts(
             divisions, groups, cyclic=True, overhang=True
         )
         return [sum(_) for _ in divisions]
-
     return preprocessor
-
 
 def fuse_quarters_preprocessor(groups):
     def preprocessor(divisions):
@@ -24,7 +21,6 @@ def fuse_quarters_preprocessor(groups):
             divisions, groups, cyclic=True, overhang=True
         )
         return [sum(_) for _ in divisions]
-
     return preprocessor
 
 
@@ -33,7 +29,6 @@ def pure_quarters_preprocessor():
         divisions = [baca.sequence.quarters([_]) for _ in divisions]
         divisions = abjad.sequence.flatten(divisions, depth=-1)
         return divisions
-
     return preprocessor
 
 
@@ -53,5 +48,4 @@ def quarters_preprocessor(groups):
             temp.append(sums)
         divisions = abjad.sequence.flatten(temp, depth=-1)
         return divisions
-
     return preprocessor

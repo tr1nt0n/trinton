@@ -128,18 +128,18 @@ def beam_meter(components, meter, offset_depth, include_rests=True):
 
 
 def beam_score_without_splitting(target):
-    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
     print("Beaming meter ...")
-    for voice in abjad.iterate(target["Staff Group"]).components(abjad.Voice):
-        measures = abjad.select(voice[:]).leaves().group_by_measure()
+    for voice in abjad.iterate.components(target["Staff Group"], abjad.Voice):
+        measures = abjad.select.group_by_measure(abjad.select.leaves(voice[:]))
         for i, shard in enumerate(measures):
             top_level_components = get_top_level_components_from_leaves(shard)
-            shard = abjad.select(top_level_components)
+            shard = top_level_components
             met = abjad.Meter(sigs[i].pair)
             inventories = [
                 x
@@ -151,7 +151,6 @@ def beam_score_without_splitting(target):
                     meter=met,
                     offset_depth=inventories[-1][0],
                     include_rests=False,
-                    # include_rests=False,
                 )
             else:
                 beam_meter(
@@ -159,9 +158,8 @@ def beam_score_without_splitting(target):
                     meter=met,
                     offset_depth=inventories[-2][0],
                     include_rests=False,
-                    # include_rests=False,
                 )
-    for trem in abjad.select(target).components(abjad.TremoloContainer):
+    for trem in abjad.select.components(target, abjad.TremoloContainer):
         if abjad.StartBeam() in abjad.get.indicators(trem[0]):
             abjad.detach(abjad.StartBeam(), trem[0])
         if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
