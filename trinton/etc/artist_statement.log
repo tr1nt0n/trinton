@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.5)  27 MAR 2022 12:00
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.5)  27 MAR 2022 13:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -655,10 +655,10 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 Here is how much of TeX's memory you used:
  14799 strings out of 476919
  337333 string characters out of 5821840
- 667448 words of memory out of 5000000
+ 671448 words of memory out of 5000000
  34563 multiletter control sequences out of 15000+600000
  403518 words of font info for 38 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 87i,5n,89p,1994b,212s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 87i,5n,89p,2892b,212s stack positions out of 5000i,500n,10000p,200000b,80000s
 
 Output written on artist_statement.pdf (1 page).
