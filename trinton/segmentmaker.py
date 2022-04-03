@@ -32,7 +32,9 @@ def make_score_template(
                 else:
                     name_string = f"{sub_item.name}"
                 staff = abjad.Staff(
-                    [abjad.Voice(name=f"{name_string} voice")],
+                    [
+                        abjad.Voice(name=f"{name_string} voice"),
+                    ],
                     name=f"{name_string} staff",
                 )
                 sub_group.append(staff)
@@ -44,7 +46,9 @@ def make_score_template(
             else:
                 name_string = f"{item.name}"
             staff = abjad.Staff(
-                [abjad.Voice(name=f"{name_string} voice")],
+                [
+                    abjad.Voice(name=f"{name_string} voice"),
+                ],
                 name=f"{name_string} staff",
             )
             score["Staff Group"].append(staff)
@@ -167,29 +171,29 @@ def beam_score_without_splitting(target):
 
 
 def rewrite_meter_without_splitting(target):
-    global_skips = [_ for _ in abjad.select(target["Global Context"]).leaves()]
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
     sigs = []
     for skip in global_skips:
         for indicator in abjad.get.indicators(skip):
             if isinstance(indicator, abjad.TimeSignature):
                 sigs.append(indicator)
-    for voice in abjad.select(target["Staff Group"]).components(abjad.Voice):
+    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
         voice_dur = abjad.get.duration(voice)
         time_signatures = sigs
         durations = [_.duration for _ in time_signatures]
         sig_dur = sum(durations)
         assert voice_dur == sig_dur, (voice_dur, sig_dur)
-        shards = abjad.select(voice[:]).leaves().group_by_measure()
+        shards = abjad.select.group_by_measure(abjad.select.leaves(voice[:]))
         for i, shard in enumerate(shards):
             if voice.name == "violin 1 voice":
                 print(i)
             if not all(
                 isinstance(leaf, (abjad.Rest, abjad.MultimeasureRest, abjad.Skip))
-                for leaf in abjad.select(shard).leaves()
+                for leaf in abjad.select.leaves(shard)
             ):
                 time_signature = sigs[i]
                 top_level_components = get_top_level_components_from_leaves(shard)
-                shard = abjad.select(top_level_components)
+                shard = top_level_components
                 inventories = [
                     x
                     for x in enumerate(
@@ -315,7 +319,7 @@ def change_notehead(voice, leaves, notehead):
 
 
 def pitched_notehead_change(voice, pitches, notehead):
-    for leaf in abjad.select(voice).leaves(pitched=True):
+    for leaf in abjad.select.leaves(voice, pitched=True):
         for pitch in pitches:
             if leaf.written_pitch.number == pitch:
                 abjad.tweak(leaf.note_head).style = notehead
@@ -996,6 +1000,7 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
+
 def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
     def rhythm_selections():
         if rewrite_meter is not None:
@@ -1008,7 +1013,7 @@ def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=
                 rmakers.extract_trivial(),
                 rmakers.RewriteMeterCommand(
                     boundary_depth=rewrite_meter,
-                    reference_meters=[abjad.Meter((4, 4))],
+                    reference_meters=[abjad.Meter((4, 4))]
                 ),
                 preprocessor=preprocessor,
             )
@@ -1039,3 +1044,34 @@ def fuse_tuplet_rests(voice):
         rests = abjad.select.rests(tuplet)
         for rest_group in abjad.select.group_by_contiguity(rests):
             abjad.mutate.fuse(rest_group)
+
+def write_id_spanner(style, left_text, right_text, id, start_selection, stop_selection, padding=7):
+    strings = [
+        rf"- \abjad-{style}",
+        fr"- \tweak bound-details.left.text \markup \concat {{ {{ \upright {left_text} }} \hspace #0.5 }}",
+    ]
+    
+    if right_text is not None:
+        for string in [
+            fr"- \tweak bound-details.right.text \markup \concat {{ {{ \upright {right_text} }} \hspace #0.5 }}"
+            rf"\startTextSpan{id}",
+        ]:
+            strings.append(string)
+
+    else:
+        strings.append(rf"\startTextSpan{id}")
+
+    spanner = abjad.LilyPondLiteral(
+        strings,
+        "absolute_after",
+    )
+
+    abjad.tweak(spanner).padding = padding
+
+    termination = abjad.LilyPondLiteral(
+        rf"\stopTextSpan{id}",
+        "absolute_after"
+    )
+
+    abjad.attach(spanner, start_selection)
+    abjad.attach(termination, stop_selection)

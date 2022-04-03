@@ -60,6 +60,7 @@ from .segmentmaker import (
     make_rhythms,
     group_selections,
     fuse_tuplet_rests,
+    write_id_spanner,
 )
 
 from .sequence import (
