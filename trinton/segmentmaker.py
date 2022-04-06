@@ -1000,8 +1000,14 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
-
-def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=None):
+def make_rhythms(
+    voice,
+    time_signature_indices,
+    rmaker,
+    commands,
+    rewrite_meter=None,
+    preprocessor=None,
+):
     def rhythm_selections():
         if rewrite_meter is not None:
             stack = rmakers.stack(
@@ -1012,8 +1018,7 @@ def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=
                 rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
                 rmakers.extract_trivial(),
                 rmakers.RewriteMeterCommand(
-                    boundary_depth=rewrite_meter,
-                    reference_meters=[abjad.Meter((4, 4))]
+                    boundary_depth=rewrite_meter, reference_meters=[abjad.Meter((4, 4))]
                 ),
                 preprocessor=preprocessor,
             )
@@ -1031,12 +1036,24 @@ def make_rhythms(selections, rmaker, commands, rewrite_meter=None, preprocessor=
             )
             return stack
 
-    for sel in selections:
-        if type(sel) == list:
-            abjad.mutate.replace(sel, rhythm_selections()([abjad.get.duration(sel)]))
-
-        else:
-            abjad.mutate.replace([sel], rhythm_selections()([abjad.get.duration(sel)]))
+    parentage = abjad.get.parentage(voice)
+    outer_context = parentage.components[-1]
+    global_context = outer_context["Global Context"]
+    relevant_leaves = [global_context[i] for i in time_signature_indices]
+    signature_instances = [
+        abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+    ]
+    new_selections = rhythm_selections()(signature_instances)
+    container = abjad.Container()
+    if isinstance(new_selections, list):
+        container.extend(new_selections)
+    else:
+        container.append(new_selections)
+    leaves = abjad.select.leaves(voice)
+    grouped_leaves = abjad.select.group_by_measure(leaves)
+    relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
+    target_leaves = abjad.select.leaves(relevant_groups)
+    abjad.mutate.replace(target_leaves, container[:])
 
 
 def fuse_tuplet_rests(voice):
@@ -1045,15 +1062,18 @@ def fuse_tuplet_rests(voice):
         for rest_group in abjad.select.group_by_contiguity(rests):
             abjad.mutate.fuse(rest_group)
 
-def write_id_spanner(style, left_text, right_text, id, start_selection, stop_selection, padding=7):
+
+def write_id_spanner(
+    style, left_text, right_text, id, start_selection, stop_selection, padding=7
+):
     strings = [
         rf"- \abjad-{style}",
-        fr"- \tweak bound-details.left.text \markup \concat {{ {{ \upright {left_text} }} \hspace #0.5 }}",
+        rf"- \tweak bound-details.left.text \markup \concat {{ {{ \upright {left_text} }} \hspace #0.5 }}",
     ]
-    
+
     if right_text is not None:
         for string in [
-            fr"- \tweak bound-details.right.text \markup \concat {{ {{ \upright {right_text} }} \hspace #0.5 }}"
+            rf"- \tweak bound-details.right.text \markup \concat {{ {{ \upright {right_text} }} \hspace #0.5 }}"
             rf"\startTextSpan{id}",
         ]:
             strings.append(string)
@@ -1068,10 +1088,7 @@ def write_id_spanner(style, left_text, right_text, id, start_selection, stop_sel
 
     abjad.tweak(spanner).padding = padding
 
-    termination = abjad.LilyPondLiteral(
-        rf"\stopTextSpan{id}",
-        "absolute_after"
-    )
+    termination = abjad.LilyPondLiteral(rf"\stopTextSpan{id}", "absolute_after")
 
     abjad.attach(spanner, start_selection)
     abjad.attach(termination, stop_selection)

@@ -124,6 +124,5 @@ def group_leaves_by_measure(voice, pitched=None):
         return abjad.select.group_by_measure(abjad.select.leaves(voice))
 
 
-
 def group_logical_ties_by_measure(voice):
     return abjad.select.group_by_measure(abjad.select.logical_ties(voice))
