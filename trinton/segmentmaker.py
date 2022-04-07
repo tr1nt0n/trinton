@@ -3,6 +3,8 @@ import evans
 import trinton
 from abjadext import rmakers
 from fractions import Fraction
+import dataclasses
+import typing
 import pathlib
 import os
 
@@ -1000,6 +1002,68 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
+@dataclasses.dataclass(slots=True)
+class RewriteMeterCommand(rmakers.Command):
+    """
+    Rewrite meter command.
+    """
+
+    boundary_depth: int | None = None
+    reference_meters: typing.Sequence[abjad.Meter] = ()
+
+    def __post_init__(self):
+        if self.boundary_depth is not None:
+            assert isinstance(self.boundary_depth, int)
+        self.reference_meters = tuple(self.reference_meters or ())
+        if not all(isinstance(_, abjad.Meter) for _ in self.reference_meters):
+            message = "must be sequence of meters:\n"
+            message += f"   {repr(self.reference_meters)}"
+            raise Exception(message)
+
+    def __call__(self, voice, *, tag: abjad.Tag = abjad.Tag()) -> None:
+        assert isinstance(voice, abjad.Voice), repr(voice)
+        staff = abjad.get.parentage(voice).parent
+        assert isinstance(staff, abjad.Staff), repr(staff)
+        time_signature_voice = staff["TimeSignatureVoice"]
+        assert isinstance(time_signature_voice, abjad.Voice)
+        meters, preferred_meters = [], []
+        for skip in time_signature_voice:
+            time_signature = abjad.get.indicator(skip, abjad.TimeSignature)
+            meter = abjad.Meter(time_signature)
+            meters.append(meter)
+        durations = [abjad.Duration(_) for _ in meters]
+        reference_meters = self.reference_meters or ()
+        command = rmakers.SplitMeasuresCommand()
+        non_tuplets = []
+        for component in voice:
+            if isinstance(component, abjad.Tuplet):
+                new_dur = abjad.get.duration(component)
+                new_mult = abjad.Multiplier(new_dur)
+                new_skip = abjad.Skip((1, 1), multiplier=new_mult)
+                non_tuplets.append(new_skip)
+            else:
+                non_tuplets.append(component)
+        command(non_tuplets, durations=durations)
+        selections = abjad.select.group_by_measure(voice[:])
+        for meter, selection in zip(meters, selections):
+            for reference_meter in reference_meters:
+                if str(reference_meter) == str(meter):
+                    meter = reference_meter
+                    break
+            preferred_meters.append(meter)
+            nontupletted_leaves = []
+            for leaf in abjad.iterate.leaves(selection):
+                if not abjad.get.parentage(leaf).count(abjad.Tuplet):
+                    nontupletted_leaves.append(leaf)
+            rmakers.unbeam()(nontupletted_leaves)
+            abjad.Meter.rewrite_meter(
+                selection,
+                meter,
+                boundary_depth=self.boundary_depth,
+                rewrite_tuplets=False,
+            )
+
+
 def make_rhythms(
     voice,
     time_signature_indices,
@@ -1009,32 +1073,27 @@ def make_rhythms(
     preprocessor=None,
 ):
     def rhythm_selections():
+        commands_ = [
+            rmaker,
+            *commands,
+            rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+            rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+            rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+            rmakers.extract_trivial(),
+        ]
         if rewrite_meter is not None:
-            stack = rmakers.stack(
-                rmaker,
-                *commands,
-                rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
-                rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
-                rmakers.extract_trivial(),
-                rmakers.RewriteMeterCommand(
-                    boundary_depth=rewrite_meter, reference_meters=[abjad.Meter((4, 4))]
-                ),
-                preprocessor=preprocessor,
+            commands_.append(
+                RewriteMeterCommand(
+                    boundary_depth=rewrite_meter,
+                )
             )
-            return stack
 
-        else:
-            stack = rmakers.stack(
-                rmaker,
-                *commands,
-                rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
-                rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
-                rmakers.extract_trivial(),
-                preprocessor=preprocessor,
-            )
-            return stack
+        stack = rmakers.stack(
+            *commands_,
+            preprocessor=preprocessor,
+        )
+
+        return stack
 
     parentage = abjad.get.parentage(voice)
     outer_context = parentage.components[-1]

@@ -61,6 +61,7 @@ from .segmentmaker import (
     group_selections,
     fuse_tuplet_rests,
     write_id_spanner,
+    RewriteMeterCommand,
 )
 
 from .sequence import (
@@ -88,6 +89,7 @@ from .preprocessors import (
     fuse_quarters_preprocessor,
     pure_quarters_preprocessor,
     quarters_preprocessor,
+    fuse_eighths_preprocessor,
 )
 
 __all__ = [
