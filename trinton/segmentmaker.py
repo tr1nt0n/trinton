@@ -1,4 +1,5 @@
 import abjad
+import baca
 import evans
 import trinton
 from abjadext import rmakers
@@ -1151,3 +1152,19 @@ def write_id_spanner(
 
     abjad.attach(spanner, start_selection)
     abjad.attach(termination, stop_selection)
+
+
+def pitch_by_hand(
+    voice, measures, pitch_list, selector=baca.selectors.pleaves(), forget=False
+):
+    handler = evans.PitchHandler(pitch_list=pitch_list, forget=forget)
+
+    for measure in measures:
+
+        grouped_measures = trinton.group_leaves_by_measure(voice)
+
+        current_measure = grouped_measures[measure - 1]
+
+        selections = selector(current_measure)
+
+        handler(selections)

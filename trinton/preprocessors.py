@@ -54,6 +54,32 @@ def fuse_eighths_preprocessor(groups):
     return preprocessor
 
 
+def fuse_sixteenths_preprocessor(groups):
+    def preprocessor(divisions):
+        def eighths(
+            sequence,
+            *,
+            compound: abjad.DurationTyping = None,
+            remainder: int = None,
+        ):
+            assert isinstance(sequence, list), repr(sequence)
+            sequence = baca.sequence.split_divisions(
+                sequence, [(1, 16)], cyclic=True, compound=compound, remainder=remainder
+            )
+            return sequence
+
+        duration = abjad.sequence.sum(divisions)
+        divisions = [duration]
+        divisions = [eighths([_]) for _ in divisions]
+        divisions = abjad.sequence.flatten(divisions, depth=-1)
+        divisions = abjad.sequence.partition_by_counts(
+            divisions, groups, cyclic=True, overhang=True
+        )
+        return [sum(_) for _ in divisions]
+
+    return preprocessor
+
+
 def pure_quarters_preprocessor():
     def preprocessor(divisions):
         divisions = [baca.sequence.quarters([_]) for _ in divisions]

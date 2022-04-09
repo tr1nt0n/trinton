@@ -67,6 +67,18 @@ def select_logical_ties_by_index(indices):
     return selector
 
 
+def select_leaves_in_tie(tie_indices, leaf_indices):
+    def selector(argument):
+        out = []
+        for index in tie_indices:
+            tie = abjad.select.logical_ties(argument)[index]
+            for leaf in leaf_indices:
+                out.append(abjad.select.leaf(tie, leaf))
+        return out
+
+    return selector
+
+
 def select_leaves_by_index(indices):
     def selector(argument):
         out = []

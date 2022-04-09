@@ -62,6 +62,7 @@ from .segmentmaker import (
     fuse_tuplet_rests,
     write_id_spanner,
     RewriteMeterCommand,
+    pitch_by_hand,
 )
 
 from .sequence import (
@@ -82,6 +83,7 @@ from .selectors import (
     patterned_tie_index_selector,
     group_leaves_by_measure,
     group_logical_ties_by_measure,
+    select_leaves_in_tie,
 )
 
 from .preprocessors import (
@@ -90,6 +92,7 @@ from .preprocessors import (
     pure_quarters_preprocessor,
     quarters_preprocessor,
     fuse_eighths_preprocessor,
+    fuse_sixteenths_preprocessor,
 )
 
 __all__ = [
