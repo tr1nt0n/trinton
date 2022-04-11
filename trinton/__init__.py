@@ -84,6 +84,8 @@ from .selectors import (
     group_leaves_by_measure,
     group_logical_ties_by_measure,
     select_leaves_in_tie,
+    grace_selector,
+    exclude_graces,
 )
 
 from .preprocessors import (

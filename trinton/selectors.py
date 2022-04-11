@@ -138,3 +138,17 @@ def group_leaves_by_measure(voice, pitched=None):
 
 def group_logical_ties_by_measure(voice):
     return abjad.select.group_by_measure(abjad.select.logical_ties(voice))
+
+
+def grace_selector():
+    def selector(argument):
+        return abjad.select.leaves(argument, grace=True)
+
+    return selector
+
+
+def exclude_graces():
+    def selector(argument):
+        return abjad.select.leaves(argument, grace=False)
+
+    return selector

@@ -760,9 +760,10 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
             handler(sel)
             markup = abjad.Markup(
                 string,
-                direction=abjad.Up,
             )
-            trinton.attach(voice=score[voice], leaves=[leaf], attachment=markup)
+            trinton.attach(
+                voice=score[voice], leaves=[leaf], attachment=markup, direction=abjad.UP
+            )
     else:
         for leaf in leaves:
             sel = abjad.select.leaf(score[voice], leaf)
@@ -1081,6 +1082,7 @@ def make_rhythms(
             rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
             rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
             rmakers.extract_trivial(),
+            rmakers.rewrite_dots(),
         ]
         if rewrite_meter is not None:
             commands_.append(
