@@ -63,6 +63,7 @@ from .segmentmaker import (
     write_id_spanner,
     RewriteMeterCommand,
     pitch_by_hand,
+    make_sc_file,
 )
 
 from .sequence import (

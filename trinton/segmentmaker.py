@@ -4,6 +4,8 @@ import evans
 import trinton
 from abjadext import rmakers
 from fractions import Fraction
+import quicktions
+import datetime
 import dataclasses
 import typing
 import pathlib
@@ -1170,3 +1172,76 @@ def pitch_by_hand(
         selections = selector(current_measure)
 
         handler(selections)
+
+def _extract_voice_info(score):
+    score_pitches = []
+    score_durations = []
+    for voice in abjad.select.components(score, abjad.Voice):
+        pitches = []
+        durations = []
+        for tie in abjad.select.logical_ties(voice):
+            dur = abjad.get.duration(tie)
+            durations.append(str(dur))
+            if isinstance(tie[0], abjad.Rest):
+                sub_pitches = ["Rest()"]
+            else:
+                if abjad.get.annotation(tie[0], "ratio"):
+                    sub_pitches = [abjad.get.annotation(tie[0], "ratio")]
+                else:
+                    sub_pitches = [p.hertz for p in abjad.get.pitches(tie[0])]
+            if 1 < len(sub_pitches):
+                pitches.append([str(s) for s in sub_pitches])
+            elif 0 == len(sub_pitches):
+                pitches.append("Rest()")
+            else:
+                pitches.append(str(sub_pitches[0]))
+        score_pitches.append(pitches)
+        score_durations.append(durations)
+    return [_ for _ in zip(score_pitches, score_durations)]
+
+def make_sc_file(score, tempo, current_directory):
+
+    info = _extract_voice_info(score)
+    lines = "s.boot;\ns.quit;\n\n("
+
+    for i, voice in enumerate(info):
+        lines += f"\n\t// voice {i + 1}\n\t\tPbind(\n\t\t\t\\freq, Pseq(\n"
+
+        lines += "\t\t\t\t[\n"
+        for chord in voice[0]:
+            lines += "\t\t\t\t\t[\n"
+            if isinstance(chord, list):
+                for _ in chord:
+                    if _ == "Rest()":
+                        lines += f"\t\t\t\t\t\t{_},\n"
+                    else:
+                        if _[0] == "[":
+                            lines += f"\t\t\t\t\t\t{_[2:-2]},\n"
+                        else:
+                            lines += f"\t\t\t\t\t\t{_},\n"
+            else:
+                if chord == "Rest()":
+                    lines += f"\t\t\t\t\t\t{chord},\n"
+                else:
+                    if chord[0] == "[":
+                        lines += f"\t\t\t\t\t\t{chord[2:-2]},\n"
+                    else:
+                        lines += f"\t\t\t\t\t\t{chord},\n"
+            lines += "\t\t\t\t\t],\n"
+        lines += "\t\t\t\t],\n"
+        lines += "\t\t\t),\n"
+        lines += "\t\t\t\\dur, Pseq(\n\t\t\t\t[\n"
+        for dur in voice[1]:
+            lines += f"\t\t\t\t\t{quicktions.Fraction(dur) * 4} * {quicktions.Fraction(60, tempo[-1])},\n"
+        lines += "\t\t\t\t]\n"
+        lines += "\t\t\t,1),\n"
+        lines += f"\t\t\t\\amp, {1 / len(info)},\n"
+        lines += "\t\t\t\\legato, 1,\n\t\t).play;"
+
+    lines += ")"
+
+    with open(
+        f'{current_directory}/voice_to_sc_{str(datetime.datetime.now()).replace(" ", "-").replace(":", "-").replace(".", "-")}.scd',
+        "w",
+    ) as fp:
+        fp.writelines(lines)
