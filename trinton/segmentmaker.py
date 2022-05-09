@@ -1173,6 +1173,7 @@ def pitch_by_hand(
 
         handler(selections)
 
+
 def _extract_voice_info(score):
     score_pitches = []
     score_durations = []
@@ -1198,6 +1199,7 @@ def _extract_voice_info(score):
         score_pitches.append(pitches)
         score_durations.append(durations)
     return [_ for _ in zip(score_pitches, score_durations)]
+
 
 def make_sc_file(score, tempo, current_directory):
 
@@ -1245,3 +1247,11 @@ def make_sc_file(score, tempo, current_directory):
         "w",
     ) as fp:
         fp.writelines(lines)
+
+
+def cache_leaves(score):
+    voices = [_ for _ in abjad.select.components(score, abjad.Voice)]
+    lists = [[voice.name, abjad.select.group_by_measure(voice)] for voice in voices]
+    measure_dicts = [dict(zip(list(range(1, len(l[1]) + 1)), l[1])) for l in lists]
+    dictionary = dict(zip([l[0] for l in lists], measure_dicts))
+    return dictionary

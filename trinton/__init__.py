@@ -64,6 +64,7 @@ from .segmentmaker import (
     RewriteMeterCommand,
     pitch_by_hand,
     make_sc_file,
+    cache_leaves,
 )
 
 from .sequence import (
