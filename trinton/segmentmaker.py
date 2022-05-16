@@ -1255,3 +1255,65 @@ def cache_leaves(score):
     measure_dicts = [dict(zip(list(range(1, len(l[1]) + 1)), l[1])) for l in lists]
     dictionary = dict(zip([l[0] for l in lists], measure_dicts))
     return dictionary
+
+
+def music_command(
+    voice,
+    measures,
+    rmaker,
+    rmaker_commands=None,
+    rewrite_meter=None,
+    preprocessor=None,
+    pitch_handler=None,
+    attachment_function=None,
+):
+    def rhythm_selections():
+        commands_ = [
+            rmaker,
+            *rmaker_commands,
+            rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+            rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+            rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+            rmakers.extract_trivial(),
+            rmakers.rewrite_dots(),
+        ]
+        if rewrite_meter is not None:
+            commands_.append(
+                RewriteMeterCommand(
+                    boundary_depth=rewrite_meter,
+                )
+            )
+
+        stack = rmakers.stack(
+            *commands_,
+            preprocessor=preprocessor,
+        )
+
+        return stack
+
+    parentage = abjad.get.parentage(voice)
+    outer_context = parentage.components[-1]
+    global_context = outer_context["Global Context"]
+    time_signature_indices = [_ - 1 for _ in measures]
+    relevant_leaves = [global_context[i] for i in time_signature_indices]
+    signature_instances = [
+        abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+    ]
+    new_selections = rhythm_selections()(signature_instances)
+    container = abjad.Container()
+    if isinstance(new_selections, list):
+        container.extend(new_selections)
+    else:
+        container.append(new_selections)
+
+    if pitch_handler is not None:
+        pitch_handler(container)
+
+    if attachment_function is not None:
+        attachment_function(container)
+
+    leaves = abjad.select.leaves(voice)
+    grouped_leaves = abjad.select.group_by_measure(leaves)
+    relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
+    target_leaves = abjad.select.leaves(relevant_groups)
+    abjad.mutate.replace(target_leaves, container[:])

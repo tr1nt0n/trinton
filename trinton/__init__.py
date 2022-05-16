@@ -63,8 +63,10 @@ from .segmentmaker import (
     write_id_spanner,
     RewriteMeterCommand,
     pitch_by_hand,
+    _extract_voice_info,
     make_sc_file,
     cache_leaves,
+    music_command,
 )
 
 from .sequence import (
@@ -175,4 +177,8 @@ __all__ = [
     "patterned_tie_index_selector",
     "group_leaves_by_measure",
     "group_logical_ties_by_measure",
+    "_extract_voice_info",
+    "make_sc_file",
+    "cache_leaves",
+    "music_command",
 ]
