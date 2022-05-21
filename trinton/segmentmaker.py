@@ -5,6 +5,7 @@ import trinton
 from abjadext import rmakers
 from fractions import Fraction
 import quicktions
+import numpy
 import datetime
 import dataclasses
 import typing
@@ -880,24 +881,40 @@ def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
 
 
 def reduce_tuplets(score, voice, tuplets):
+    def numpy_gcd(a, b):
+        a, b = numpy.broadcast_arrays(a, b)
+        a = a.copy()
+        b = b.copy()
+        pos = numpy.nonzero(b)[0]
+        while len(pos) > 0:
+            b2 = b[pos]
+            a[pos], b[pos] = b2, a[pos] % b2
+            pos = pos[b[pos] != 0]
+        return a
+
     if tuplets == "all":
         for tuplet in abjad.select.tuplets(score[voice]):
             multiplier = Fraction(tuplet.multiplier)
             num = multiplier.numerator
             den = multiplier.denominator
             tuple = (num, den)
+            gcd = numpy_gcd(numpy.array([num]), numpy.array([den]))
+            list = [int(_) / gcd for _ in tuple]
+            tuple = (int(list[0][0]), int(list[1][0]))
             new_markup = rf"{tuple[1]}:{tuple[0]}"
             abjad.override(tuplet).TupletNumber.text = rf"\markup \italic {new_markup}"
 
     else:
         for tuplet in tuplets:
-            sel = abjad.select.tuplet(score[voice], tuplet)
-            multiplier = Fraction(sel.multiplier)
+            multiplier = Fraction(tuplet.multiplier)
             num = multiplier.numerator
             den = multiplier.denominator
             tuple = (num, den)
+            gcd = numpy_gcd(numpy.array([num]), numpy.array([den]))
+            list = [int(_) / gcd for _ in tuple]
+            tuple = (int(list[0][0]), int(list[1][0]))
             new_markup = rf"{tuple[1]}:{tuple[0]}"
-            abjad.override(sel).TupletNumber.text = rf"\markup \italic {new_markup}"
+            abjad.override(tuplet).TupletNumber.text = rf"\markup \italic {new_markup}"
 
 
 def dashed_slur(start_selection, stop_selection):
@@ -1310,7 +1327,7 @@ def music_command(
         pitch_handler(container)
 
     if attachment_function is not None:
-        attachment_function(container)
+        attachment_function([*container])
 
     leaves = abjad.select.leaves(voice)
     grouped_leaves = abjad.select.group_by_measure(leaves)
