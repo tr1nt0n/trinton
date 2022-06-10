@@ -67,6 +67,7 @@ from .segmentmaker import (
     make_sc_file,
     cache_leaves,
     music_command,
+    beam,
 )
 
 from .sequence import (
@@ -181,4 +182,5 @@ __all__ = [
     "make_sc_file",
     "cache_leaves",
     "music_command",
+    "beam",
 ]

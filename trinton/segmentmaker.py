@@ -1267,7 +1267,7 @@ def make_sc_file(score, tempo, current_directory):
 
 
 def cache_leaves(score):
-    voices = [_ for _ in abjad.select.components(score, abjad.Voice)]
+    voices = abjad.select.components(score, abjad.Voice)
     lists = [[voice.name, abjad.select.group_by_measure(voice)] for voice in voices]
     measure_dicts = [dict(zip(list(range(1, len(l[1]) + 1)), l[1])) for l in lists]
     dictionary = dict(zip([l[0] for l in lists], measure_dicts))
@@ -1334,3 +1334,49 @@ def music_command(
     relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
     target_leaves = abjad.select.leaves(relevant_groups)
     abjad.mutate.replace(target_leaves, container[:])
+
+
+def beam(score):
+    for voice in abjad.select.components(score, abjad.Voice):
+        time_signatures = [
+            abjad.get.indicator(_, abjad.TimeSignature)
+            for _ in abjad.select.leaves(score["Global Context"])
+        ]
+
+        time_signatures_copy = time_signatures.copy()
+
+        measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
+
+        final_durations = []
+
+        for measure, ts in zip(measures, time_signatures_copy):
+            top_level_components = get_top_level_components_from_leaves(measure)
+            for component in top_level_components:
+                if isinstance(component, abjad.Tuplet):
+                    tuplet_duration = abjad.get.duration(component)
+                    replacement_fraction = abjad.Duration(ts) - abjad.NonreducedFraction(
+                        tuplet_duration
+                    )
+                    replacement_duration = abjad.Duration(replacement_fraction)
+                    if replacement_duration == 0:
+                        time_signatures[measures.index(measure)] = abjad.Duration(ts)
+                    else:
+                        time_signatures[measures.index(measure)] = [
+                            tuplet_duration,
+                            replacement_duration,
+                        ]
+                else:
+                    replacement = [
+                        abjad.Duration(1, ts.denominator) for _ in range(ts.numerator)
+                    ]
+                    time_signatures[measures.index(measure)] = replacement
+
+        abjad.beam(
+            abjad.select.leaves(voice),
+            beam_rests=False,
+            durations=abjad.sequence.flatten(time_signatures),
+        )
+
+        print("")
+        print(abjad.sequence.flatten(time_signatures))
+        print("")
