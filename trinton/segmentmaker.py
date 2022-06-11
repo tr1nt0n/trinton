@@ -1335,48 +1335,50 @@ def music_command(
     target_leaves = abjad.select.leaves(relevant_groups)
     abjad.mutate.replace(target_leaves, container[:])
 
+def group_by_prolation(leaves):
+    out = []
+    tuplets = []
+    non_tuplets = []
+    for leaf in leaves:
+        if abjad.get.duration(leaf).denominator % 2 == 0:
+            non_tuplets.append(leaf)
+        else:
+            tuplets.append(leaf)
 
-def beam(score):
+    out.append(tuplets)
+    out.append(non_tuplets)
+
+    return out
+
+def continuous_beams(score):
     for voice in abjad.select.components(score, abjad.Voice):
-        time_signatures = [
-            abjad.get.indicator(_, abjad.TimeSignature)
-            for _ in abjad.select.leaves(score["Global Context"])
-        ]
-
-        time_signatures_copy = time_signatures.copy()
-
-        measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
-
         final_durations = []
+        top_level_components = group_by_prolation(abjad.select.leaves(voice))
+        for component in top_level_components:
+            if isinstance(component, abjad.Tuplet):
+                partitions = abjad.select.partition_by_durations(
+                    abjad.select.leaves(component),
+                    [abjad.Duration(4, abjad.get.duration(abjad.select.leaf(component, 0)).denominator)],
+                    cyclic=True,
+                    fill=abjad.MORE,
+                    in_seconds=False,
+                    overhang=True,
+                )
 
-        for measure, ts in zip(measures, time_signatures_copy):
-            top_level_components = get_top_level_components_from_leaves(measure)
-            for component in top_level_components:
-                if isinstance(component, abjad.Tuplet):
-                    tuplet_duration = abjad.get.duration(component)
-                    replacement_fraction = abjad.Duration(ts) - abjad.NonreducedFraction(
-                        tuplet_duration
-                    )
-                    replacement_duration = abjad.Duration(replacement_fraction)
-                    if replacement_duration == 0:
-                        time_signatures[measures.index(measure)] = abjad.Duration(ts)
-                    else:
-                        time_signatures[measures.index(measure)] = [
-                            tuplet_duration,
-                            replacement_duration,
-                        ]
-                else:
-                    replacement = [
-                        abjad.Duration(1, ts.denominator) for _ in range(ts.numerator)
-                    ]
-                    time_signatures[measures.index(measure)] = replacement
+                for partition in partitions:
+                    final_durations.append(abjad.get.duration(partition))
 
-        abjad.beam(
-            abjad.select.leaves(voice),
-            beam_rests=False,
-            durations=abjad.sequence.flatten(time_signatures),
-        )
+            else:
+                partitions = abjad.select.partition_by_durations(
+                    abjad.select.leaves(component),
+                    [abjad.Duration(1, 4)],
+                    cyclic=True,
+                    fill=abjad.MORE,
+                    in_seconds=False,
+                    overhang=True,
+                )
 
-        print("")
-        print(abjad.sequence.flatten(time_signatures))
-        print("")
+                for partition in partitions:
+                    final_durations.append(abjad.get.duration(partition))
+
+        abjad.beam(abjad.select.leaves(voice), beam_rests=False, durations=abjad.sequence.flatten(final_durations))
