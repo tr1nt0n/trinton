@@ -1280,6 +1280,7 @@ def music_command(
     rmaker,
     rmaker_commands=None,
     rewrite_meter=None,
+    non_power_of_two=False,
     preprocessor=None,
     pitch_handler=None,
     attachment_function=None,
@@ -1290,7 +1291,6 @@ def music_command(
             *rmaker_commands,
             rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
             rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-            rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
             rmakers.extract_trivial(),
             rmakers.rewrite_dots(),
         ]
@@ -1299,6 +1299,12 @@ def music_command(
                 RewriteMeterCommand(
                     boundary_depth=rewrite_meter,
                 )
+            )
+
+        if non_power_of_two is False:
+            commands_.insert(
+                4,
+                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
             )
 
         stack = rmakers.stack(
@@ -1382,3 +1388,22 @@ def continuous_beams(score):
                     final_durations.append(abjad.get.duration(partition))
 
         abjad.beam(abjad.select.leaves(voice), beam_rests=False, durations=abjad.sequence.flatten(final_durations))
+
+def make_ts_pair_list(numerators, denominators):
+    out = []
+    for numerator, denominator in zip(numerators, denominators):
+        pair = (numerator, denominator)
+        out.append(pair)
+
+    return out
+
+def respell(selections):
+    for tie in abjad.select.logical_ties(selections):
+        if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('bs'):
+            abjad.iterpitches.respell_with_flats(tie)
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('es'):
+            abjad.iterpitches.respell_with_flats(tie)
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('cf'):
+            abjad.iterpitches.respell_with_sharps(tie)
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('ff'):
+            abjad.iterpitches.respell_with_sharps(tie)

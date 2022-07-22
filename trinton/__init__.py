@@ -68,6 +68,8 @@ from .segmentmaker import (
     cache_leaves,
     music_command,
     continuous_beams,
+    make_ts_pair_list,
+    respell,
 )
 
 from .sequence import (
@@ -76,6 +78,8 @@ from .sequence import (
     primes_odds_evens,
     logistic_map,
     all_additions,
+    remove_all,
+    remove_adjacent,
 )
 
 from .selectors import (
@@ -183,4 +187,8 @@ __all__ = [
     "cache_leaves",
     "music_command",
     "continuous_beams",
+    "make_ts_pair_list",
+    "remove_all",
+    "respell",
+    "remove_adjacent",
 ]

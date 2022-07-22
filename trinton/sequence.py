@@ -60,6 +60,21 @@ def logistic_map(x, r, n, seed):
 
     return out
 
+def remove_all(l, remove_all):
+    for item in remove_all:
+        for _ in l:
+            if _ == item:
+                l.remove(_)
+    return l
 
 def all_additions(lst, s, pair_num):
     return [pair for pair in combinations(lst, pair_num) if sum(pair) == s]
+
+def remove_adjacent(sequence):
+    a = []
+    for item in sequence:
+        if len(a):
+          if a[-1] != item:
+            a.append(item)
+        else: a.append(item)
+    return a
