@@ -61,8 +61,8 @@ def logistic_map(x, r, n, seed):
     return out
 
 def remove_all(l, remove_all):
-    for item in remove_all:
-        for _ in l:
+    for _ in l:
+        for item in remove_all:
             if _ == item:
                 l.remove(_)
     return l
