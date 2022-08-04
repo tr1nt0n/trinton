@@ -5,6 +5,7 @@ import random
 from random import randint
 import itertools
 from itertools import combinations
+from itertools import cycle
 
 
 def rotated_sequence(pitch_list, start_index):
@@ -60,6 +61,7 @@ def logistic_map(x, r, n, seed):
 
     return out
 
+
 def remove_all(l, remove_all):
     for _ in l:
         for item in remove_all:
@@ -67,14 +69,17 @@ def remove_all(l, remove_all):
                 l.remove(_)
     return l
 
+
 def all_additions(lst, s, pair_num):
     return [pair for pair in combinations(lst, pair_num) if sum(pair) == s]
+
 
 def remove_adjacent(sequence):
     a = []
     for item in sequence:
         if len(a):
-          if a[-1] != item:
+            if a[-1] != item:
+                a.append(item)
+        else:
             a.append(item)
-        else: a.append(item)
     return a

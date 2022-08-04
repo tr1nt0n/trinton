@@ -70,6 +70,7 @@ from .segmentmaker import (
     continuous_beams,
     make_ts_pair_list,
     respell,
+    extract_instrument_name,
 )
 
 from .sequence import (
@@ -191,4 +192,5 @@ __all__ = [
     "remove_all",
     "respell",
     "remove_adjacent",
+    "extract_instrument_name",
 ]

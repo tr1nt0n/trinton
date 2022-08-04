@@ -13,10 +13,24 @@ import pathlib
 import os
 
 
+def extract_instrument_name(instrument_class):
+    instrument_string = str(instrument_class)
+
+    out = ""
+
+    for _ in instrument_string:
+        if _ == "(":
+            break
+
+        out += _
+
+    return out.lower()
+
+
 def make_score_template(
     instruments, groups, outer_staff="ChoirStaff", inner_staff="PianoStaff"
 ):
-    name_counts = {_.name: 1 for _ in instruments}
+    name_counts = {extract_instrument_name(_): 1 for _ in instruments}
     sub_group_counter = 1
     score = abjad.Score(
         [
@@ -34,9 +48,9 @@ def make_score_template(
             sub_group_counter += 1
             for sub_item in item:
                 if 1 < instruments.count(sub_item):
-                    name_string = f"{sub_item.name} {name_counts[sub_item.name]}"
+                    name_string = f"{extract_instrument_name(sub_item)} {name_counts[extract_instrument_name(sub_item)]}"
                 else:
-                    name_string = f"{sub_item.name}"
+                    name_string = f"{extract_instrument_name(sub_item)}"
                 staff = abjad.Staff(
                     [
                         abjad.Voice(name=f"{name_string} voice"),
@@ -44,13 +58,13 @@ def make_score_template(
                     name=f"{name_string} staff",
                 )
                 sub_group.append(staff)
-                name_counts[sub_item.name] += 1
+                name_counts[extract_instrument_name(sub_item)] += 1
             score["Staff Group"].append(sub_group)
         else:
             if 1 < instruments.count(item):
-                name_string = f"{item.name} {name_counts[item.name]}"
+                name_string = f"{extract_instrument_name(item)} {name_counts[extract_instrument_name(item)]}"
             else:
-                name_string = f"{item.name}"
+                name_string = f"{extract_instrument_name(item)}"
             staff = abjad.Staff(
                 [
                     abjad.Voice(name=f"{name_string} voice"),
@@ -58,7 +72,7 @@ def make_score_template(
                 name=f"{name_string} staff",
             )
             score["Staff Group"].append(staff)
-            name_counts[item.name] += 1
+            name_counts[extract_instrument_name(item)] += 1
     return score
 
 
@@ -1176,7 +1190,7 @@ def write_id_spanner(
 
 
 def pitch_by_hand(
-    voice, measures, pitch_list, selector=baca.selectors.pleaves(), forget=False
+    voice, measures, pitch_list, selector=lambda _: baca.select.pleaves(_), forget=False
 ):
     handler = evans.PitchHandler(pitch_list=pitch_list, forget=forget)
 
@@ -1341,6 +1355,7 @@ def music_command(
     target_leaves = abjad.select.leaves(relevant_groups)
     abjad.mutate.replace(target_leaves, container[:])
 
+
 def group_by_prolation(leaves):
     out = []
     tuplets = []
@@ -1356,6 +1371,7 @@ def group_by_prolation(leaves):
 
     return out
 
+
 def continuous_beams(score):
     for voice in abjad.select.components(score, abjad.Voice):
         final_durations = []
@@ -1364,7 +1380,14 @@ def continuous_beams(score):
             if isinstance(component, abjad.Tuplet):
                 partitions = abjad.select.partition_by_durations(
                     abjad.select.leaves(component),
-                    [abjad.Duration(4, abjad.get.duration(abjad.select.leaf(component, 0)).denominator)],
+                    [
+                        abjad.Duration(
+                            4,
+                            abjad.get.duration(
+                                abjad.select.leaf(component, 0)
+                            ).denominator,
+                        )
+                    ],
                     cyclic=True,
                     fill=abjad.MORE,
                     in_seconds=False,
@@ -1387,7 +1410,12 @@ def continuous_beams(score):
                 for partition in partitions:
                     final_durations.append(abjad.get.duration(partition))
 
-        abjad.beam(abjad.select.leaves(voice), beam_rests=False, durations=abjad.sequence.flatten(final_durations))
+        abjad.beam(
+            abjad.select.leaves(voice),
+            beam_rests=False,
+            durations=abjad.sequence.flatten(final_durations),
+        )
+
 
 def make_ts_pair_list(numerators, denominators):
     out = []
@@ -1397,13 +1425,14 @@ def make_ts_pair_list(numerators, denominators):
 
     return out
 
+
 def respell(selections):
     for tie in abjad.select.logical_ties(selections):
-        if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('bs'):
+        if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
             abjad.iterpitches.respell_with_flats(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('es'):
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("es"):
             abjad.iterpitches.respell_with_flats(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('cf'):
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("cf"):
             abjad.iterpitches.respell_with_sharps(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass('ff'):
+        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
             abjad.iterpitches.respell_with_sharps(tie)

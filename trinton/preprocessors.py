@@ -33,8 +33,8 @@ def fuse_eighths_preprocessor(groups):
         def eighths(
             sequence,
             *,
-            compound: abjad.DurationTyping = None,
-            remainder: int = None,
+            compound=None,
+            remainder=None,
         ):
             assert isinstance(sequence, list), repr(sequence)
             sequence = baca.sequence.split_divisions(
@@ -59,8 +59,8 @@ def fuse_sixteenths_preprocessor(groups):
         def eighths(
             sequence,
             *,
-            compound: abjad.DurationTyping = None,
-            remainder: int = None,
+            compound=None,
+            remainder=None,
         ):
             assert isinstance(sequence, list), repr(sequence)
             sequence = baca.sequence.split_divisions(

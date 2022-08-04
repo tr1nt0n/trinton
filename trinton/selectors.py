@@ -1,5 +1,6 @@
 import abjad
 import trinton
+from itertools import cycle
 
 
 def exclude_tuplets():
