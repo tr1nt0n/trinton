@@ -1038,13 +1038,18 @@ def group_selections(voice, leaves, groups=None):
 
 
 @dataclasses.dataclass(slots=True)
-class RewriteMeterCommand(rmakers.Command):
+class RewriteMeterCommand:
     """
     Rewrite meter command.
     """
 
-    boundary_depth: int | None = None
-    reference_meters: typing.Sequence[abjad.Meter] = ()
+    def __init__(
+        self,
+        boundary_depth=None,
+        reference_meters=(),
+    ):
+        self.boundary_depth = boundary_depth
+        self.reference_meters = reference_meters
 
     def __post_init__(self):
         if self.boundary_depth is not None:
@@ -1068,7 +1073,6 @@ class RewriteMeterCommand(rmakers.Command):
             meters.append(meter)
         durations = [abjad.Duration(_) for _ in meters]
         reference_meters = self.reference_meters or ()
-        command = rmakers.SplitMeasuresCommand()
         non_tuplets = []
         for component in voice:
             if isinstance(component, abjad.Tuplet):
@@ -1078,7 +1082,7 @@ class RewriteMeterCommand(rmakers.Command):
                 non_tuplets.append(new_skip)
             else:
                 non_tuplets.append(component)
-        command(non_tuplets, durations=durations)
+        rmakers.split_measures(non_tuplets, durations=durations)
         selections = abjad.select.group_by_measure(voice[:])
         for meter, selection in zip(meters, selections):
             for reference_meter in reference_meters:
@@ -1090,7 +1094,7 @@ class RewriteMeterCommand(rmakers.Command):
             for leaf in abjad.iterate.leaves(selection):
                 if not abjad.get.parentage(leaf).count(abjad.Tuplet):
                     nontupletted_leaves.append(leaf)
-            rmakers.unbeam()(nontupletted_leaves)
+            rmakers.unbeam(nontupletted_leaves)
             abjad.Meter.rewrite_meter(
                 selection,
                 meter,
@@ -1288,10 +1292,45 @@ def cache_leaves(score):
     return dictionary
 
 
+def treat_tuplets(non_power_of_two=False):
+    def treatment(selections):
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.trivialize(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.rewrite_rest_filled(tuplets)
+        if non_power_of_two is False:
+            tuplets = abjad.select.tuplets(selections)
+            rmakers.rewrite_sustained(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.extract_trivial(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.rewrite_dots(tuplets)
+
+    return treatment
+
+
+def force_note(selector):
+    def force(selections):
+        selection = selector(selections)
+        rmakers.force_note(selection)
+
+    return force
+
+
+def force_rest(selector):
+    def force(selections):
+        selection = selector(selections)
+        rmakers.force_rest(selection)
+
+    return force
+
+
 def music_command(
     voice,
     measures,
     rmaker,
+    # use evans.talea or something? evans.talea([1, 2, 3], 8, extra_counts=[0, 1]) for statal rmakers
+    # for things like rmakers.note just pass it in *with no parenthesis* because it isn't called yet
     rmaker_commands=None,
     rewrite_meter=None,
     non_power_of_two=False,
@@ -1299,34 +1338,52 @@ def music_command(
     pitch_handler=None,
     attachment_function=None,
 ):
-    def rhythm_selections():
+    def rhythm_selections(divisions):
         commands_ = [
-            rmaker,
-            *rmaker_commands,
-            rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
-            rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-            rmakers.extract_trivial(),
-            rmakers.rewrite_dots(),
+            *rmaker_commands,  # all input rmaker_commands should be functions which *include* the lambda selector
+            # rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+            # rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+            # rmakers.extract_trivial(),
+            # rmakers.rewrite_dots(),
+            treat_tuplets(non_power_of_two=non_power_of_two),
         ]
+        # if rewrite_meter is not None:
+        #     commands_.append(
+        #         evans.RewriteMeterCommand(
+        #             boundary_depth=rewrite_meter,
+        #         )
+        #     )
+        #
+        # if non_power_of_two is False:
+        #     commands_.insert(
+        #         3,
+        #         rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+        #     )
+
+        # stack = rmakers.stack(
+        #     *commands_,
+        #     preprocessor=preprocessor,
+        # )
+
+        new_divisions = divisions
+        if preprocessor is not None:
+            new_divisions = [abjad.Duration(_.pair) for _ in new_divisions]
+            new_divisions = preprocessor(new_divisions)
+        nested_music = rmaker(new_divisions)
+        container = abjad.Container(nested_music)
+        for command in commands_:
+            command(container)
         if rewrite_meter is not None:
-            commands_.append(
-                RewriteMeterCommand(
-                    boundary_depth=rewrite_meter,
-                )
+            meter_command = evans.RewriteMeterCommand(boundary_depth=rewrite_meter)
+            metered_staff = rmakers.wrap_in_time_signature_staff(
+                container[:], divisions
             )
+            meter_command(metered_staff)
+            music = abjad.mutate.eject_contents(metered_staff)
+        else:
+            music = abjad.mutate.eject_contents(container)
 
-        if non_power_of_two is False:
-            commands_.insert(
-                4,
-                rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
-            )
-
-        stack = rmakers.stack(
-            *commands_,
-            preprocessor=preprocessor,
-        )
-
-        return stack
+        return music
 
     parentage = abjad.get.parentage(voice)
     outer_context = parentage.components[-1]
@@ -1336,7 +1393,7 @@ def music_command(
     signature_instances = [
         abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
     ]
-    new_selections = rhythm_selections()(signature_instances)
+    new_selections = rhythm_selections(signature_instances)
     container = abjad.Container()
     if isinstance(new_selections, list):
         container.extend(new_selections)
@@ -1354,67 +1411,6 @@ def music_command(
     relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
     target_leaves = abjad.select.leaves(relevant_groups)
     abjad.mutate.replace(target_leaves, container[:])
-
-
-def group_by_prolation(leaves):
-    out = []
-    tuplets = []
-    non_tuplets = []
-    for leaf in leaves:
-        if abjad.get.duration(leaf).denominator % 2 == 0:
-            non_tuplets.append(leaf)
-        else:
-            tuplets.append(leaf)
-
-    out.append(tuplets)
-    out.append(non_tuplets)
-
-    return out
-
-
-def continuous_beams(score):
-    for voice in abjad.select.components(score, abjad.Voice):
-        final_durations = []
-        top_level_components = group_by_prolation(abjad.select.leaves(voice))
-        for component in top_level_components:
-            if isinstance(component, abjad.Tuplet):
-                partitions = abjad.select.partition_by_durations(
-                    abjad.select.leaves(component),
-                    [
-                        abjad.Duration(
-                            4,
-                            abjad.get.duration(
-                                abjad.select.leaf(component, 0)
-                            ).denominator,
-                        )
-                    ],
-                    cyclic=True,
-                    fill=abjad.MORE,
-                    in_seconds=False,
-                    overhang=True,
-                )
-
-                for partition in partitions:
-                    final_durations.append(abjad.get.duration(partition))
-
-            else:
-                partitions = abjad.select.partition_by_durations(
-                    abjad.select.leaves(component),
-                    [abjad.Duration(1, 4)],
-                    cyclic=True,
-                    fill=abjad.MORE,
-                    in_seconds=False,
-                    overhang=True,
-                )
-
-                for partition in partitions:
-                    final_durations.append(abjad.get.duration(partition))
-
-        abjad.beam(
-            abjad.select.leaves(voice),
-            beam_rests=False,
-            durations=abjad.sequence.flatten(final_durations),
-        )
 
 
 def make_ts_pair_list(numerators, denominators):

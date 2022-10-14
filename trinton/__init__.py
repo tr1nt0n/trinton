@@ -67,10 +67,11 @@ from .segmentmaker import (
     make_sc_file,
     cache_leaves,
     music_command,
-    continuous_beams,
     make_ts_pair_list,
     respell,
     extract_instrument_name,
+    force_note,
+    force_rest,
 )
 
 from .sequence import (
@@ -193,4 +194,6 @@ __all__ = [
     "respell",
     "remove_adjacent",
     "extract_instrument_name",
+    "force_note",
+    "force_rest",
 ]
