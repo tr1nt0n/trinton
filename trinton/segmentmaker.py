@@ -317,8 +317,9 @@ def write_hooked_spanner(voice, string, start_leaf, stop_leaf, padding):
         right_text=None,
         style="dashed-line-with-hook",
     )
-    abjad.tweak(start_text_span).padding = padding
-    trinton.attach(voice, start_leaf, start_text_span)
+    # abjad.tweak(start_text_span).padding = padding
+    bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
+    trinton.attach(voice, start_leaf, bundle)
     trinton.attach(voice, stop_leaf, abjad.StopTextSpan())
 
 
@@ -1103,37 +1104,108 @@ class RewriteMeterCommand:
             )
 
 
+def treat_tuplets(non_power_of_two=False):
+    def treatment(selections):
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.trivialize(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.rewrite_rest_filled(tuplets)
+        if non_power_of_two is False:
+            tuplets = abjad.select.tuplets(selections)
+            rmakers.rewrite_sustained(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.extract_trivial(tuplets)
+        tuplets = abjad.select.tuplets(selections)
+        rmakers.rewrite_dots(tuplets)
+
+    return treatment
+
+
+# def make_rhythms(
+#     voice,
+#     time_signature_indices,
+#     rmaker,
+#     commands,
+#     rewrite_meter=None,
+#     preprocessor=None,
+# ):
+#     def rhythm_selections():
+#         commands_ = [
+#             rmaker,
+#             *commands,
+#             rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
+#             rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
+#             rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
+#             rmakers.extract_trivial(),
+#             rmakers.rewrite_dots(),
+#         ]
+#         if rewrite_meter is not None:
+#             commands_.append(
+#                 RewriteMeterCommand(
+#                     boundary_depth=rewrite_meter,
+#                 )
+#             )
+#
+#         stack = rmakers.stack(
+#             *commands_,
+#             preprocessor=preprocessor,
+#         )
+#
+#         return stack
+#
+#     parentage = abjad.get.parentage(voice)
+#     outer_context = parentage.components[-1]
+#     global_context = outer_context["Global Context"]
+#     relevant_leaves = [global_context[i] for i in time_signature_indices]
+#     signature_instances = [
+#         abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+#     ]
+#     new_selections = rhythm_selections()(signature_instances)
+#     container = abjad.Container()
+#     if isinstance(new_selections, list):
+#         container.extend(new_selections)
+#     else:
+#         container.append(new_selections)
+#     leaves = abjad.select.leaves(voice)
+#     grouped_leaves = abjad.select.group_by_measure(leaves)
+#     relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
+#     target_leaves = abjad.select.leaves(relevant_groups)
+#     abjad.mutate.replace(target_leaves, container[:])
+
+
 def make_rhythms(
     voice,
     time_signature_indices,
     rmaker,
-    commands,
+    commands=None,
     rewrite_meter=None,
     preprocessor=None,
 ):
-    def rhythm_selections():
+    def rhythm_selections(divisions):
         commands_ = [
-            rmaker,
             *commands,
-            rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
-            rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-            rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
-            rmakers.extract_trivial(),
-            rmakers.rewrite_dots(),
+            treat_tuplets(),
         ]
+
+        new_divisions = divisions
+        if preprocessor is not None:
+            new_divisions = [abjad.Duration(_.pair) for _ in new_divisions]
+            new_divisions = preprocessor(new_divisions)
+        nested_music = rmaker(new_divisions)
+        container = abjad.Container(nested_music)
+        for command in commands_:
+            command(container)
         if rewrite_meter is not None:
-            commands_.append(
-                RewriteMeterCommand(
-                    boundary_depth=rewrite_meter,
-                )
+            meter_command = evans.RewriteMeterCommand(boundary_depth=rewrite_meter)
+            metered_staff = rmakers.wrap_in_time_signature_staff(
+                container[:], divisions
             )
+            meter_command(metered_staff)
+            music = abjad.mutate.eject_contents(metered_staff)
+        else:
+            music = abjad.mutate.eject_contents(container)
 
-        stack = rmakers.stack(
-            *commands_,
-            preprocessor=preprocessor,
-        )
-
-        return stack
+        return music
 
     parentage = abjad.get.parentage(voice)
     outer_context = parentage.components[-1]
@@ -1142,7 +1214,7 @@ def make_rhythms(
     signature_instances = [
         abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
     ]
-    new_selections = rhythm_selections()(signature_instances)
+    new_selections = rhythm_selections(signature_instances)
     container = abjad.Container()
     if isinstance(new_selections, list):
         container.extend(new_selections)
@@ -1185,11 +1257,11 @@ def write_id_spanner(
         "absolute_after",
     )
 
-    abjad.tweak(spanner).padding = padding
+    bundle = abjad.bundle(spanner, rf"- \tweak padding #{padding}")
 
     termination = abjad.LilyPondLiteral(rf"\stopTextSpan{id}", "absolute_after")
 
-    abjad.attach(spanner, start_selection)
+    abjad.attach(bundle, start_selection)
     abjad.attach(termination, stop_selection)
 
 
@@ -1290,23 +1362,6 @@ def cache_leaves(score):
     measure_dicts = [dict(zip(list(range(1, len(l[1]) + 1)), l[1])) for l in lists]
     dictionary = dict(zip([l[0] for l in lists], measure_dicts))
     return dictionary
-
-
-def treat_tuplets(non_power_of_two=False):
-    def treatment(selections):
-        tuplets = abjad.select.tuplets(selections)
-        rmakers.trivialize(tuplets)
-        tuplets = abjad.select.tuplets(selections)
-        rmakers.rewrite_rest_filled(tuplets)
-        if non_power_of_two is False:
-            tuplets = abjad.select.tuplets(selections)
-            rmakers.rewrite_sustained(tuplets)
-        tuplets = abjad.select.tuplets(selections)
-        rmakers.extract_trivial(tuplets)
-        tuplets = abjad.select.tuplets(selections)
-        rmakers.rewrite_dots(tuplets)
-
-    return treatment
 
 
 def force_note(selector):

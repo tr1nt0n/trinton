@@ -97,6 +97,7 @@ from .selectors import (
     select_leaves_in_tie,
     grace_selector,
     exclude_graces,
+    pleaves,
 )
 
 from .preprocessors import (
@@ -196,4 +197,5 @@ __all__ = [
     "extract_instrument_name",
     "force_note",
     "force_rest",
+    "pleaves",
 ]

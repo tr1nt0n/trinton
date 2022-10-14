@@ -1,4 +1,5 @@
 import abjad
+import baca
 import trinton
 from itertools import cycle
 
@@ -151,5 +152,13 @@ def grace_selector():
 def exclude_graces():
     def selector(argument):
         return abjad.select.leaves(argument, grace=False)
+
+    return selector
+
+
+def pleaves():
+    def selector(argument):
+        selections = baca.select.pleaves(argument)
+        return selections
 
     return selector
