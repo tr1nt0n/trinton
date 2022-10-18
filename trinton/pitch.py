@@ -89,3 +89,19 @@ def durational_pitch_association(selection, durations, pitch_lists, forget):
             forget=forget,
         )
         handler(sel)
+
+
+def pitch_by_hand(
+    voice, measures, pitch_list, selector=lambda _: baca.select.pleaves(_), forget=False
+):
+    handler = evans.PitchHandler(pitch_list=pitch_list, forget=forget)
+
+    for measure in measures:
+
+        grouped_measures = trinton.group_leaves_by_measure(voice)
+
+        current_measure = grouped_measures[measure - 1]
+
+        selections = selector(current_measure)
+
+        handler(selections)

@@ -162,3 +162,36 @@ def pleaves():
         return selections
 
     return selector
+
+
+def make_leaf_selection(score, voice, leaves):
+    selection = []
+    for leaf in leaves:
+        sel = abjad.select.leaf(score[voice], leaf)
+        selection.append(sel)
+    return selection
+
+
+def group_selections(voice, leaves, groups=None):
+    out = []
+    for leaf in leaves:
+        out.append(abjad.select.leaf(voice, leaf))
+    if groups is None:
+        return out
+    else:
+        new_out = evans.Sequence(out).grouper(groups)
+        return new_out
+
+
+def select_target(voice, measure_number_range=(1, 3)):
+    revised_range = range(measure_number_range[0] - 1, measure_number_range[1] - 1)
+    indices = [_ for _ in revised_range]
+
+    measures = abjad.select.group_by_measure(voice)
+
+    target_measures = []
+
+    for i in indices:
+        target_measures.extend(measures[i])
+
+    return target_measures
