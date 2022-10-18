@@ -306,8 +306,8 @@ def write_text_span(voice, begin_text, end_text, start_leaf, stop_leaf, padding)
         right_text=abjad.Markup(end_text),
         style="dashed-line-with-arrow",
     )
-    abjad.tweak(start_text_span).padding = padding
-    trinton.attach(voice, start_leaf, start_text_span)
+    bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
+    trinton.attach(voice, start_leaf, bundle)
     trinton.attach(voice, stop_leaf, abjad.StopTextSpan())
 
 
@@ -333,10 +333,12 @@ def write_slur(voice, start_slur, stop_slur):
 def change_notehead(voice, leaves, notehead):
     if leaves == all:
         for _ in abjad.select.leaves(voice, pitched=True):
-            abjad.tweak(_.note_head).style = notehead
+            abjad.tweak(_.note_head, rf"\tweak style #'{notehead}")
     else:
         for _ in leaves:
-            abjad.tweak(abjad.select.leaf(voice, _).note_head).style = notehead
+            abjad.tweak(
+                abjad.select.leaf(voice, _).note_head, rf"\tweak style #'{notehead}"
+            )
 
 
 def pitched_notehead_change(voice, pitches, notehead):
@@ -363,9 +365,12 @@ def annotate_leaves(score, prototype=abjad.Leaf):
             abjad.label.with_indices(voice)
 
 
-def make_rhythm_selections(stack, durations):
-    selections = stack(durations)
-    return selections
+def make_rhythm_selections(rmaker, rmaker_commands):
+    container = abjad.Container(rmaker)
+    for command in rmaker_commands:
+        command(container)
+    music = abjad.mutate.eject_contents(container)
+    return music
 
 
 def append_rhythm_selections(voice, score, selections):
@@ -375,8 +380,15 @@ def append_rhythm_selections(voice, score, selections):
     return selections
 
 
-def make_and_append_rhythm_selections(score, voice_name, stack, durations):
-    selections = stack(durations)
+def make_and_append_rhythm_selections(score, voice_name, rmaker, rmaker_commands):
+    def make_rhythm():
+        container = abjad.Container(rmaker)
+        for command in rmaker_commands:
+            command(container)
+        music = abjad.mutate.eject_contents(container)
+        return music
+
+    selections = make_rhythm()
     relevant_voice = score[voice_name]
     for selection in selections:
         relevant_voice.append(selection)
@@ -389,14 +401,13 @@ def append_rests(score, voice, rests):
 
 
 def handwrite(score, voice, durations, pitch_list=None):
-    stack = rmakers.stack(
-        rmakers.NoteRhythmMaker(),
-    )
+    def make_rhythm(divisions):
+        nested_music = rmakers.note(divisions)
+        container = abjad.Container(nested_music)
+        music = abjad.mutate.eject_contents(container)
+        return music
 
-    sel = trinton.make_rhythm_selections(
-        stack=stack,
-        durations=durations,
-    )
+    sel = make_rhythm(divisions=durations)
 
     container = abjad.Container(sel)
 
@@ -466,12 +477,12 @@ def write_marginmarkups(score, voices, markups):
 def transparent_accidentals(score, voice, leaves):
     if leaves == all:
         for leaf in abjad.select.leaves(score[voice], pitched=True):
-            abjad.tweak(leaf.note_head).Accidental.transparent = True
+            abjad.tweak(leaf.note_head, r"\tweak Accidental.transparent ##t")
 
     else:
         for leaf in leaves:
             sel = abjad.select.leaf(score[voice], leaf)
-            abjad.tweak(sel.note_head).Accidental.transparent = True
+            abjad.tweak(sel.note_head, r"\tweak Accidental.transparent ##t")
 
 
 def rewrite_meter(target):
@@ -543,6 +554,42 @@ def beam_score(target):
                     include_rests=False,
                 )
     for trem in abjad.select.components(target, abjad.TremoloContainer):
+        if abjad.StartBeam() in abjad.get.indicators(trem[0]):
+            abjad.detach(abjad.StartBeam(), trem[0])
+        if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
+            abjad.detach(abjad.StopBeam(), trem[-1])
+
+
+def beam_score_by_voice(score, voices):
+    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    print("Beaming meter ...")
+    for voice in voices:
+        for i, shard in enumerate(abjad.mutate.split(voice[:], sigs)):
+            met = abjad.Meter(sigs[i].pair)
+            inventories = [
+                x
+                for x in enumerate(abjad.Meter(sigs[i].pair).depthwise_offset_inventory)
+            ]
+            if sigs[i].denominator == 4:
+                beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-1][0],
+                    include_rests=False,
+                )
+            else:
+                beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-2][0],
+                    include_rests=False,
+                )
+    for trem in abjad.select.components(score, abjad.TremoloContainer):
         if abjad.StartBeam() in abjad.get.indicators(trem[0]):
             abjad.detach(abjad.StartBeam(), trem[0])
         if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
@@ -921,6 +968,7 @@ def reduce_tuplets(score, voice, tuplets):
 
     else:
         for tuplet in tuplets:
+            tuplet = abjad.select.tuplet(score[voice], tuplet)
             multiplier = Fraction(tuplet.multiplier)
             num = multiplier.numerator
             den = multiplier.denominator
@@ -1119,58 +1167,6 @@ def treat_tuplets(non_power_of_two=False):
         rmakers.rewrite_dots(tuplets)
 
     return treatment
-
-
-# def make_rhythms(
-#     voice,
-#     time_signature_indices,
-#     rmaker,
-#     commands,
-#     rewrite_meter=None,
-#     preprocessor=None,
-# ):
-#     def rhythm_selections():
-#         commands_ = [
-#             rmaker,
-#             *commands,
-#             rmakers.trivialize(lambda _: abjad.select.tuplets(_)),
-#             rmakers.rewrite_rest_filled(lambda _: abjad.select.tuplets(_)),
-#             rmakers.rewrite_sustained(lambda _: abjad.select.tuplets(_)),
-#             rmakers.extract_trivial(),
-#             rmakers.rewrite_dots(),
-#         ]
-#         if rewrite_meter is not None:
-#             commands_.append(
-#                 RewriteMeterCommand(
-#                     boundary_depth=rewrite_meter,
-#                 )
-#             )
-#
-#         stack = rmakers.stack(
-#             *commands_,
-#             preprocessor=preprocessor,
-#         )
-#
-#         return stack
-#
-#     parentage = abjad.get.parentage(voice)
-#     outer_context = parentage.components[-1]
-#     global_context = outer_context["Global Context"]
-#     relevant_leaves = [global_context[i] for i in time_signature_indices]
-#     signature_instances = [
-#         abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
-#     ]
-#     new_selections = rhythm_selections()(signature_instances)
-#     container = abjad.Container()
-#     if isinstance(new_selections, list):
-#         container.extend(new_selections)
-#     else:
-#         container.append(new_selections)
-#     leaves = abjad.select.leaves(voice)
-#     grouped_leaves = abjad.select.group_by_measure(leaves)
-#     relevant_groups = abjad.select.get(grouped_leaves, time_signature_indices)
-#     target_leaves = abjad.select.leaves(relevant_groups)
-#     abjad.mutate.replace(target_leaves, container[:])
 
 
 def make_rhythms(
@@ -1380,6 +1376,13 @@ def force_rest(selector):
     return force
 
 
+def beam_groups(beam_rests):
+    def beam(selections):
+        rmakers.beam_groups([selections], beam_rests=beam_rests)
+
+    return beam
+
+
 def music_command(
     voice,
     measures,
@@ -1487,3 +1490,64 @@ def respell(selections):
             abjad.iterpitches.respell_with_sharps(tie)
         elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
             abjad.iterpitches.respell_with_sharps(tie)
+
+
+def select_target(voice, measure_number_range=(1, 3)):
+    revised_range = range(measure_number_range[0] - 1, measure_number_range[1] - 1)
+    indices = [_ for _ in revised_range]
+
+    measures = abjad.select.group_by_measure(voice)
+
+    target_measures = []
+
+    for i in indices:
+        target_measures.extend(measures[i])
+
+    return target_measures
+
+
+def make_music(
+    selector_function=lambda _: select_target(_, (1, 3)),
+    *args,
+    preprocessor=None,
+    voice=None,
+):
+    target = selector_function(voice)
+    indicators = [_ for _ in abjad.get.indicators(abjad.select.leaf(target, 0))]
+    selections = None
+    groups = abjad.select.group_by_measure(target)
+    first_leaves = [abjad.select.leaf(_, 0) for _ in groups]
+    parentage = abjad.get.parentage(voice)
+    outer_context = parentage.components[-1]
+    global_context = outer_context["Global Context"]
+    relevant_leaves = selector_function(global_context)
+    signature_instances = [
+        abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+    ]
+    for arg in args:
+        target = selector_function(voice)
+        if isinstance(arg, evans.RhythmHandler):
+            if preprocessor is not None:
+                durations = [abjad.Duration(_.pair) for _ in signature_instances]
+                divisions = preprocessor(durations)
+            else:
+                divisions = signature_instances
+            nested_music = arg(divisions)
+            container = abjad.Container(nested_music)
+
+            for indicator in indicators:
+                abjad.detach(indicator, abjad.select.leaf(target, 0))
+                abjad.attach(indicator, abjad.select.leaf(container, 0))
+
+            selections = abjad.mutate.eject_contents(container)
+            abjad.mutate.replace(target, selections)
+
+        elif isinstance(arg, evans.RewriteMeterCommand):
+            metered_staff = rmakers.wrap_in_time_signature_staff(
+                selections[:], signature_instances
+            )
+            arg(metered_staff)
+            selections = abjad.mutate.eject_contents(metered_staff)
+            abjad.mutate.replace(target, selections)
+        else:
+            arg(target)

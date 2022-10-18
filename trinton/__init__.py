@@ -70,8 +70,13 @@ from .segmentmaker import (
     make_ts_pair_list,
     respell,
     extract_instrument_name,
+    treat_tuplets,
     force_note,
     force_rest,
+    beam_groups,
+    beam_score_by_voice,
+    select_target,
+    make_music,
 )
 
 from .sequence import (
@@ -195,7 +200,12 @@ __all__ = [
     "respell",
     "remove_adjacent",
     "extract_instrument_name",
+    "treat_tuplets",
     "force_note",
     "force_rest",
     "pleaves",
+    "beam_groups",
+    "beam_score_by_voice",
+    "make_music",
+    "select_target",
 ]
