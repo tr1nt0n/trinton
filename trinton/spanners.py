@@ -42,6 +42,19 @@ def write_slur(voice, start_slur, stop_slur):
         trinton.attach(voice, [leaf], abjad.StopPhrasingSlur())
 
 
+def dashed_slur(start_selection, stop_selection):
+    abjad.attach(abjad.StartSlur(), start_selection)
+    abjad.attach(
+        abjad.LilyPondLiteral(r"\slurDashed", "absolute_before"),
+        start_selection,
+    )
+    abjad.attach(abjad.StopSlur(), stop_selection)
+    abjad.attach(
+        abjad.LilyPondLiteral(r"\slurSolid", "absolute_after"),
+        stop_selection,
+    )
+
+
 def write_trill_span(score, voice, pitch, start_leaf, stop_leaf):
     trinton.attach(
         voice=score[voice],
