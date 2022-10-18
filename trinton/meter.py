@@ -28,6 +28,185 @@ def get_top_level_components_from_leaves(leaves):
     return out
 
 
+# rewriting
+
+
+def rewrite_meter_without_splitting(target):
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
+        voice_dur = abjad.get.duration(voice)
+        time_signatures = sigs
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        shards = abjad.select.group_by_measure(abjad.select.leaves(voice[:]))
+        for i, shard in enumerate(shards):
+            if voice.name == "violin 1 voice":
+                print(i)
+            if not all(
+                isinstance(leaf, (abjad.Rest, abjad.MultimeasureRest, abjad.Skip))
+                for leaf in abjad.select.leaves(shard)
+            ):
+                time_signature = sigs[i]
+                top_level_components = get_top_level_components_from_leaves(shard)
+                shard = top_level_components
+                inventories = [
+                    x
+                    for x in enumerate(
+                        abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                    )
+                ]
+                if time_signature.denominator == 4:
+                    abjad.Meter.rewrite_meter(
+                        shard,
+                        time_signature,
+                        boundary_depth=inventories[-1][0],
+                        rewrite_tuplets=False,
+                    )
+                else:
+                    abjad.Meter.rewrite_meter(
+                        shard,
+                        time_signature,
+                        boundary_depth=inventories[-2][0],
+                        rewrite_tuplets=False,
+                    )
+
+
+def rewrite_meter(target):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
+        voice_dur = abjad.get.duration(voice)
+        time_signatures = sigs  # [:-1]
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        shards = abjad.mutate.split(voice[:], durations)
+        for i, shard in enumerate(shards):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )
+
+
+def rewrite_meter_by_voice(score, voice_indeces):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
+    sigs = []
+    for skip in global_skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    voices = []
+    for voice in voice_indeces:
+        voices.append(abjad.select.components(score["Staff Group"], abjad.Voice)[voice])
+    for voice in voices:
+        voice_dur = abjad.get.duration(voice)
+        time_signatures = sigs
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        shards = abjad.mutate.split(voice[:], durations)
+        for i, shard in enumerate(shards):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )
+
+
+def rewrite_meter_by_measure(score, measures):
+    print("Rewriting meter ...")
+    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
+    sigs = []
+    skips = []
+    for measure in measures:
+        skips.append(global_skips[measure - 1])
+    for skip in skips:
+        for indicator in abjad.get.indicators(skip):
+            if isinstance(indicator, abjad.TimeSignature):
+                sigs.append(indicator)
+    for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
+        all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
+        voice_sel = [all_measures[_ - 1] for _ in measures]
+        voice_dur = abjad.get.duration(voice_sel)
+        time_signatures = sigs  # [:-1]
+        durations = [_.duration for _ in time_signatures]
+        sig_dur = sum(durations)
+        assert voice_dur == sig_dur, (voice_dur, sig_dur)
+        all_shards = abjad.mutate.split(voice[:], durations)
+        shards = []
+        shards.append(all_shards[measures[0] - 1 : measures[-1]])
+        for i, shard in enumerate(shards[0]):
+            time_signature = sigs[i]
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
+                )
+            ]
+            if time_signature.denominator == 4:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-1][0],
+                    rewrite_tuplets=False,
+                )
+            else:
+                abjad.Meter.rewrite_meter(
+                    shard,
+                    time_signature,
+                    boundary_depth=inventories[-2][0],
+                    rewrite_tuplets=False,
+                )
+
+
+# beaming
+
+
 def beam_meter(components, meter, offset_depth, include_rests=True):
     offsets = meter.depthwise_offset_inventory[offset_depth]
     offset_pairs = []
@@ -127,91 +306,6 @@ def beam_score_without_splitting(target):
             abjad.detach(abjad.StopBeam(), trem[-1])
 
 
-def rewrite_meter_without_splitting(target):
-    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
-    sigs = []
-    for skip in global_skips:
-        for indicator in abjad.get.indicators(skip):
-            if isinstance(indicator, abjad.TimeSignature):
-                sigs.append(indicator)
-    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
-        voice_dur = abjad.get.duration(voice)
-        time_signatures = sigs
-        durations = [_.duration for _ in time_signatures]
-        sig_dur = sum(durations)
-        assert voice_dur == sig_dur, (voice_dur, sig_dur)
-        shards = abjad.select.group_by_measure(abjad.select.leaves(voice[:]))
-        for i, shard in enumerate(shards):
-            if voice.name == "violin 1 voice":
-                print(i)
-            if not all(
-                isinstance(leaf, (abjad.Rest, abjad.MultimeasureRest, abjad.Skip))
-                for leaf in abjad.select.leaves(shard)
-            ):
-                time_signature = sigs[i]
-                top_level_components = get_top_level_components_from_leaves(shard)
-                shard = top_level_components
-                inventories = [
-                    x
-                    for x in enumerate(
-                        abjad.Meter(time_signature.pair).depthwise_offset_inventory
-                    )
-                ]
-                if time_signature.denominator == 4:
-                    abjad.Meter.rewrite_meter(
-                        shard,
-                        time_signature,
-                        boundary_depth=inventories[-1][0],
-                        rewrite_tuplets=False,
-                    )
-                else:
-                    abjad.Meter.rewrite_meter(
-                        shard,
-                        time_signature,
-                        boundary_depth=inventories[-2][0],
-                        rewrite_tuplets=False,
-                    )
-
-
-def rewrite_meter(target):
-    print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
-    sigs = []
-    for skip in global_skips:
-        for indicator in abjad.get.indicators(skip):
-            if isinstance(indicator, abjad.TimeSignature):
-                sigs.append(indicator)
-    for voice in abjad.select.components(target["Staff Group"], abjad.Voice):
-        voice_dur = abjad.get.duration(voice)
-        time_signatures = sigs  # [:-1]
-        durations = [_.duration for _ in time_signatures]
-        sig_dur = sum(durations)
-        assert voice_dur == sig_dur, (voice_dur, sig_dur)
-        shards = abjad.mutate.split(voice[:], durations)
-        for i, shard in enumerate(shards):
-            time_signature = sigs[i]
-            inventories = [
-                x
-                for x in enumerate(
-                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
-                )
-            ]
-            if time_signature.denominator == 4:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-1][0],
-                    rewrite_tuplets=False,
-                )
-            else:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-2][0],
-                    rewrite_tuplets=False,
-                )
-
-
 def beam_score(target):
     global_skips = [_ for _ in abjad.select.leaves(target["Global Context"])]
     sigs = []
@@ -282,91 +376,3 @@ def beam_score_by_voice(score, voices):
             abjad.detach(abjad.StartBeam(), trem[0])
         if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
             abjad.detach(abjad.StopBeam(), trem[-1])
-
-
-def rewrite_meter_by_voice(score, voice_indeces):
-    print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
-    sigs = []
-    for skip in global_skips:
-        for indicator in abjad.get.indicators(skip):
-            if isinstance(indicator, abjad.TimeSignature):
-                sigs.append(indicator)
-    voices = []
-    for voice in voice_indeces:
-        voices.append(abjad.select.components(score["Staff Group"], abjad.Voice)[voice])
-    for voice in voices:
-        voice_dur = abjad.get.duration(voice)
-        time_signatures = sigs
-        durations = [_.duration for _ in time_signatures]
-        sig_dur = sum(durations)
-        assert voice_dur == sig_dur, (voice_dur, sig_dur)
-        shards = abjad.mutate.split(voice[:], durations)
-        for i, shard in enumerate(shards):
-            time_signature = sigs[i]
-            inventories = [
-                x
-                for x in enumerate(
-                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
-                )
-            ]
-            if time_signature.denominator == 4:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-1][0],
-                    rewrite_tuplets=False,
-                )
-            else:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-2][0],
-                    rewrite_tuplets=False,
-                )
-
-
-def rewrite_meter_by_measure(score, measures):
-    print("Rewriting meter ...")
-    global_skips = [_ for _ in abjad.select.leaves(score["Global Context"])]
-    sigs = []
-    skips = []
-    for measure in measures:
-        skips.append(global_skips[measure - 1])
-    for skip in skips:
-        for indicator in abjad.get.indicators(skip):
-            if isinstance(indicator, abjad.TimeSignature):
-                sigs.append(indicator)
-    for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-        all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
-        voice_sel = [all_measures[_ - 1] for _ in measures]
-        voice_dur = abjad.get.duration(voice_sel)
-        time_signatures = sigs  # [:-1]
-        durations = [_.duration for _ in time_signatures]
-        sig_dur = sum(durations)
-        assert voice_dur == sig_dur, (voice_dur, sig_dur)
-        all_shards = abjad.mutate.split(voice[:], durations)
-        shards = []
-        shards.append(all_shards[measures[0] - 1 : measures[-1]])
-        for i, shard in enumerate(shards[0]):
-            time_signature = sigs[i]
-            inventories = [
-                x
-                for x in enumerate(
-                    abjad.Meter(time_signature.pair).depthwise_offset_inventory
-                )
-            ]
-            if time_signature.denominator == 4:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-1][0],
-                    rewrite_tuplets=False,
-                )
-            else:
-                abjad.Meter.rewrite_meter(
-                    shard,
-                    time_signature,
-                    boundary_depth=inventories[-2][0],
-                    rewrite_tuplets=False,
-                )
