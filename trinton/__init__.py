@@ -29,7 +29,6 @@ from .makers import (
     make_and_append_rhythm_selections,
     append_rests,
     handwrite,
-    make_leaf_selection,
     extract_parts,
     make_fermata_measure,
     populate_fermata_measures,
@@ -106,6 +105,7 @@ from .selectors import (
     pleaves,
     group_selections,
     select_target,
+    make_leaf_selection,
 )
 
 from .sequence import (
