@@ -204,7 +204,7 @@ def make_rhythms(
     def rhythm_selections(divisions):
         commands_ = [
             *commands,
-            treat_tuplets(),
+            trinton.treat_tuplets(),
         ]
 
         new_divisions = divisions
@@ -317,7 +317,6 @@ def make_music(
     *args,
     preprocessor=None,
     voice=None,
-    rewrite=None,
 ):
     target = selector_function(voice)
     indicators = [_ for _ in abjad.get.indicators(abjad.select.leaf(target, 0))]
@@ -347,16 +346,16 @@ def make_music(
                 abjad.attach(indicator, abjad.select.leaf(container, 0))
 
             selections = abjad.mutate.eject_contents(container)
-            if rewrite is not None:
-                meter_command = evans.RewriteMeterCommand(boundary_depth=rewrite)
-                metered_staff = rmakers.wrap_in_time_signature_staff(
-                    selections[:], signature_instances
-                )
-                meter_command(metered_staff)
-                selections = abjad.mutate.eject_contents(metered_staff)
-                abjad.mutate.replace(target, selections)
-            else:
-                abjad.mutate.replace(target, selections)
+            abjad.mutate.replace(target, selections)
+
+        elif isinstance(arg, evans.RewriteMeterCommand):
+            target_copy = abjad.mutate.copy(target[:])
+            metered_staff = rmakers.wrap_in_time_signature_staff(
+                target_copy, signature_instances
+            )
+            arg(metered_staff)
+            selections = abjad.mutate.eject_contents(metered_staff)
+            abjad.mutate.replace(target, selections)
         else:
             arg(target)
 

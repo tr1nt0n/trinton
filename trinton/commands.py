@@ -59,6 +59,25 @@ def attach_multiple(score, voice, attachments, leaves, direction=None):
             )
 
 
+def attachment_command(attachments, selector):
+    def command(argument):
+        selections = selector(argument)
+        for selection in selections:
+            for attachment in attachments:
+                abjad.attach(attachment, selection)
+
+    return command
+
+
+def linear_attachment_command(attachments, selector):
+    def command(argument):
+        selections = selector(argument)
+        for selection, attachment in zip(selections, attachments):
+            abjad.attach(attachment, selection)
+
+    return command
+
+
 # notehead changers
 
 
@@ -212,6 +231,9 @@ def unmeasured_stem_tremolo(selections):
         elif leaf.written_duration == abjad.Duration(3, 16):
             abjad.attach(abjad.StemTremolo(64), leaf)
 
+        elif leaf.written_duration == abjad.Duration(7, 32):
+            abjad.attach(abjad.StemTremolo(64), leaf)
+
         elif leaf.written_duration == abjad.Duration(1, 8):
             abjad.attach(abjad.StemTremolo(64), leaf)
 
@@ -289,7 +311,7 @@ def unbeam_quarters(selections):
                 abjad.attach(abjad.StopBeam(), leaf3)
 
 
-def beam_durations(divisions):
+def beam_durations(divisions, beam_rests=False):
     def func(selections):
         selections = abjad.select.leaves(selections)
 
@@ -306,9 +328,11 @@ def beam_durations(divisions):
             group.append(leaf)
 
             if abjad.get.duration(group) == new_durations[0]:
-                abjad.beam(group)
+                abjad.beam(group, beam_rests=beam_rests)
                 group.clear()
                 new_durations.pop(0)
+
+        abjad.beam(group, beam_rests=beam_rests)
 
     return func
 

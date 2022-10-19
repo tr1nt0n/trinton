@@ -18,6 +18,8 @@ from .commands import (
     fuse_tuplet_rests,
     respell,
     beam_durations,
+    attachment_command,
+    linear_attachment_command,
 )
 
 from .makers import (
