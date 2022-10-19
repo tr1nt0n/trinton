@@ -17,6 +17,7 @@ from .commands import (
     unbeam_quarters,
     fuse_tuplet_rests,
     respell,
+    beam_durations,
 )
 
 from .makers import (

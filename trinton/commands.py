@@ -4,6 +4,7 @@ import evans
 import trinton
 from abjadext import rmakers
 from fractions import Fraction
+from itertools import cycle
 import quicktions
 import numpy
 import datetime
@@ -286,6 +287,30 @@ def unbeam_quarters(selections):
                 abjad.attach(abjad.StartBeam(), leaf2)
             if leaf3.written_duration < abjad.Duration(1, 4):
                 abjad.attach(abjad.StopBeam(), leaf3)
+
+
+def beam_durations(divisions):
+    def func(selections):
+        selections = abjad.select.leaves(selections)
+
+        durations = cycle([abjad.Duration(_) for _ in divisions])
+
+        new_durations = []
+
+        for _, duration in zip(range(len(selections)), durations):
+            new_durations.append(duration)
+
+        group = []
+
+        for leaf in selections:
+            group.append(leaf)
+
+            if abjad.get.duration(group) == new_durations[0]:
+                abjad.beam(group)
+                group.clear()
+                new_durations.pop(0)
+
+    return func
 
 
 # rest measures

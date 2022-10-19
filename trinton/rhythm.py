@@ -16,6 +16,8 @@ import os
 def treat_tuplets(non_power_of_two=False):
     def treatment(selections):
         tuplets = abjad.select.tuplets(selections)
+        rmakers.rewrite_dots(tuplets)
+        tuplets = abjad.select.tuplets(selections)
         rmakers.trivialize(tuplets)
         tuplets = abjad.select.tuplets(selections)
         rmakers.rewrite_rest_filled(tuplets)
@@ -24,8 +26,6 @@ def treat_tuplets(non_power_of_two=False):
             rmakers.rewrite_sustained(tuplets)
         tuplets = abjad.select.tuplets(selections)
         rmakers.extract_trivial(tuplets)
-        tuplets = abjad.select.tuplets(selections)
-        rmakers.rewrite_dots(tuplets)
 
     return treatment
 
