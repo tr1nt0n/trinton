@@ -20,6 +20,7 @@ from .commands import (
     beam_durations,
     attachment_command,
     linear_attachment_command,
+    glissando_command,
 )
 
 from .makers import (
@@ -109,6 +110,7 @@ from .selectors import (
     group_selections,
     select_target,
     make_leaf_selection,
+    select_tuplets_by_index,
 )
 
 from .sequence import (
@@ -129,6 +131,8 @@ from .spanners import (
     write_trill_span,
     ottava,
     write_id_spanner,
+    hooked_spanner_command,
+    arrow_spanner_command,
 )
 
 __all__ = [

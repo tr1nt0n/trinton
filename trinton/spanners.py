@@ -108,3 +108,81 @@ def write_id_spanner(
 
     abjad.attach(bundle, start_selection)
     abjad.attach(termination, stop_selection)
+
+
+def hooked_spanner_command(string, selector, padding=7, direction=None):
+    def attach_spanner(argument):
+        if direction == "down":
+            start_text_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(rf'\markup \upright {{ "{string}" }}'),
+                right_text=None,
+                style="dashed-line-with-up-hook",
+            )
+        else:
+            start_text_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(rf'\markup \upright {{ "{string}" }}'),
+                right_text=None,
+                style="dashed-line-with-hook",
+            )
+        bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
+
+        selections1 = selector(argument)
+
+        selections2 = selections1[1:]
+
+        for s1, s2 in zip(selections1, selections2):
+            if direction == "down":
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\textSpannerDown",
+                        "before",
+                    ),
+                    s1,
+                )
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\textSpannerUp",
+                        "after",
+                    ),
+                    s2,
+                )
+            abjad.attach(bundle, s1),
+            abjad.attach(abjad.StopTextSpan(), s2)
+
+    return attach_spanner
+
+
+def arrow_spanner_command(l_string, r_string, selector, padding=7, direction=None):
+    def attach_spanner(argument):
+        start_text_span = abjad.StartTextSpan(
+            left_text=abjad.Markup(rf'\markup \upright {{ "{l_string}" }}'),
+            right_text=abjad.Markup(rf"\markup \upright {{ {r_string} }}"),
+            style="dashed-line-with-arrow",
+        )
+
+        bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
+
+        selections1 = selector(argument)
+
+        selections2 = selections1[1:]
+
+        for s1, s2 in zip(selections1, selections2):
+            if direction == "down":
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\textSpannerDown",
+                        "before",
+                    ),
+                    s1,
+                )
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\textSpannerUp",
+                        "after",
+                    ),
+                    s2,
+                )
+            abjad.attach(bundle, s1),
+            abjad.attach(abjad.StopTextSpan(), s2)
+
+    return attach_spanner

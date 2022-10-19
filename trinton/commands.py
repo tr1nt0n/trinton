@@ -59,21 +59,21 @@ def attach_multiple(score, voice, attachments, leaves, direction=None):
             )
 
 
-def attachment_command(attachments, selector):
+def attachment_command(attachments, selector, direction=None):
     def command(argument):
         selections = selector(argument)
         for selection in selections:
             for attachment in attachments:
-                abjad.attach(attachment, selection)
+                abjad.attach(attachment, selection, direction=direction)
 
     return command
 
 
-def linear_attachment_command(attachments, selector):
+def linear_attachment_command(attachments, selector, direction=None):
     def command(argument):
         selections = selector(argument)
         for selection, attachment in zip(selections, attachments):
-            abjad.attach(attachment, selection)
+            abjad.attach(attachment, selection, direction=direction)
 
     return command
 
@@ -222,6 +222,9 @@ def unmeasured_stem_tremolo(selections):
         elif leaf.written_duration == abjad.Duration(1, 32):
             abjad.attach(abjad.StemTremolo(256), leaf)
 
+        elif leaf.written_duration == abjad.Duration(3, 64):
+            abjad.attach(abjad.StemTremolo(256), leaf)
+
         elif leaf.written_duration == abjad.Duration(3, 32):
             abjad.attach(abjad.StemTremolo(256), leaf)
 
@@ -278,6 +281,20 @@ def glissando(score, voice, start_gliss, stop_gliss):
             allow_repeats=True,
             allow_ties=True,
         )
+
+
+def glissando_command(selector):
+    def command(argument):
+        selections = selector(argument)
+        for selection in selections:
+            abjad.glissando(
+                selection,
+                hide_middle_note_heads=True,
+                allow_repeats=True,
+                allow_ties=True,
+            )
+
+    return command
 
 
 # beaming
