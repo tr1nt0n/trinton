@@ -6,6 +6,7 @@ from abjadext import rmakers
 from fractions import Fraction
 import quicktions
 import numpy
+import itertools
 import datetime
 import dataclasses
 import typing
@@ -126,28 +127,30 @@ def hooked_spanner_command(string, selector, padding=7, direction=None):
             )
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
 
-        selections1 = selector(argument)
+        selections = selector(argument)
 
-        selections2 = selections1[1:]
+        it = iter(selections)
 
-        for s1, s2 in zip(selections1, selections2):
+        tups = [*zip(it, it)]
+
+        for tup in tups:
             if direction == "down":
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         r"\textSpannerDown",
                         "before",
                     ),
-                    s1,
+                    tup[0],
                 )
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         r"\textSpannerUp",
                         "after",
                     ),
-                    s2,
+                    tup[1],
                 )
-            abjad.attach(bundle, s1),
-            abjad.attach(abjad.StopTextSpan(), s2)
+            abjad.attach(bundle, tup[0]),
+            abjad.attach(abjad.StopTextSpan(), tup[1])
 
     return attach_spanner
 
@@ -162,27 +165,29 @@ def arrow_spanner_command(l_string, r_string, selector, padding=7, direction=Non
 
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
 
-        selections1 = selector(argument)
+        selections = selector(argument)
 
-        selections2 = selections1[1:]
+        it = iter(selections)
 
-        for s1, s2 in zip(selections1, selections2):
+        tups = [*zip(it, it)]
+
+        for tup in tups:
             if direction == "down":
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         r"\textSpannerDown",
                         "before",
                     ),
-                    s1,
+                    tup[0],
                 )
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         r"\textSpannerUp",
                         "after",
                     ),
-                    s2,
+                    tup[1],
                 )
-            abjad.attach(bundle, s1),
-            abjad.attach(abjad.StopTextSpan(), s2)
+            abjad.attach(bundle, tup[0]),
+            abjad.attach(abjad.StopTextSpan(), tup[1])
 
     return attach_spanner
