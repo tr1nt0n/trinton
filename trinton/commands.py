@@ -78,6 +78,19 @@ def linear_attachment_command(attachments, selector, direction=None):
     return command
 
 
+def detach_command(detachments, selector):
+    def command(argument):
+        selections = selector(argument)
+        for selection in selections:
+            for detachment in detachments:
+                abjad.detach(
+                    detachment,
+                    selection,
+                )
+
+    return command
+
+
 # notehead changers
 
 
@@ -96,7 +109,17 @@ def pitched_notehead_change(voice, pitches, notehead):
     for leaf in abjad.select.leaves(voice, pitched=True):
         for pitch in pitches:
             if leaf.written_pitch.number == pitch:
-                abjad.tweak(leaf.note_head).style = notehead
+                abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
+
+
+def change_notehead_command(notehead, selector):
+    def change(argument):
+        selections = selector(argument)
+        leaves = abjad.select.leaves(selections, pitched=True)
+        for leaf in leaves:
+            abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
+
+    return change
 
 
 # barlines

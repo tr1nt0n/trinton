@@ -192,7 +192,7 @@ def select_target(voice, measure_number_range=(1, 3)):
     if len(measure_number_range) == 1:
         indices = [_ - 1 for _ in measure_number_range]
     else:
-        revised_range = range(measure_number_range[0] - 1, measure_number_range[1] - 1)
+        revised_range = range(measure_number_range[0] - 1, measure_number_range[1])
         indices = [_ for _ in revised_range]
 
     measures = abjad.select.group_by_measure(voice)

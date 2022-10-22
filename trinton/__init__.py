@@ -21,6 +21,8 @@ from .commands import (
     attachment_command,
     linear_attachment_command,
     glissando_command,
+    detach_command,
+    change_notehead_command,
 )
 
 from .makers import (
