@@ -83,3 +83,11 @@ def remove_adjacent(sequence):
         else:
             a.append(item)
     return a
+
+
+def return_middle_index(sequence):
+    if len(sequence) % 2 == 0:
+        half = (len(sequence) - 1) / 2
+        return half + 0.5
+    else:
+        return (len(sequence) - 1) / 2

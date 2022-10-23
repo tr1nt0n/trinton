@@ -123,6 +123,7 @@ from .sequence import (
     all_additions,
     remove_all,
     remove_adjacent,
+    return_middle_index,
 )
 
 from .spanners import (
@@ -135,6 +136,7 @@ from .spanners import (
     write_id_spanner,
     hooked_spanner_command,
     arrow_spanner_command,
+    id_spanner_command,
 )
 
 __all__ = [
