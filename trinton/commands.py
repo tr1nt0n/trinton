@@ -249,7 +249,7 @@ def unmeasured_stem_tremolo(selections):
             abjad.attach(abjad.StemTremolo(256), leaf)
 
         elif leaf.written_duration == abjad.Duration(3, 32):
-            abjad.attach(abjad.StemTremolo(256), leaf)
+            abjad.attach(abjad.StemTremolo(128), leaf)
 
         elif leaf.written_duration == abjad.Duration(1, 16):
             abjad.attach(abjad.StemTremolo(128), leaf)

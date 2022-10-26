@@ -204,7 +204,12 @@ def arrow_spanner_command(
 
 
 def id_spanner_command(
-    selector, id, left_text, right_text=None, style="dashed-line-with-arrow", padding=7
+    selector,
+    id,
+    left_text,
+    right_text=None,
+    style="dashed-line-with-arrow",
+    padding=7,
 ):
     def attach_spanner(argument):
         selections = selector(argument)

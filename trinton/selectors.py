@@ -230,13 +230,9 @@ def select_target(voice, measure_number_range=(1, 3)):
     stop_offset = target_timespans[-1].offsets[-1]
     relevant_timespan = abjad.Timespan(start_offset, stop_offset)
 
-    leaves = abjad.select.leaves(voice)
-
-    top_level_components = trinton.get_top_level_components_from_leaves(leaves)
-
     out = []
 
-    for component in top_level_components:
+    for component in voice[:]:
         span = abjad.get.timespan(component)
         if span.intersects_timespan(relevant_timespan) is True:
             out.append(component)
