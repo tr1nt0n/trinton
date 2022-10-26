@@ -224,11 +224,7 @@ def select_target(voice, measure_number_range=(1, 3)):
     for i in indices:
         target_measures.extend(measures[i])
 
-    target_timespans = []
-
-    for measure in target_measures:
-        timespan = abjad.get.timespan(measure)
-        target_timespans.append(timespan)
+    target_timespans = [abjad.get.timespan(_) for _ in target_measures]
 
     start_offset = target_timespans[0].offsets[0]
     stop_offset = target_timespans[-1].offsets[-1]
@@ -236,12 +232,13 @@ def select_target(voice, measure_number_range=(1, 3)):
 
     leaves = abjad.select.leaves(voice)
 
-    timespans = [abjad.get.timespan(_) for _ in leaves]
+    top_level_components = trinton.get_top_level_components_from_leaves(leaves)
 
-    relevant_leaves = []
+    out = []
 
-    for leaf, span in zip(leaves, timespans):
+    for component in top_level_components:
+        span = abjad.get.timespan(component)
         if span.intersects_timespan(relevant_timespan) is True:
-            relevant_leaves.append(leaf)
+            out.append(component)
 
-    return relevant_leaves
+    return out
