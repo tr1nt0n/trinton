@@ -99,12 +99,13 @@ def select_leaves_by_index(indices, pitched=None):
 def patterned_leaf_index_selector(
     indices,
     period,
+    pitched=None,
 ):
     def selector(argument):
         out = []
         index = []
         pattern = abjad.Pattern(indices=indices, period=period)
-        leaves = abjad.select.leaves(argument)
+        leaves = abjad.select.leaves(argument, pitched=pitched)
         for i in range(len(leaves)):
             if pattern.matches_index(i, len(leaves)):
                 index.append(i)
@@ -115,20 +116,21 @@ def patterned_leaf_index_selector(
     return selector
 
 
-def patterned_tie_index_selector(
-    indices,
-    period,
-):
+def patterned_tie_index_selector(indices, period, first=False, pitched=None):
     def selector(argument):
         out = []
         index = []
         pattern = abjad.Pattern(indices=indices, period=period)
-        ties = abjad.select.logical_ties(argument)
+        ties = abjad.select.logical_ties(argument, pitched=pitched)
         for i in range(len(ties)):
             if pattern.matches_index(i, len(ties)):
                 index.append(i)
-        for i in index:
-            out.append(ties[i])
+        if first is True:
+            for i in index:
+                out.append(ties[i][0])
+        else:
+            for i in index:
+                out.append(ties[i])
         return out
 
     return selector
@@ -188,6 +190,23 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
+# def select_target(voice, measure_number_range=(1, 3)):
+#     if len(measure_number_range) == 1:
+#         indices = [_ - 1 for _ in measure_number_range]
+#     else:
+#         revised_range = range(measure_number_range[0] - 1, measure_number_range[1])
+#         indices = [_ for _ in revised_range]
+#
+#     measures = abjad.select.group_by_measure(voice)
+#
+#     target_measures = []
+#
+#     for i in indices:
+#         target_measures.extend(measures[i])
+#
+#     return target_measures
+
+
 def select_target(voice, measure_number_range=(1, 3)):
     if len(measure_number_range) == 1:
         indices = [_ - 1 for _ in measure_number_range]
@@ -195,11 +214,34 @@ def select_target(voice, measure_number_range=(1, 3)):
         revised_range = range(measure_number_range[0] - 1, measure_number_range[1])
         indices = [_ for _ in revised_range]
 
-    measures = abjad.select.group_by_measure(voice)
+    parentage = abjad.get.parentage(voice)
+    outer_context = parentage.components[-1]
+    global_context = outer_context["Global Context"]
+    measures = abjad.select.group_by_measure(global_context)
 
     target_measures = []
 
     for i in indices:
         target_measures.extend(measures[i])
 
-    return target_measures
+    target_timespans = []
+
+    for measure in target_measures:
+        timespan = abjad.get.timespan(measure)
+        target_timespans.append(timespan)
+
+    start_offset = target_timespans[0].offsets[0]
+    stop_offset = target_timespans[-1].offsets[-1]
+    relevant_timespan = abjad.Timespan(start_offset, stop_offset)
+
+    leaves = abjad.select.leaves(voice)
+
+    timespans = [abjad.get.timespan(_) for _ in leaves]
+
+    relevant_leaves = []
+
+    for leaf, span in zip(leaves, timespans):
+        if span.intersects_timespan(relevant_timespan) is True:
+            relevant_leaves.append(leaf)
+
+    return relevant_leaves

@@ -155,13 +155,23 @@ def hooked_spanner_command(string, selector, padding=7, direction=None):
     return attach_spanner
 
 
-def arrow_spanner_command(l_string, r_string, selector, padding=7, direction=None):
+def arrow_spanner_command(
+    l_string, r_string, selector, padding=7, direction=None, tempo=False
+):
     def attach_spanner(argument):
-        start_text_span = abjad.StartTextSpan(
-            left_text=abjad.Markup(rf'\markup \upright {{ "{l_string}" }}'),
-            right_text=abjad.Markup(rf"\markup \upright {{ {r_string} }}"),
-            style="dashed-line-with-arrow",
-        )
+        if tempo is True:
+            start_text_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(l_string),
+                right_text=abjad.Markup(r_string),
+                style="dashed-line-with-arrow",
+            )
+
+        else:
+            start_text_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(rf'\markup \upright {{ "{l_string}" }}'),
+                right_text=abjad.Markup(rf"\markup \upright {{ {r_string} }}"),
+                style="dashed-line-with-arrow",
+            )
 
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
 

@@ -1,0 +1,15 @@
+A replacement for the process of using measure indices to select components to replace after rhythm making (group_by_measure can't handle measure crossing tuplets which produce leafless measures)
+
+1. Any score component can be queried for a timespan which represents the context of its contiguous logical voice (abjad.get.timespan)
+
+2. The global context will never have giant tuplets (the voice might)
+
+3. We can select the relevant measures by index using the global context consistently
+
+4. Ask the skips in the global context for their timespans and save a new timespan which is their sum (grab the first one's start_offset and the last one's stop_offset)
+
+5. Timespans can be compared. (intersects_timespan ?)
+
+6. Create list of leaves in voice which intersect timespan
+
+7. After done iterating all leaves in voice, replace list of leaves with new selections.

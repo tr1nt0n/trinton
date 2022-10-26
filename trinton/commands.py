@@ -263,32 +263,32 @@ def unmeasured_stem_tremolo(selections):
         elif leaf.written_duration == abjad.Duration(1, 8):
             abjad.attach(abjad.StemTremolo(64), leaf)
 
-        elif leaf.written_duration == abjad.Duration(1, 4):
+        elif leaf.written_duration >= abjad.Duration(1, 4):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
-        elif leaf.written_duration == abjad.Duration(3, 8):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(1, 2):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(3, 4):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(7, 8):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(1, 1):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(3, 2):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(7, 4):
-            abjad.attach(abjad.StemTremolo(32), leaf)
-
-        elif leaf.written_duration == abjad.Duration(2, 1):
-            abjad.attach(abjad.StemTremolo(32), leaf)
+        # elif leaf.written_duration == abjad.Duration(3, 8):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(1, 2):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(3, 4):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(7, 8):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(1, 1):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(3, 2):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(7, 4):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
+        #
+        # elif leaf.written_duration == abjad.Duration(2, 1):
+        #     abjad.attach(abjad.StemTremolo(32), leaf)
 
 
 # glissandi

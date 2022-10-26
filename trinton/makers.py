@@ -322,7 +322,6 @@ def make_music(
     indicators = [_ for _ in abjad.get.indicators(abjad.select.leaf(target, 0))]
     selections = None
     groups = abjad.select.group_by_measure(target)
-    first_leaves = [abjad.select.leaf(_, 0) for _ in groups]
     parentage = abjad.get.parentage(voice)
     outer_context = parentage.components[-1]
     global_context = outer_context["Global Context"]
