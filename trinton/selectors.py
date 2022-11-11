@@ -190,23 +190,6 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
-# def select_target(voice, measure_number_range=(1, 3)):
-#     if len(measure_number_range) == 1:
-#         indices = [_ - 1 for _ in measure_number_range]
-#     else:
-#         revised_range = range(measure_number_range[0] - 1, measure_number_range[1])
-#         indices = [_ for _ in revised_range]
-#
-#     measures = abjad.select.group_by_measure(voice)
-#
-#     target_measures = []
-#
-#     for i in indices:
-#         target_measures.extend(measures[i])
-#
-#     return target_measures
-
-
 def select_target(voice, measure_number_range=(1, 3)):
     if len(measure_number_range) == 1:
         indices = [_ - 1 for _ in measure_number_range]

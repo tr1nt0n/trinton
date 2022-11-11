@@ -189,6 +189,19 @@ def tuplet_brackets(score, all_staves):
         new_brackets(score[staff])
 
 
+def notehead_bracket_command(selector=None):
+    def call_handler(argument):
+        handler = evans.NoteheadBracketMaker()
+        if selector is not None:
+            selections = selector(argument)
+            handler(selections)
+
+        else:
+            handler(argument)
+
+    return call_handler
+
+
 def reduce_tuplets(score, voice, tuplets):
     def numpy_gcd(a, b):
         a, b = numpy.broadcast_arrays(a, b)
@@ -265,30 +278,6 @@ def unmeasured_stem_tremolo(selections):
 
         elif leaf.written_duration >= abjad.Duration(1, 4):
             abjad.attach(abjad.StemTremolo(32), leaf)
-
-        # elif leaf.written_duration == abjad.Duration(3, 8):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(1, 2):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(3, 4):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(7, 8):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(1, 1):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(3, 2):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(7, 4):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
-        #
-        # elif leaf.written_duration == abjad.Duration(2, 1):
-        #     abjad.attach(abjad.StemTremolo(32), leaf)
 
 
 # glissandi

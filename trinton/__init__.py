@@ -23,6 +23,7 @@ from .commands import (
     glissando_command,
     detach_command,
     change_notehead_command,
+    notehead_bracket_command,
 )
 
 from .makers import (
@@ -234,4 +235,5 @@ __all__ = [
     "make_music",
     "select_target",
     "write_id_spanner",
+    "notehead_bracket_command",
 ]
