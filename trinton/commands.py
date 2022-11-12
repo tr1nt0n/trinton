@@ -286,7 +286,7 @@ def unmeasured_stem_tremolo(selections):
 def glissando(score, voice, start_gliss, stop_gliss):
     for gliss1, gliss2 in zip(start_gliss, stop_gliss):
         leaves = list(range(gliss1, gliss2 + 1))
-        sel = make_leaf_selection(score=score, voice=voice, leaves=leaves)
+        sel = trinton.make_leaf_selection(score=score, voice=voice, leaves=leaves)
         abjad.glissando(
             sel,
             hide_middle_note_heads=True,

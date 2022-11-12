@@ -221,3 +221,17 @@ def select_target(voice, measure_number_range=(1, 3)):
             out.append(component)
 
     return out
+
+
+def logical_ties(first=False, pitched=None):
+    def selector(argument):
+        ties = abjad.select.logical_ties(argument, pitched=pitched)
+        if first is True:
+            out = []
+            for tie in ties:
+                out.append(tie[0])
+            return out
+        else:
+            return ties
+
+    return selector

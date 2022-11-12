@@ -114,6 +114,7 @@ from .selectors import (
     select_target,
     make_leaf_selection,
     select_tuplets_by_index,
+    logical_ties,
 )
 
 from .sequence import (
@@ -236,4 +237,5 @@ __all__ = [
     "select_target",
     "write_id_spanner",
     "notehead_bracket_command",
+    "logical_ties",
 ]
