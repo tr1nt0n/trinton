@@ -36,9 +36,9 @@ def write_hooked_spanner(voice, string, start_leaf, stop_leaf, padding):
     trinton.attach(voice, stop_leaf, abjad.StopTextSpan())
 
 
-def write_slur(voice, start_slur, stop_slur):
+def write_slur(voice, start_slur, stop_slur, direction=None):
     for leaf in start_slur:
-        trinton.attach(voice, [leaf], abjad.StartPhrasingSlur())
+        trinton.attach(voice, [leaf], abjad.StartPhrasingSlur(), direction=direction)
     for leaf in stop_slur:
         trinton.attach(voice, [leaf], abjad.StopPhrasingSlur())
 

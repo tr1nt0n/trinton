@@ -4,6 +4,7 @@ import evans
 import trinton
 from abjadext import rmakers
 from fractions import Fraction
+from itertools import cycle
 import quicktions
 import numpy
 import datetime
@@ -50,7 +51,11 @@ def extract_instrument_name(instrument_class):
 
 
 def make_score_template(
-    instruments, groups, outer_staff="ChoirStaff", inner_staff="PianoStaff"
+    instruments,
+    groups,
+    outer_staff="StaffGroup",
+    inner_staff="GrandStaff",
+    staff_types=None,
 ):
     name_counts = {extract_instrument_name(_): 1 for _ in instruments}
     sub_group_counter = 1
@@ -62,13 +67,17 @@ def make_score_template(
         name="Score",
     )
     grouped_voices = evans.Sequence(instruments).grouper(groups)
-    for item in grouped_voices:
+    if staff_types is None:
+        staff_types = []
+        for item in grouped_voices:
+            staff_types.append(["Staff" for _ in item])
+    for item, type in zip(grouped_voices, staff_types):
         if isinstance(item, list):
             sub_group = abjad.StaffGroup(
                 name=f"sub group {sub_group_counter}", lilypond_type=inner_staff
             )
             sub_group_counter += 1
-            for sub_item in item:
+            for sub_item, sub_type in zip(item, type):
                 if 1 < instruments.count(sub_item):
                     name_string = f"{extract_instrument_name(sub_item)} {name_counts[extract_instrument_name(sub_item)]}"
                 else:
@@ -78,6 +87,7 @@ def make_score_template(
                         abjad.Voice(name=f"{name_string} voice"),
                     ],
                     name=f"{name_string} staff",
+                    lilypond_type=sub_type,
                 )
                 sub_group.append(staff)
                 name_counts[extract_instrument_name(sub_item)] += 1
@@ -89,7 +99,7 @@ def make_score_template(
                 name_string = f"{extract_instrument_name(item)}"
             staff = abjad.Staff(
                 [
-                    abjad.Voice(name=f"{name_string} voice"),
+                    abjad.Voice(name=f"{name_string} voice", lilypond_type=type),
                 ],
                 name=f"{name_string} staff",
             )
@@ -547,12 +557,19 @@ def populate_fermata_measures(score, voices, leaves, fermata_measures=None):
         if voice == "Global Context":
             pass
         else:
-            trinton.attach(
-                voice=score[voice],
+            trinton.attach_multiple(
+                score=score,
+                voice=voice,
                 leaves=l,
-                attachment=abjad.Markup(
-                    r'\markup \huge { \musicglyph "scripts.ufermata" }'
-                ),
+                attachments=[
+                    abjad.Markup(r'\markup \huge { \musicglyph "scripts.ufermata" }'),
+                    abjad.LilyPondLiteral(
+                        r"\once \override Score.BarLine.transparent = ##f", "after"
+                    ),
+                    abjad.LilyPondLiteral(
+                        r"\once \override Score.BarLine.transparent = ##f", "before"
+                    ),
+                ],
             )
 
 
