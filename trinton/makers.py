@@ -70,7 +70,10 @@ def make_score_template(
     if staff_types is None:
         staff_types = []
         for item in grouped_voices:
-            staff_types.append(["Staff" for _ in item])
+            if isinstance(item, list):
+                staff_types.append(["Staff" for _ in item])
+            else:
+                staff_types.append("Staff")
     for item, type in zip(grouped_voices, staff_types):
         if isinstance(item, list):
             sub_group = abjad.StaffGroup(
@@ -84,7 +87,9 @@ def make_score_template(
                     name_string = f"{extract_instrument_name(sub_item)}"
                 staff = abjad.Staff(
                     [
-                        abjad.Voice(name=f"{name_string} voice"),
+                        abjad.Voice(
+                            name=f"{name_string} voice",
+                        ),
                     ],
                     name=f"{name_string} staff",
                     lilypond_type=sub_type,
@@ -99,9 +104,12 @@ def make_score_template(
                 name_string = f"{extract_instrument_name(item)}"
             staff = abjad.Staff(
                 [
-                    abjad.Voice(name=f"{name_string} voice", lilypond_type=type),
+                    abjad.Voice(
+                        name=f"{name_string} voice",
+                    ),
                 ],
                 name=f"{name_string} staff",
+                lilypond_type=type,
             )
             score["Staff Group"].append(staff)
             name_counts[extract_instrument_name(item)] += 1
