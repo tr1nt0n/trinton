@@ -335,6 +335,7 @@ def make_music(
     *args,
     preprocessor=None,
     voice=None,
+    beam_meter=False,
 ):
     target = selector_function(voice)
     indicators = [_ for _ in abjad.get.indicators(abjad.select.leaf(target, 0))]
@@ -375,6 +376,40 @@ def make_music(
             abjad.mutate.replace(target, selections)
         else:
             arg(target)
+
+    if beam_meter is True:
+        print("Beaming meter ...")
+        target = selector_function(voice)
+        measures = abjad.select.group_by_measure(target)
+        for i, shard in enumerate(measures):
+            top_level_components = trinton.get_top_level_components_from_leaves(shard)
+            shard = top_level_components
+            met = abjad.Meter(signature_instances[i].pair)
+            inventories = [
+                x
+                for x in enumerate(
+                    abjad.Meter(signature_instances[i].pair).depthwise_offset_inventory
+                )
+            ]
+            if signature_instances[i].denominator == 4:
+                trinton.beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-1][0],
+                    include_rests=False,
+                )
+            else:
+                trinton.beam_meter(
+                    components=shard[:],
+                    meter=met,
+                    offset_depth=inventories[-2][0],
+                    include_rests=False,
+                )
+    for trem in abjad.select.components(target, abjad.TremoloContainer):
+        if abjad.StartBeam() in abjad.get.indicators(trem[0]):
+            abjad.detach(abjad.StartBeam(), trem[0])
+        if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
+            abjad.detach(abjad.StopBeam(), trem[-1])
 
 
 # extraction
