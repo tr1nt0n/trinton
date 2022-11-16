@@ -64,11 +64,17 @@ def select_tuplets_by_index(indices):
     return selector
 
 
-def select_logical_ties_by_index(indices):
+def select_logical_ties_by_index(indices, pitched=None, first=False):
     def selector(argument):
         out = []
-        for index in indices:
-            out.append(abjad.select.logical_ties(argument)[index])
+        if first is True:
+            for index in indices:
+                out.append(
+                    abjad.select.logical_ties(argument, pitched=pitched)[index][0]
+                )
+        else:
+            for index in indices:
+                out.append(abjad.select.logical_ties(argument, pitched=pitched)[index])
         return out
 
     return selector
