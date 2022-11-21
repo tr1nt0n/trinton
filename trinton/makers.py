@@ -129,7 +129,7 @@ def make_empty_score(
         groups=groups,
         outer_staff=outer_staff,
         inner_staff=inner_staff,
-        staff_types=staff_types
+        staff_types=staff_types,
     )
 
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])

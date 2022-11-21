@@ -79,6 +79,7 @@ def ottava(score, voice, start_ottava, stop_ottava, octave):
             abjad.select.leaf(score[voice], stop),
         )
 
+
 def ottava_command(selector, octave=1):
     def wrap(argument):
         selections = selector(argument)
@@ -91,7 +92,6 @@ def ottava_command(selector, octave=1):
             abjad.attach(abjad.Ottava(n=0, site="after"), tup[1])
 
     return wrap
-
 
 
 def write_id_spanner(

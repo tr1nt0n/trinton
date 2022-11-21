@@ -122,6 +122,35 @@ def change_notehead_command(notehead, selector):
     return change
 
 
+def noteheads_only(duration_log="2"):
+    def only_noteheads(argument):
+        for leaf in abjad.select.leaves(argument):
+            abjad.attach(
+                abjad.LilyPondLiteral(r"\once \override Stem.stencil = ##f", "before"),
+                leaf,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(r"\once \override Beam.stencil = ##f", "before"),
+                leaf,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(r"\once \override Flag.stencil = ##f", "before"),
+                leaf,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(r"\once \override Dots.stencil = ##f", "before"),
+                leaf,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    rf"\once \override NoteHead.duration-log = {duration_log}", "before"
+                ),
+                leaf,
+            )
+
+    return only_noteheads
+
+
 # barlines
 
 
@@ -178,6 +207,7 @@ def respell(selections):
         elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
             abjad.iterpitches.respell_with_sharps(tie)
 
+
 def force_accidentals(voice, selector):
     selections = selector(voice)
     for tie in abjad.select.logical_ties(selections, pitched=True):
@@ -186,6 +216,7 @@ def force_accidentals(voice, selector):
                 head.is_forced = True
         else:
             tie[0].note_head.is_forced = True
+
 
 def force_accidentals_command(selector):
     def force(argument):
@@ -196,7 +227,9 @@ def force_accidentals_command(selector):
                     head.is_forced = True
             else:
                 tie[0].note_head.is_forced = True
+
     return force
+
 
 # tuplets
 

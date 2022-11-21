@@ -26,6 +26,7 @@ from .commands import (
     notehead_bracket_command,
     force_accidentals,
     force_accidentals_command,
+    noteheads_only,
 )
 
 from .makers import (
