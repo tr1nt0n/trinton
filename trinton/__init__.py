@@ -24,6 +24,8 @@ from .commands import (
     detach_command,
     change_notehead_command,
     notehead_bracket_command,
+    force_accidentals,
+    force_accidentals_command,
 )
 
 from .makers import (
@@ -78,6 +80,7 @@ from .pitch import (
     consecutive_multiplication,
     durational_pitch_association,
     pitch_by_hand,
+    pitch_with_selector_command,
 )
 
 from .preprocessors import (
@@ -139,6 +142,7 @@ from .spanners import (
     hooked_spanner_command,
     arrow_spanner_command,
     id_spanner_command,
+    ottava_command,
 )
 
 __all__ = [

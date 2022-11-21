@@ -105,3 +105,10 @@ def pitch_by_hand(
         selections = selector(current_measure)
 
         handler(selections)
+
+def pitch_with_selector_command(pitch_list, selector, forget=False, as_ratios=False):
+    def pitch(argument):
+        selections = selector(argument)
+        handler = evans.PitchHandler(pitch_list=pitch_list, forget=forget, as_ratios=as_ratios)
+        handler(selections)
+    return pitch

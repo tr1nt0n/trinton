@@ -178,6 +178,25 @@ def respell(selections):
         elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
             abjad.iterpitches.respell_with_sharps(tie)
 
+def force_accidentals(voice, selector):
+    selections = selector(voice)
+    for tie in abjad.select.logical_ties(selections, pitched=True):
+        if isinstance(tie[0], abjad.Chord):
+            for head in tie[0].note_heads:
+                head.is_forced = True
+        else:
+            tie[0].note_head.is_forced = True
+
+def force_accidentals_command(selector):
+    def force(argument):
+        selections = selector(argument)
+        for tie in abjad.select.logical_ties(selections, pitched=True):
+            if isinstance(tie[0], abjad.Chord):
+                for head in tie[0].note_heads:
+                    head.is_forced = True
+            else:
+                tie[0].note_head.is_forced = True
+    return force
 
 # tuplets
 

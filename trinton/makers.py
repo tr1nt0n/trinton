@@ -122,12 +122,14 @@ def make_empty_score(
     time_signatures,
     outer_staff="StaffGroup",
     inner_staff="GrandStaff",
+    staff_types=None,
 ):
     score = make_score_template(
         instruments=instruments,
         groups=groups,
         outer_staff=outer_staff,
         inner_staff=inner_staff,
+        staff_types=staff_types
     )
 
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])
