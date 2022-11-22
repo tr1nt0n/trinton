@@ -418,6 +418,214 @@ def beam_durations(divisions, beam_rests=False):
     return func
 
 
+def _matches_pitch(pitched_leaf, pitch_object):
+    if isinstance(pitch_object, baca.Coat):
+        pitch_object = pitch_object.argument
+    if pitch_object is None:
+        return False
+    if isinstance(pitched_leaf, abjad.Note):
+        written_pitches = [pitched_leaf.written_pitch]
+    elif isinstance(pitched_leaf, abjad.Chord):
+        written_pitches = pitched_leaf.written_pitches
+    else:
+        raise TypeError(pitched_leaf)
+    if isinstance(pitch_object, int | float):
+        source = [_.number for _ in written_pitches]
+    elif isinstance(pitch_object, abjad.NamedPitch):
+        source = written_pitches
+    elif isinstance(pitch_object, abjad.NumberedPitch):
+        source = [abjad.NumberedPitch(_) for _ in written_pitches]
+    elif isinstance(pitch_object, abjad.NamedPitchClass):
+        source = [abjad.NamedPitchClass(_) for _ in written_pitches]
+    elif isinstance(pitch_object, abjad.NumberedPitchClass):
+        source = [abjad.NumberedPitchClass(_) for _ in written_pitches]
+    else:
+        raise TypeError(f"unknown pitch object: {pitch_object!r}.")
+    # if not type(source[0]) is type(pitch_object):
+    #     raise TypeError(f"{source!r} type must match {pitch_object!r}.")
+    return pitch_object in source
+
+
+def _do_imbrication(
+    container: abjad.Container,
+    segment: list,
+    voice_name: str,
+    *commands,
+    allow_unused_pitches: bool = False,
+    by_pitch_class: bool = False,
+    hocket: bool = False,
+    truncate_ties: bool = False,
+) -> dict[str, list]:
+    original_container = container
+    container = baca.copy.deepcopy(container)
+    abjad.override(container).TupletBracket.stencil = False
+    abjad.override(container).TupletNumber.stencil = False
+    segment = abjad.sequence.flatten(segment, depth=-1)
+    if by_pitch_class:
+        segment = [abjad.NumberedPitchClass(_) for _ in segment]
+    cursor = baca.Cursor(singletons=True, source=segment, suppress_exception=True)
+    pitch_number = cursor.next()
+    original_logical_ties = abjad.select.logical_ties(original_container)
+    logical_ties = abjad.select.logical_ties(container)
+    pairs = zip(logical_ties, original_logical_ties)
+    for logical_tie, original_logical_tie in pairs:
+        if isinstance(logical_tie.head, abjad.Rest):
+            for leaf in logical_tie:
+                duration = leaf.written_duration
+                skip = abjad.Skip(duration)
+                abjad.mutate.replace(leaf, [skip])
+        elif isinstance(logical_tie.head, abjad.Skip):
+            pass
+        elif _matches_pitch(logical_tie.head, pitch_number):
+            if isinstance(pitch_number, baca.Coat):
+                for leaf in logical_tie:
+                    duration = leaf.written_duration
+                    skip = abjad.Skip(duration)
+                    abjad.mutate.replace(leaf, [skip])
+                pitch_number = cursor.next()
+                continue
+            baca.figures._trim_matching_chord(logical_tie, pitch_number)
+            pitch_number = cursor.next()
+            if truncate_ties:
+                head = logical_tie.head
+                tail = logical_tie.tail
+                for leaf in logical_tie[1:]:
+                    duration = leaf.written_duration
+                    skip = abjad.Skip(duration)
+                    abjad.mutate.replace(leaf, [skip])
+                abjad.detach(abjad.Tie, head)
+                next_leaf = abjad.get.leaf(tail, 1)
+                if next_leaf is not None:
+                    abjad.detach(abjad.RepeatTie, next_leaf)
+            if hocket:
+                for leaf in original_logical_tie:
+                    duration = leaf.written_duration
+                    skip = abjad.Skip(duration)
+                    abjad.mutate.replace(leaf, [skip])
+        else:
+            for leaf in logical_tie:
+                duration = leaf.written_duration
+                skip = abjad.Skip(duration)
+                abjad.mutate.replace(leaf, [skip])
+    if not allow_unused_pitches and not cursor.is_exhausted:
+        assert cursor.position is not None
+        current, total = cursor.position - 1, len(cursor)
+        raise Exception(f"{cursor!r} used only {current} of {total} pitches.")
+    for command in commands:
+        command(container)
+    selection = [container]
+    if not hocket:
+        pleaves = baca.select.pleaves(container)
+        assert isinstance(pleaves, list)
+        for pleaf in pleaves:
+            abjad.attach(baca.enums.ALLOW_OCTAVE, pleaf)
+    return {voice_name: selection}
+
+
+def imbricate(
+    container: abjad.Container,
+    voice_name: str,
+    segment: list,
+    *specifiers: typing.Any,
+    allow_unused_pitches: bool = False,
+    by_pitch_class: bool = False,
+    hocket: bool = False,
+    truncate_ties: bool = False,
+) -> dict[str, list]:
+    return _do_imbrication(
+        container,
+        segment,
+        voice_name,
+        *specifiers,
+        allow_unused_pitches=allow_unused_pitches,
+        by_pitch_class=by_pitch_class,
+        hocket=hocket,
+        truncate_ties=truncate_ties,
+    )
+
+
+def imbrication(
+    selections,
+    pitches,
+    name,
+    *,
+    direction=abjad.UP,
+    articulation=None,
+    beam=False,
+    secondary=False,
+    allow_unused_pitches=False,
+    by_pitch_class=False,
+    hocket=False,
+    truncate_ties=False,
+):
+    def _find_parent(selections):
+        first_leaf = abjad.select.leaf(selections, 0)
+        parentage = abjad.get.parentage(first_leaf)
+        parent_voice = abjad.select.components(parentage, abjad.Voice)
+        return f"{parent_voice[0].name} temp"
+
+    container = abjad.Container(simultaneous=True)
+    original_voice = abjad.Voice(name=_find_parent(selections))
+    intermittent_voice = abjad.Voice(name=name)
+    selections_ = trinton.get_top_level_components_from_leaves(selections)
+    abjad.mutate.wrap(selections_, original_voice)
+    abjad.mutate.wrap(original_voice, container)
+    if beam is True:
+        groups = rmakers.nongrace_leaves_in_each_tuplet(original_voice)
+        rmakers.beam_groups(groups)
+        baca.extend_beam(abjad.select.leaf(original_voice, -1))
+
+    imbrications = imbricate(
+        original_voice,
+        "v1",
+        pitches,
+        allow_unused_pitches=allow_unused_pitches,
+        by_pitch_class=by_pitch_class,
+        hocket=hocket,
+        truncate_ties=truncate_ties,
+    )
+    imbrication = imbrications["v1"][0]
+    contents = abjad.mutate.eject_contents(imbrication)
+    intermittent_voice.extend(contents)
+
+    groups = rmakers.nongrace_leaves_in_each_tuplet(intermittent_voice)
+    rmakers.beam_groups(groups, beam_rests=True)
+    if articulation is not None:
+        for head in baca.select.pheads(intermittent_voice):
+            abjad.attach(abjad.Articulation(articulation), head)
+    baca.extend_beam(abjad.select.leaf(intermittent_voice, -1))
+    abjad.override(intermittent_voice).TupletBracket.stencil = False
+    abjad.override(intermittent_voice).TupletNumber.stencil = False
+
+    container.append(intermittent_voice)
+    if secondary is False:
+        direction_1 = "One"
+        direction_2 = "Two"
+    else:
+        direction_1 = "Three \shiftOff"
+        direction_2 = "Four \shiftOff"
+    if direction == abjad.UP:
+        abjad.attach(
+            abjad.LilyPondLiteral(rf"\voice{direction_2}", site="before"),
+            abjad.select.leaf(original_voice, 0),
+        )
+        abjad.attach(
+            abjad.LilyPondLiteral(rf"\voice{direction_1}", site="before"),
+            abjad.select.leaf(intermittent_voice, 0),
+        )
+    else:
+        abjad.attach(
+            abjad.LilyPondLiteral(rf"\voice{direction_1}", site="before"),
+            abjad.select.leaf(original_voice, 0),
+        )
+        abjad.attach(
+            abjad.LilyPondLiteral(rf"\voice{direction_2}", site="before"),
+            abjad.select.leaf(intermittent_voice, 0),
+        )
+    closing_literal = abjad.LilyPondLiteral(r"\oneVoice", site="after")
+    abjad.attach(closing_literal, container)
+
+
 # rest measures
 
 

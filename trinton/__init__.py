@@ -27,6 +27,7 @@ from .commands import (
     force_accidentals,
     force_accidentals_command,
     noteheads_only,
+    imbrication,
 )
 
 from .makers import (
@@ -130,6 +131,8 @@ from .sequence import (
     remove_all,
     remove_adjacent,
     return_middle_index,
+    correct_redundant_floats,
+    make_float,
 )
 
 from .spanners import (

@@ -1,9 +1,9 @@
 import abjad
 import evans
+import itertools
 import trinton
 import random
 from random import randint
-import itertools
 from itertools import combinations
 from itertools import cycle
 
@@ -91,3 +91,19 @@ def return_middle_index(sequence):
         return half + 0.5
     else:
         return (len(sequence) - 1) / 2
+
+
+def correct_redundant_floats(n):
+    string = str(n)
+    if len(string) < 3:
+        pass
+    else:
+        if string[-1] == "0" and string[-2] == ".":
+            n = int(n)
+
+    return n
+
+
+def make_float(n):
+    n = float(n)
+    return n
