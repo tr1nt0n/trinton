@@ -46,8 +46,8 @@ def force_rest(selector):
     return force
 
 
-def beam_groups(beam_rests):
+def beam_groups(beam_rests=False, beam_lone_notes=False):
     def beam(selections):
-        rmakers.beam_groups([selections], beam_rests=beam_rests)
+        abjad.beam(selections, beam_rests=beam_rests, beam_lone_notes=False)
 
     return beam

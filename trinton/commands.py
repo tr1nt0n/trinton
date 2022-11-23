@@ -572,7 +572,7 @@ def imbrication(
     abjad.mutate.wrap(original_voice, container)
     if beam is True:
         groups = rmakers.nongrace_leaves_in_each_tuplet(original_voice)
-        rmakers.beam_groups(groups)
+        abjad.beam(groups, beam_rests=False, beam_lone_notes=False)
         baca.extend_beam(abjad.select.leaf(original_voice, -1))
 
     imbrications = imbricate(
