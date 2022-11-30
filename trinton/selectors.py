@@ -1,5 +1,6 @@
 import abjad
 import baca
+import evans
 import trinton
 from itertools import cycle
 
@@ -239,5 +240,28 @@ def logical_ties(first=False, pitched=None):
             return out
         else:
             return ties
+
+    return selector
+
+
+def group_selections(selector, groups):
+    def group(argument):
+        selections = selector(argument)
+        grouped = evans.Sequence(selections).grouper(groups)
+        return grouped
+
+    return group
+
+
+def ranged_selector(ranges, nested=False):
+    def selector(argument):
+        out = []
+        for range in ranges:
+            selection = [abjad.select.leaf(argument, _) for _ in range]
+            out.append(selection)
+        if nested is True:
+            return out
+        else:
+            return selection
 
     return selector

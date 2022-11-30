@@ -170,7 +170,12 @@ def hooked_spanner_command(string, selector, padding=7, direction=None):
 
 
 def arrow_spanner_command(
-    l_string, r_string, selector, padding=7, direction=None, tempo=False
+    l_string,
+    r_string,
+    selector,
+    padding=7,
+    direction=None,
+    tempo=False,
 ):
     def attach_spanner(argument):
         if tempo is True:
@@ -213,6 +218,89 @@ def arrow_spanner_command(
                 )
             abjad.attach(bundle, tup[0]),
             abjad.attach(abjad.StopTextSpan(), tup[1])
+
+    return attach_spanner
+
+
+def continuous_spanner_command(
+    strings,
+    selector,
+    style="dashed-line-with-arrow",
+    padding=7,
+    direction=None,
+    full_string=False,
+):
+    def attach_spanner(argument):
+        all_but_last_string = strings[:]
+        del all_but_last_string[-1]
+
+        if full_string is True:
+            start_spans = [
+                abjad.StartTextSpan(
+                    left_text=abjad.Markup(_),
+                    style=style,
+                )
+                for _ in all_but_last_string
+            ]
+
+        else:
+            start_spans = [
+                abjad.StartTextSpan(
+                    left_text=abjad.Markup(rf'\markup \upright {{ "{_}" }}'),
+                    style=style,
+                )
+                for _ in all_but_last_string
+            ]
+
+        start_spans = [
+            abjad.bundle(_, rf"- \tweak padding #{padding}") for _ in start_spans
+        ]
+
+        selections = selector(argument)
+
+        all_but_last_selection = abjad.select.exclude(selections, [-1])
+
+        if direction == "down":
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\textSpannerDown",
+                    "before",
+                ),
+                selections[0],
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\textSpannerUp",
+                    "after",
+                ),
+                selections[-1],
+            )
+
+        it = iter(all_but_last_selection)
+
+        tups = [*zip(it, it)]
+
+        for tup, span in zip(tups, start_spans):
+            abjad.attach(span, tup[0]),
+            abjad.attach(abjad.StopTextSpan(), tup[-1])
+
+        if full_string is True:
+            last_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(strings[-2]),
+                right_text=abjad.Markup(strings[-1]),
+                style=style,
+            )
+
+        else:
+            last_span = abjad.StartTextSpan(
+                left_text=abjad.Markup(rf'\markup \upright {{ "{strings[-2]}" }}'),
+                right_text=abjad.Markup(rf"\markup \upright {{ {strings[-1]} }}"),
+                style=style,
+            )
+
+        last_span = abjad.bundle(last_span, rf"- \tweak padding #{padding}")
+        abjad.attach(last_span, selections[-2]),
+        abjad.attach(abjad.StopTextSpan(), selections[-1])
 
     return attach_spanner
 

@@ -332,6 +332,36 @@ def unmeasured_stem_tremolo(selections):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
 
+def tremolo_lines(selector, lines):
+    _lines_to_multiplier = {
+        1: 4,
+        2: 8,
+        3: 16,
+    }
+
+    def tremolo(argument):
+        selections = selector(argument)
+        for leaf, line_ammount in zip(selections, lines):
+            duration = leaf.written_duration
+            string = duration.lilypond_duration_string
+            denominator = int(string[0])
+            abjad.attach(
+                abjad.StemTremolo(denominator * _lines_to_multiplier[line_ammount]),
+                leaf,
+            )
+
+    return tremolo
+
+
+def tremolo_command(selector):
+    def trem(argument):
+        selections = selector(argument)
+        for selection in selections:
+            unmeasured_stem_tremolo([selection])
+
+    return trem
+
+
 # glissandi
 
 
@@ -347,15 +377,17 @@ def glissando(score, voice, start_gliss, stop_gliss):
         )
 
 
-def glissando_command(selector):
+def glissando_command(selector, tweaks=[], zero_padding=False):
     def command(argument):
         selections = selector(argument)
         for selection in selections:
             abjad.glissando(
                 selection,
+                *tweaks,
                 hide_middle_note_heads=True,
                 allow_repeats=True,
                 allow_ties=True,
+                zero_padding=zero_padding,
             )
 
     return command

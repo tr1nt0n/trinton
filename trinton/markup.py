@@ -42,3 +42,10 @@ def write_marginmarkups(score, voices, markups):
             leaves=[0],
             attachment=margin_markup,
         )
+
+
+def return_fraction_string_list(tups):
+    return [
+        rf"\markup \concat {{ \upright \fraction {tup[0]} {tup[-1]} \hspace #0.5 }}"
+        for tup in tups
+    ]

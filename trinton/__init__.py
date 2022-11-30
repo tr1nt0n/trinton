@@ -28,6 +28,8 @@ from .commands import (
     force_accidentals_command,
     noteheads_only,
     imbrication,
+    tremolo_lines,
+    tremolo_command,
 )
 
 from .makers import (
@@ -58,6 +60,7 @@ from .markup import (
     write_markup,
     write_startmarkups,
     write_marginmarkups,
+    return_fraction_string_list,
 )
 
 from .meter import (
@@ -120,6 +123,8 @@ from .selectors import (
     make_leaf_selection,
     select_tuplets_by_index,
     logical_ties,
+    group_selections,
+    ranged_selector,
 )
 
 from .sequence import (
@@ -147,6 +152,7 @@ from .spanners import (
     arrow_spanner_command,
     id_spanner_command,
     ottava_command,
+    continuous_spanner_command,
 )
 
 __all__ = [
