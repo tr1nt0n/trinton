@@ -30,6 +30,7 @@ from .commands import (
     imbrication,
     tremolo_lines,
     tremolo_command,
+    transparent_noteheads,
 )
 
 from .makers import (
@@ -102,6 +103,7 @@ from .rhythm import (
     force_note,
     force_rest,
     beam_groups,
+    call_rmaker,
 )
 
 from .selectors import (

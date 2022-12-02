@@ -124,7 +124,7 @@ def change_notehead_command(notehead, selector):
 
 def noteheads_only(duration_log="2"):
     def only_noteheads(argument):
-        for leaf in abjad.select.leaves(argument):
+        for leaf in abjad.select.leaves(argument, pitched=True):
             abjad.attach(
                 abjad.LilyPondLiteral(r"\once \override Stem.stencil = ##f", "before"),
                 leaf,
@@ -149,6 +149,27 @@ def noteheads_only(duration_log="2"):
             )
 
     return only_noteheads
+
+
+def transparent_noteheads(selector):
+    def transparent(argument):
+        selections = selector(argument)
+        for leaf in abjad.select.leaves(selections):
+            abjad.override(leaf).NoteHead.transparent = True
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override NoteHead.no-ledgers = ##t", "before"
+                ),
+                leaf,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override Accidental.stencil = ##f", "before"
+                ),
+                leaf,
+            )
+
+    return transparent
 
 
 # barlines

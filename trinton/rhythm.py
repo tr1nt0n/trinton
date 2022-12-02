@@ -51,3 +51,11 @@ def beam_groups(beam_rests=False, beam_lone_notes=False):
         abjad.beam(selections, beam_rests=beam_rests, beam_lone_notes=False)
 
     return beam
+
+
+def call_rmaker(rmaker, selector):
+    def call(argument):
+        selections = selector(argument)
+        rmaker(selections)
+
+    return call
