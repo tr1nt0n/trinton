@@ -320,6 +320,13 @@ def fuse_tuplet_rests(voice):
             abjad.mutate.fuse(rest_group)
 
 
+def fuse_tuplet_rests_command():
+    def fuse(argument):
+        fuse_tuplet_rests(argument)
+
+    return fuse
+
+
 # tremoli
 
 
@@ -333,6 +340,9 @@ def unmeasured_stem_tremolo(selections):
 
         elif leaf.written_duration == abjad.Duration(3, 64):
             abjad.attach(abjad.StemTremolo(256), leaf)
+
+        elif leaf.written_duration == abjad.Duration(7, 64):
+            abjad.attach(abjad.StemTremolo(128), leaf)
 
         elif leaf.written_duration == abjad.Duration(3, 32):
             abjad.attach(abjad.StemTremolo(128), leaf)

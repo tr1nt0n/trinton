@@ -332,6 +332,16 @@ def music_command(
     abjad.mutate.replace(target_leaves, container[:])
 
 
+def replace_with_rhythm_selection(rhythmhandler, selector):
+    def replace(argument):
+        selection = selector(argument)
+        duration = abjad.get.duration(selection)
+        rhythm_selections = rhythmhandler([duration])
+        abjad.mutate.replace(selection, rhythm_selections)
+
+    return replace
+
+
 def make_music(
     selector_function=lambda _: select_target(_, (1, 3)),
     *args,

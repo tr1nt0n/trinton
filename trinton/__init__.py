@@ -31,6 +31,7 @@ from .commands import (
     tremolo_lines,
     tremolo_command,
     transparent_noteheads,
+    fuse_tuplet_rests_command,
 )
 
 from .makers import (
@@ -55,6 +56,7 @@ from .makers import (
     make_ts_pair_list,
     extract_instrument_name,
     make_music,
+    replace_with_rhythm_selection,
 )
 
 from .markup import (
