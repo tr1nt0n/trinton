@@ -125,7 +125,9 @@ def write_id_spanner(
     abjad.attach(termination, stop_selection)
 
 
-def hooked_spanner_command(string, selector, padding=7, direction=None):
+def hooked_spanner_command(
+    string, selector, padding=7, direction=None, right_padding=1
+):
     def attach_spanner(argument):
         if direction == "down":
             start_text_span = abjad.StartTextSpan(
@@ -165,6 +167,13 @@ def hooked_spanner_command(string, selector, padding=7, direction=None):
                 )
             abjad.attach(bundle, tup[0]),
             abjad.attach(abjad.StopTextSpan(), tup[1])
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    rf"\once \override TextSpanner.bound-details.right.padding = #-{right_padding}",
+                    "before",
+                ),
+                tup[0],
+            )
 
     return attach_spanner
 
@@ -312,6 +321,7 @@ def id_spanner_command(
     right_text=None,
     style="dashed-line-with-arrow",
     padding=7,
+    right_padding=None,
 ):
     def attach_spanner(argument):
         selections = selector(argument)
@@ -345,6 +355,14 @@ def id_spanner_command(
 
         for tup in tups:
             abjad.attach(bundle, tup[0])
+            if right_padding is not None:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        rf"\once \override TextSpanner.bound-details.right.padding = #-{right_padding}",
+                        "before",
+                    ),
+                    tup[0],
+                )
             abjad.attach(termination, tup[1])
 
     return attach_spanner

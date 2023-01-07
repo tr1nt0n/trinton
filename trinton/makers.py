@@ -424,6 +424,170 @@ def make_music(
             abjad.detach(abjad.StopBeam(), trem[-1])
 
 
+def on_beat_grace_container(
+    contents,
+    anchor_voice_selection,
+    *,
+    anchor_voice_number=2,
+    do_not_beam=None,
+    do_not_slash=None,
+    do_not_slur=None,
+    do_not_stop_polyphony=None,
+    font_size=-3,
+    grace_voice_number=1,
+    leaf_duration=None,
+):
+    def _site(n):
+        return abjad.Tag(f"abjad.on_beat_grace_container({n})")
+
+    if not abjad.mutate._are_contiguous_same_parent(
+        anchor_voice_selection, ignore_before_after_grace=True
+    ):
+        message = "selection must be contiguous in same parent:\n"
+        message += f"   {repr(anchor_voice_selection)}"
+        raise Exception(message)
+    on_beat_grace_container = abjad.OnBeatGraceContainer(
+        contents, leaf_duration=leaf_duration
+    )
+    anchor_leaf = abjad._iterlib._get_leaf(anchor_voice_selection, 0)
+    anchor_voice = abjad.parentage.Parentage(anchor_leaf).get(abjad.score.Voice)
+    if anchor_voice.name is None:
+        raise Exception(f"anchor voice must be named:\n   {repr(anchor_voice)}")
+    anchor_voice_insert = abjad.score.Voice(name=f"{anchor_voice.name} Anchor")
+    abjad.mutate.wrap(anchor_voice_selection, anchor_voice_insert)
+    container = abjad.score.Container(simultaneous=True)
+    abjad.mutate.wrap(anchor_voice_insert, container)
+    container.insert(0, on_beat_grace_container)
+    on_beat_grace_container._match_anchor_leaf()
+    on_beat_grace_container._set_leaf_durations()
+    insert_duration = anchor_voice_insert._get_duration()
+    grace_container_duration = on_beat_grace_container._get_duration()
+    if insert_duration < grace_container_duration:
+        message = f"grace {repr(grace_container_duration)}"
+        message += f" exceeds anchor {repr(insert_duration)}."
+        raise Exception(message)
+    if font_size is not None:
+        string = rf"\set fontSize = #{font_size}"
+        literal = abjad.LilyPondLiteral(string)
+        abjad.attach(literal, on_beat_grace_container, tag=_site(1))
+    if not do_not_beam:
+        abjad.beam(on_beat_grace_container[:])
+    if not do_not_slash:
+        literal = abjad.LilyPondLiteral(r"\slash")
+        abjad.attach(literal, on_beat_grace_container[0], tag=_site(2))
+    if not do_not_slur:
+        abjad.slur(on_beat_grace_container[:])
+    voice_number_to_string = {
+        1: r"\voiceOne",
+        2: r"\voiceTwo",
+        3: r"\voiceThree",
+        4: r"\voiceFour",
+    }
+    first_grace = abjad._iterlib._get_leaf(on_beat_grace_container, 0)
+    one_voice_literal = abjad.LilyPondLiteral(r"\oneVoice", site="absolute_before")
+    string = voice_number_to_string.get(grace_voice_number, None)
+    if string is not None:
+        literal
+        abjad.detach(one_voice_literal, anchor_leaf)
+        abjad.attach(abjad.LilyPondLiteral(string), first_grace, tag=_site(3))
+    string = voice_number_to_string.get(anchor_voice_number, None)
+    if string is not None:
+        abjad.detach(one_voice_literal, anchor_leaf)
+        abjad.attach(abjad.LilyPondLiteral(string), anchor_leaf, tag=_site(4))
+    if not do_not_stop_polyphony:
+        last_anchor_leaf = abjad._iterlib._get_leaf(anchor_voice_selection, -1)
+        next_leaf = abjad._iterlib._get_leaf(last_anchor_leaf, 1)
+        if next_leaf is not None:
+            literal = abjad.LilyPondLiteral(r"\oneVoice", site="absolute_before")
+            abjad.attach(literal, next_leaf, tag=_site(5))
+    return on_beat_grace_container
+
+
+class OnBeatGraceHandler(evans.handlers.Handler):
+    def __init__(
+        self,
+        number_of_attacks=[4, 5, 6],
+        durations=[
+            2,
+            1,
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            1,
+        ],
+        attack_number_forget=False,
+        durations_forget=False,
+        font_size=(-4),
+        forced_multiplier=None,
+        leaf_duration=(1, 28),
+        boolean_vector=[1],
+        vector_forget=False,
+        attack_count=-1,
+        durations_count=-1,
+        vector_count=-1,
+        name="On Beat Grace Handler",
+    ):
+        self.font_size = font_size
+        self.forced_multiplier = forced_multiplier
+        self.leaf_duration = leaf_duration
+        self._attack_count = attack_count
+        self._durations_count = durations_count
+        self._vector_count = vector_count
+        self.attack_number_forget = attack_number_forget
+        self.durations_forget = durations_forget
+        self.vector_forget = vector_forget
+        self.attacks = evans.sequence.CyclicList(
+            number_of_attacks, self.attack_number_forget, self._attack_count
+        )
+        self.durations = evans.sequence.CyclicList(
+            durations, self.durations_forget, self._durations_count
+        )
+        self.boolean_vector = evans.sequence.CyclicList(
+            boolean_vector, self.vector_forget, self._vector_count
+        )
+        self.name = name
+
+    def __call__(self, selections):
+        self.add_grace(selections)
+
+    def add_grace(self, selections):
+        ties = abjad.select.logical_ties(selections, pitched=True)
+        vector = self.boolean_vector(r=len(ties))
+        for value, tie in zip(vector, ties):
+            if value == 1:
+                repetitions = self.attacks(r=1)[0]
+                list_ = []
+                durs = self.durations(r=repetitions)
+                for _ in durs:
+                    list_.append(abjad.Note("c'", (_, 16)))
+                sel = list_
+                trinton.on_beat_grace_container(
+                    sel,
+                    tie[:],
+                    leaf_duration=self.leaf_duration,
+                    do_not_slur=False,
+                    do_not_beam=False,
+                    font_size=self.font_size,
+                )
+        if self.forced_multiplier is not None:
+            for grace in abjad.select.leaves(selections, grace=True):
+                grace.multiplier = abjad.Multiplier(self.forced_multiplier)
+
+    def name(self):
+        return self.name
+
+    def state(self):
+        return dict(
+            [
+                ("attack_count", self.attacks.state()),
+                ("vector_count", self.boolean_vector.state()),
+            ]
+        )
+
+
 # extraction
 
 

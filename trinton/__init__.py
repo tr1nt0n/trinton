@@ -57,6 +57,8 @@ from .makers import (
     extract_instrument_name,
     make_music,
     replace_with_rhythm_selection,
+    on_beat_grace_container,
+    OnBeatGraceHandler,
 )
 
 from .markup import (

@@ -158,7 +158,7 @@ def group_logical_ties_by_measure(voice):
 
 def grace_selector():
     def selector(argument):
-        return abjad.select.leaves(argument, grace=True)
+        return abjad.select.leaves(argument, pitched=True, grace=True)
 
     return selector
 
@@ -170,9 +170,11 @@ def exclude_graces():
     return selector
 
 
-def pleaves():
+def pleaves(exclude=None):
     def selector(argument):
         selections = baca.select.pleaves(argument)
+        if exclude is not None:
+            selections = abjad.select.exclude(selections, exclude)
         return selections
 
     return selector
@@ -253,11 +255,11 @@ def group_selections(selector, groups):
     return group
 
 
-def ranged_selector(ranges, nested=False):
+def ranged_selector(ranges, nested=False, pitched=None):
     def selector(argument):
         out = []
         for range in ranges:
-            selection = [abjad.select.leaf(argument, _) for _ in range]
+            selection = [abjad.select.leaf(argument, _, pitched=pitched) for _ in range]
             out.append(selection)
         if nested is True:
             return out
