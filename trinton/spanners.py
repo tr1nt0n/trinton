@@ -342,12 +342,15 @@ def id_spanner_command(
 
         spanner = abjad.LilyPondLiteral(
             strings,
-            "absolute_after",
+            # "absolute_after",
         )
 
         bundle = abjad.bundle(spanner, rf"- \tweak padding #{padding}")
 
-        termination = abjad.LilyPondLiteral(rf"\stopTextSpan{id}", "absolute_after")
+        termination = abjad.LilyPondLiteral(
+            rf"\stopTextSpan{id}",
+            # "after"
+        )
 
         it = iter(selections)
 

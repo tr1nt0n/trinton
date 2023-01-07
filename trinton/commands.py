@@ -420,6 +420,14 @@ def glissando_command(selector, tweaks=[], zero_padding=False):
                 allow_ties=True,
                 zero_padding=zero_padding,
             )
+            middle_leaves = abjad.select.exclude(selection, [0, -1])
+            for leaf in middle_leaves:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override Dots.staff-position = #2", "before"
+                    ),
+                    leaf,
+                )
 
     return command
 
