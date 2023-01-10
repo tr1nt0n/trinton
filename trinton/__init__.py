@@ -32,6 +32,7 @@ from .commands import (
     tremolo_command,
     transparent_noteheads,
     fuse_tuplet_rests_command,
+    invisible_rests,
 )
 
 from .makers import (

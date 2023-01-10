@@ -134,12 +134,14 @@ def hooked_spanner_command(
                 left_text=abjad.Markup(rf'\markup \upright {{ "{string}" }}'),
                 right_text=None,
                 style="dashed-line-with-up-hook",
+                right_padding=-right_padding,
             )
         else:
             start_text_span = abjad.StartTextSpan(
                 left_text=abjad.Markup(rf'\markup \upright {{ "{string}" }}'),
                 right_text=None,
                 style="dashed-line-with-hook",
+                right_padding=-right_padding,
             )
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
 
@@ -167,13 +169,13 @@ def hooked_spanner_command(
                 )
             abjad.attach(bundle, tup[0]),
             abjad.attach(abjad.StopTextSpan(), tup[1])
-            abjad.attach(
-                abjad.LilyPondLiteral(
-                    rf"\once \override TextSpanner.bound-details.right.padding = #-{right_padding}",
-                    "before",
-                ),
-                tup[0],
-            )
+            # abjad.attach(
+            #     abjad.LilyPondLiteral(
+            #         rf"\once \override TextSpanner.bound-details.right.padding = #-{right_padding}",
+            #         "before",
+            #     ),
+            #     tup[0],
+            # )
 
     return attach_spanner
 
@@ -185,13 +187,22 @@ def arrow_spanner_command(
     padding=7,
     direction=None,
     tempo=False,
+    right_padding=None,
 ):
     def attach_spanner(argument):
+
+        if right_padding is not None:
+            r_padding = right_padding * -1
+
+        else:
+            r_padding = right_padding
+
         if tempo is True:
             start_text_span = abjad.StartTextSpan(
                 left_text=abjad.Markup(l_string),
                 right_text=abjad.Markup(r_string),
                 style="dashed-line-with-arrow",
+                right_padding=r_padding,
             )
 
         else:
@@ -199,6 +210,7 @@ def arrow_spanner_command(
                 left_text=abjad.Markup(rf'\markup \upright {{ "{l_string}" }}'),
                 right_text=abjad.Markup(rf"\markup \upright {{ {r_string} }}"),
                 style="dashed-line-with-arrow",
+                right_padding=r_padding,
             )
 
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
@@ -325,31 +337,34 @@ def id_spanner_command(
 ):
     def attach_spanner(argument):
         selections = selector(argument)
-        strings = [
-            rf"- \abjad-{style}",
-            rf'- \tweak bound-details.left.text \markup \concat {{ {{ \upright "{left_text}" }} \hspace #0.5 }}',
-        ]
 
-        if right_text is not None:
-            for string in [
-                rf'- \tweak bound-details.right.text \markup \concat {{ {{ \upright "{right_text}" }} \hspace #0.5 }}'
-                rf"\startTextSpan{id}",
-            ]:
-                strings.append(string)
+        if right_padding is not None:
+            r_padding = right_padding * -1
 
         else:
-            strings.append(rf"\startTextSpan{id}")
+            r_padding = right_padding
 
-        spanner = abjad.LilyPondLiteral(
-            strings,
-            # "absolute_after",
-        )
+        if right_text is not None:
+            spanner = abjad.StartTextSpan(
+                command=r"\startTextSpan" + id,
+                left_text=abjad.Markup(rf'\markup \upright {{ "{left_text}" }}'),
+                right_text=abjad.Markup(rf'\markup \upright {{ "{right_text}" }}'),
+                style=style,
+                right_padding=r_padding,
+            )
+
+        else:
+            spanner = abjad.StartTextSpan(
+                command=r"\startTextSpan" + id,
+                left_text=abjad.Markup(rf'\markup \upright {{ "{left_text}" }}'),
+                style=style,
+                right_padding=r_padding,
+            )
 
         bundle = abjad.bundle(spanner, rf"- \tweak padding #{padding}")
 
-        termination = abjad.LilyPondLiteral(
-            rf"\stopTextSpan{id}",
-            # "after"
+        termination = abjad.StopTextSpan(
+            command=rf"\stopTextSpan{id}",
         )
 
         it = iter(selections)
@@ -358,14 +373,6 @@ def id_spanner_command(
 
         for tup in tups:
             abjad.attach(bundle, tup[0])
-            if right_padding is not None:
-                abjad.attach(
-                    abjad.LilyPondLiteral(
-                        rf"\once \override TextSpanner.bound-details.right.padding = #-{right_padding}",
-                        "before",
-                    ),
-                    tup[0],
-                )
             abjad.attach(termination, tup[1])
 
     return attach_spanner

@@ -765,6 +765,22 @@ def fill_empty_staves_with_skips(voice):
         abjad.mutate.replace(shard, invisible_rest)
 
 
+def invisible_rests():
+    def rests(argument):
+        rests = abjad.select.rests(argument)
+        for rest in rests:
+            rest_literal = abjad.LilyPondLiteral(
+                r"\once \override Rest.transparent = ##t", "before"
+            )
+            abjad.attach(rest_literal, rest)
+            rest_literal = abjad.LilyPondLiteral(
+                r"\once \override Dots.transparent = ##t", "before"
+            )
+            abjad.attach(rest_literal, rest)
+
+    return rests
+
+
 # multiphonics
 
 
