@@ -33,6 +33,7 @@ from .commands import (
     transparent_noteheads,
     fuse_tuplet_rests_command,
     invisible_rests,
+    ficta_command,
 )
 
 from .makers import (

@@ -217,6 +217,30 @@ def ficta(score, voice, start_ficta, stop_ficta):
         )
 
 
+def ficta_command(selector):
+    def suggest(argument):
+        selections = selector(argument)
+        it = iter(selections)
+
+        tups = [*zip(it, it)]
+
+        for tup in tups:
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\set suggestAccidentals = ##t", "absolute_before"
+                ),
+                tup[0],
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\set suggestAccidentals = ##f", "absolute_after"
+                ),
+                tup[1],
+            )
+
+    return suggest
+
+
 def respell(selections):
     for tie in abjad.select.logical_ties(selections):
         if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
