@@ -263,15 +263,25 @@ def force_accidentals(voice, selector):
             tie[0].note_head.is_forced = True
 
 
-def force_accidentals_command(selector):
+def force_accidentals_command(selector, after_ties=False):
     def force(argument):
         selections = selector(argument)
-        for tie in abjad.select.logical_ties(selections, pitched=True):
-            if isinstance(tie[0], abjad.Chord):
-                for head in tie[0].note_heads:
+        if after_ties is True:
+            selections = abjad.select.leaves(selections, pitched=True)
+        else:
+            selections = abjad.select.logical_ties(selections, pitched=True)
+
+        for sel in selections:
+            if isinstance(sel, abjad.LogicalTie):
+                leaf = sel[0]
+            else:
+                leaf = sel
+
+            if isinstance(leaf, abjad.Chord):
+                for head in leaf.note_heads:
                     head.is_forced = True
             else:
-                tie[0].note_head.is_forced = True
+                leaf.note_head.is_forced = True
 
     return force
 
