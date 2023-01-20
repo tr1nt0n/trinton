@@ -376,3 +376,109 @@ def beam_score_by_voice(score, voices):
             abjad.detach(abjad.StartBeam(), trem[0])
         if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
             abjad.detach(abjad.StopBeam(), trem[-1])
+
+
+def rebar(
+    score,
+    global_context,
+    selector_function,
+    replacement_signatures,
+    boundary_depth=None,
+    rebeam=None,
+):
+    target = selector_function(global_context)
+    indicators = [_ for _ in abjad.get.indicators(abjad.select.leaf(target, 0))]
+    new_sigs = [abjad.TimeSignature(_) for _ in replacement_signatures]
+    if boundary_depth is not None:
+        for voice in abjad.select.components(score, abjad.Voice):
+            rewrite_meter_command = evans.RewriteMeterCommand(
+                boundary_depth=boundary_depth
+            )
+            voice_target = selector_function(voice)
+            target_copy = abjad.mutate.copy(voice_target[:])
+            metered_staff = rmakers.wrap_in_time_signature_staff(target_copy, new_sigs)
+            rewrite_meter_command(metered_staff)
+            selections = abjad.mutate.eject_contents(metered_staff)
+            abjad.mutate.replace(voice_target, selections)
+
+    for voice in abjad.select.components(score, abjad.Voice):
+        rest_target = selector_function(voice)
+        for leaf in abjad.select.leaves(rest_target):
+            if isinstance(leaf, abjad.Skip):
+                skip_duration = abjad.get.duration(leaf)
+                new_rest = abjad.Rest(skip_duration)
+                rest_indicators = [_ for _ in abjad.get.indicators(leaf)]
+                for indicator in rest_indicators:
+                    abjad.detach(indicator, leaf)
+                    abjad.attach(indicator, new_rest)
+                abjad.mutate.replace(leaf, new_rest)
+
+    rebeam_voices = [selector_function(_) for _ in rebeam]
+
+    new_leaves = []
+
+    for pair in replacement_signatures:
+        signature = abjad.TimeSignature(pair)
+        skip = abjad.Skip((1, 1), multiplier=abjad.Multiplier(pair))
+        abjad.attach(signature, skip)
+        new_leaves.append(skip)
+
+    for indicator in indicators:
+        if isinstance(indicator, abjad.TimeSignature):
+            pass
+        else:
+            abjad.detach(indicator, abjad.select.leaf(target, 0))
+            abjad.attach(indicator, abjad.select.leaf(new_leaves, 0))
+
+    first_duration = abjad.get.duration(target)
+    second_duration = abjad.get.duration(new_leaves)
+
+    if first_duration != second_duration:
+        raise Exception(
+            "New time signatures must equal the total duration of the signatures they are to replace"
+        )
+
+    abjad.mutate.replace(target, new_leaves)
+
+    if rebeam is not None:
+        for target in rebeam_voices:
+            print("Rebeaming ...")
+            # beam_target = selector_function(voice)
+            for leaf in abjad.select.leaves(target):
+                abjad.detach(abjad.StartBeam, leaf)
+                abjad.detach(abjad.StopBeam, leaf)
+            if len(new_sigs) > 1:
+                measures = abjad.select.group_by_measure(target)
+            else:
+                measures = [target]
+            for i, shard in enumerate(measures):
+                top_level_components = trinton.get_top_level_components_from_leaves(
+                    shard
+                )
+                shard = top_level_components
+                met = abjad.Meter(new_sigs[i].pair)
+                inventories = [
+                    x
+                    for x in enumerate(
+                        abjad.Meter(new_sigs[i].pair).depthwise_offset_inventory
+                    )
+                ]
+                if new_sigs[i].denominator == 4:
+                    trinton.beam_meter(
+                        components=shard[:],
+                        meter=met,
+                        offset_depth=inventories[-1][0],
+                        include_rests=False,
+                    )
+                else:
+                    trinton.beam_meter(
+                        components=shard[:],
+                        meter=met,
+                        offset_depth=inventories[-2][0],
+                        include_rests=False,
+                    )
+        for trem in abjad.select.components(target, abjad.TremoloContainer):
+            if abjad.StartBeam() in abjad.get.indicators(trem[0]):
+                abjad.detach(abjad.StartBeam(), trem[0])
+            if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
+                abjad.detach(abjad.StopBeam(), trem[-1])

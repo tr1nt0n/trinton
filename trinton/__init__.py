@@ -80,6 +80,7 @@ from .meter import (
     beam_score_by_voice,
     rewrite_meter_by_voice,
     rewrite_meter_by_measure,
+    rebar,
 )
 
 from .pitch import (

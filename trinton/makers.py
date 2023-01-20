@@ -343,7 +343,7 @@ def replace_with_rhythm_selection(rhythmhandler, selector):
 
 
 def make_music(
-    selector_function=lambda _: select_target(_, (1, 3)),
+    selector_function=lambda _: trinton.select_target(_, (1, 3)),
     *args,
     preprocessor=None,
     voice=None,
