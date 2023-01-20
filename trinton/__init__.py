@@ -81,6 +81,7 @@ from .meter import (
     rewrite_meter_by_voice,
     rewrite_meter_by_measure,
     rebar,
+    remove_redundant_time_signatures,
 )
 
 from .pitch import (

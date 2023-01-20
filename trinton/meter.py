@@ -4,6 +4,7 @@ import evans
 import trinton
 from abjadext import rmakers
 from fractions import Fraction
+import itertools
 import quicktions
 import numpy
 import datetime
@@ -482,3 +483,22 @@ def rebar(
                 abjad.detach(abjad.StartBeam(), trem[0])
             if abjad.StopBeam() in abjad.get.indicators(trem[-1]):
                 abjad.detach(abjad.StopBeam(), trem[-1])
+
+
+def remove_redundant_time_signatures(score):
+    global_context = score["Global Context"]
+    target = abjad.select.leaves(global_context)
+    target = abjad.select.exclude(target, [-1])
+    for leaf in target:
+        next_leaf = abjad.select.with_next_leaf(leaf)[-1]
+        ts_1 = abjad.get.indicator(leaf, abjad.TimeSignature)
+        ts_2 = abjad.get.indicator(next_leaf, abjad.TimeSignature)
+
+        if ts_1.pair == ts_2.pair:
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override Score.TimeSignature.stencil = ##f",
+                    "before",
+                ),
+                next_leaf,
+            )
