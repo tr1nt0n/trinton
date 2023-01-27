@@ -54,7 +54,7 @@ def make_score_template(
     instruments,
     groups,
     outer_staff="StaffGroup",
-    inner_staff="GrandStaff",
+    inner_staff=["GrandStaff"],
     staff_types=None,
 ):
     name_counts = {extract_instrument_name(_): 1 for _ in instruments}
@@ -74,10 +74,16 @@ def make_score_template(
                 staff_types.append(["Staff" for _ in item])
             else:
                 staff_types.append("Staff")
-    for item, type in zip(grouped_voices, staff_types):
+    if len(inner_staff) == 1:
+        inner_staff = [inner_staff[0] for _ in instruments]
+    else:
+        inner_staff = inner_staff
+
+    for item, type, group in zip(grouped_voices, staff_types, inner_staff):
         if isinstance(item, list):
             sub_group = abjad.StaffGroup(
-                name=f"sub group {sub_group_counter}", lilypond_type=inner_staff
+                name=f"sub group {sub_group_counter}",
+                lilypond_type=inner_staff[sub_group_counter],
             )
             sub_group_counter += 1
             for sub_item, sub_type in zip(item, type):
@@ -121,7 +127,7 @@ def make_empty_score(
     groups,
     time_signatures,
     outer_staff="StaffGroup",
-    inner_staff="GrandStaff",
+    inner_staff=["GrandStaff"],
     staff_types=None,
 ):
     score = make_score_template(
