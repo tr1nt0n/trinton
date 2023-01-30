@@ -162,7 +162,7 @@ from .spanners import (
     arrow_spanner_command,
     id_spanner_command,
     ottava_command,
-    continuous_spanner_command,
+    spanner_command,
 )
 
 __all__ = [

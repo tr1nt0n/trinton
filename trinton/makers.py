@@ -129,6 +129,7 @@ def make_empty_score(
     outer_staff="StaffGroup",
     inner_staff=["GrandStaff"],
     staff_types=None,
+    filler=abjad.Skip,
 ):
     score = make_score_template(
         instruments=instruments,
@@ -141,7 +142,7 @@ def make_empty_score(
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
     for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-        for rest in [abjad.Skip((1, 1), multiplier=_) for _ in time_signatures]:
+        for rest in [filler((1, 1), multiplier=_) for _ in time_signatures]:
             voice.append(rest)
 
     return score
