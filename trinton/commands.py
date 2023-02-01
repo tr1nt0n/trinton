@@ -361,6 +361,25 @@ def fuse_tuplet_rests_command():
     return fuse
 
 
+def invisible_tuplet_brackets():
+    def command(argument):
+        for tuplet in abjad.select.tuplets(argument):
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    "\once \override TupletBracket.stencil = ##f", "before"
+                ),
+                tuplet,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    "\once \override TupletNumber.stencil = ##f", "before"
+                ),
+                tuplet,
+            )
+
+    return command
+
+
 # tremoli
 
 
@@ -734,45 +753,68 @@ def imbrication(
 # rest measures
 
 
-def whiteout_empty_staves(score, voice, cutaway):
-    leaves = abjad.select.leaves(score[voice])
-    shards = leaves.group_by_measure()
-    for i, shard in enumerate(shards):
-        if not all(isinstance(leaf, abjad.Rest) for leaf in shard):
-            continue
-        indicators = abjad.get.indicators(shard[0])
-        multiplier = abjad.get.duration(shard) / 2
-        invisible_rest = abjad.Rest(1, multiplier=(multiplier))
-        rest_literal = abjad.LilyPondLiteral(
-            r"\once \override Rest.transparent = ##t", "before"
-        )
-        abjad.attach(
-            rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
-        )
-        for indicator in indicators:
-            abjad.attach(
-                indicator, invisible_rest, tag=abjad.Tag("applying indicators")
-            )
-        multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
-        start_command = abjad.LilyPondLiteral(
-            r"\stopStaff \once \override Staff.StaffSymbol.line-count = #1 \startStaff",
-            "before",
-        )
-        stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
-        if cutaway == True:
-            abjad.attach(
-                start_command, invisible_rest, tag=abjad.Tag("applying cutaway")
+def whiteout_empty_staves(score, cutaway=True):
+    print("Making empty staves ...")
+    ts_leaves = abjad.select.leaves(score["Global Context"])
+    signature_instances = [
+        abjad.get.indicator(_, abjad.TimeSignature) for _ in ts_leaves
+    ]
+    for voice in abjad.iterate.components(score["Staff Group"], abjad.Staff):
+        leaves = abjad.select.leaves(voice, grace=False)
+        shards = abjad.mutate.split(leaves, signature_instances)
+        relevant_shards = []
+        for shard in shards:
+            if (
+                all(isinstance(leaf, abjad.Rest) for leaf in shard)
+                or all(isinstance(leaf, abjad.MultimeasureRest) for leaf in shard)
+                or all(isinstance(leaf, abjad.Skip) for leaf in shard)
+            ):
+                relevant_shards.append(shard)
+
+        for i, shard in enumerate(relevant_shards):
+            indicators = abjad.get.indicators(shard[0])
+            multiplier = abjad.get.duration(shard) / 2
+            invisible_rest = abjad.Rest(1, multiplier=(multiplier))
+            rest_literal = abjad.LilyPondLiteral(
+                r"\once \override Rest.transparent = ##t", "before"
             )
             abjad.attach(
-                stop_command,
-                multimeasure_rest,
-                tag=abjad.Tag("applying cutaway"),
+                rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
             )
-            both_rests = [invisible_rest, multimeasure_rest]
-            abjad.mutate.replace(shard, both_rests[:])
-        else:
-            both_rests = [invisible_rest, multimeasure_rest]
-            abjad.mutate.replace(shard, both_rests[:])
+            for indicator in indicators:
+                abjad.attach(
+                    indicator, invisible_rest, tag=abjad.Tag("applying indicators")
+                )
+            if cutaway == "blank":
+                multimeasure_rest = abjad.Skip(1, multiplier=(multiplier))
+                start_command = abjad.LilyPondLiteral(
+                    r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
+                    site="before",
+                )
+            else:
+                multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
+                start_command = abjad.LilyPondLiteral(
+                    r"\stopStaff \once \override Staff.StaffSymbol.line-count = #1 \startStaff",
+                    site="before",
+                )
+
+            stop_command = abjad.LilyPondLiteral(
+                r"\stopStaff \startStaff", site="after"
+            )
+            if cutaway is True or cutaway == "blank":
+                abjad.attach(
+                    start_command, invisible_rest, tag=abjad.Tag("applying cutaway")
+                )
+                abjad.attach(
+                    stop_command,
+                    multimeasure_rest,
+                    tag=abjad.Tag("applying cutaway"),
+                )
+                both_rests = [invisible_rest, multimeasure_rest]
+                abjad.mutate.replace(shard, both_rests[:])
+            else:
+                both_rests = [invisible_rest, multimeasure_rest]
+                abjad.mutate.replace(shard, both_rests[:])
 
 
 def fill_empty_staves_with_skips(voice):

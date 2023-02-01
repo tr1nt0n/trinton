@@ -46,8 +46,13 @@ def force_rest(selector):
     return force
 
 
-def beam_groups(beam_rests=False, beam_lone_notes=False):
-    def beam(selections):
+def beam_groups(beam_rests=False, beam_lone_notes=False, selector=None):
+    def beam(argument):
+        if selector is not None:
+            selections = selector(argument)
+        else:
+            selections = argument
+
         abjad.beam(selections, beam_rests=beam_rests, beam_lone_notes=False)
 
     return beam

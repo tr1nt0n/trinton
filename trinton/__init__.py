@@ -34,6 +34,7 @@ from .commands import (
     fuse_tuplet_rests_command,
     invisible_rests,
     ficta_command,
+    invisible_tuplet_brackets,
 )
 
 from .makers import (
