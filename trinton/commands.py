@@ -753,13 +753,18 @@ def imbrication(
 # rest measures
 
 
-def whiteout_empty_staves(score, cutaway=True):
+def whiteout_empty_staves(score, voice_names=None, cutaway=True):
     print("Making empty staves ...")
     ts_leaves = abjad.select.leaves(score["Global Context"])
     signature_instances = [
         abjad.get.indicator(_, abjad.TimeSignature) for _ in ts_leaves
     ]
-    for voice in abjad.iterate.components(score["Staff Group"], abjad.Staff):
+    if voice_names is not None:
+        voices = [score[_] for _ in voices]
+    else:
+        voices = abjad.iterate.components(score["Staff Group"], abjad.Staff)
+
+    for voice in voices:
         leaves = abjad.select.leaves(voice, grace=False)
         shards = abjad.mutate.split(leaves, signature_instances)
         relevant_shards = []
