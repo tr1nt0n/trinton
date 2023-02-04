@@ -430,7 +430,7 @@ def spanner_command(
         if len(strings) > 2 and end_hook is False:
             all_but_last_markup = markups[:]
             del all_but_last_markup[-1]
-            del all_but_last_markup[-2]
+            del all_but_last_markup[-1]
 
             start_spans = [
                 abjad.StartTextSpan(
