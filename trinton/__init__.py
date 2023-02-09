@@ -35,13 +35,14 @@ from .commands import (
     invisible_rests,
     ficta_command,
     invisible_tuplet_brackets,
+    annotate_leaves,
+    change_lines,
 )
 
 from .makers import (
     make_score_template,
     write_time_signatures,
     render_file,
-    annotate_leaves,
     make_rhythm_selections,
     append_rhythm_selections,
     make_and_append_rhythm_selections,

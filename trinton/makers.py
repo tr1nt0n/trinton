@@ -148,14 +148,6 @@ def make_empty_score(
     return score
 
 
-def annotate_leaves(score, prototype=abjad.Leaf):
-    for voice in abjad.select.components(score, abjad.Voice):
-        if prototype is not None:
-            abjad.label.with_indices(voice, prototype=prototype)
-        else:
-            abjad.label.with_indices(voice)
-
-
 # making rhythms
 
 

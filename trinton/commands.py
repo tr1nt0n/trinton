@@ -181,6 +181,42 @@ def repeats(score, start_leaf, stop_leaf):
     trinton.attach(voice=score, leaves=stop_leaf, attachment=abjad.BarLine(":|."))
 
 
+def change_lines(
+    lines,
+    selector,
+    clef="treble",
+):
+    def change(argument):
+        _line_to_bar_extent = {
+            1: "(-0.01 . 0.01)",
+            2: "(-0.5 . 0.5)",
+            3: "(-1 . 1)",
+            4: "(-1.5 . 1.5)",
+            5: "(-2 . 2)",
+            6: "(-2.5 . 2.5)",
+        }
+
+        selections = selector(argument)
+        for selection in selections:
+            abjad.attach(abjad.Clef(clef), selection)
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    rf"\override Staff.BarLine.bar-extent = #'{_line_to_bar_extent[lines]}",
+                    site="after",
+                ),
+                selection,
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    rf"\staff-line-count {lines}",
+                    site="absolute_before",
+                ),
+                selection,
+            )
+
+    return change
+
+
 # accidentals
 
 
@@ -778,8 +814,14 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
             rest_literal = abjad.LilyPondLiteral(
                 r"\once \override Rest.transparent = ##t", "before"
             )
+            bar_literal = abjad.LilyPondLiteral(
+                r"\once \override Staff.BarLine.transparent = ##f", "absolute_before"
+            )
             abjad.attach(
                 rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
+            )
+            abjad.attach(
+                bar_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
             )
             for indicator in indicators:
                 abjad.attach(
@@ -878,3 +920,14 @@ def write_multiphonics(score, voice, dict, leaves, multiphonic, markup):
         for leaf in leaves:
             sel = abjad.select.leaf(score[voice], leaf)
             handler(sel)
+
+
+# leaf indexing
+
+
+def annotate_leaves(score, prototype=abjad.Leaf):
+    for voice in abjad.select.components(score, abjad.Voice):
+        if prototype is not None:
+            abjad.label.with_indices(voice, prototype=prototype)
+        else:
+            abjad.label.with_indices(voice)
