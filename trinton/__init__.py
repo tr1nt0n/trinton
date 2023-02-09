@@ -63,6 +63,7 @@ from .makers import (
     replace_with_rhythm_selection,
     on_beat_grace_container,
     OnBeatGraceHandler,
+    fermata_measures,
 )
 
 from .markup import (

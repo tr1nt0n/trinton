@@ -719,6 +719,91 @@ def make_sc_file(score, tempo, current_directory):
 # fermate
 
 
+def fermata_measures(
+    score,
+    measures,
+    fermata="ufermata",
+    voice_names=None,
+    blank=True,
+):
+    measures = [_ - 1 for _ in measures]
+
+    leaves = trinton.make_leaf_selection(
+        score=score, voice="Global Context", leaves=measures
+    )
+
+    for leaf in leaves:
+        leaf_duration = abjad.get.duration(leaf)
+        mm_rest = abjad.MultimeasureRest(1, multiplier=leaf_duration)
+
+        transparent_literal = abjad.LilyPondLiteral(
+            r"\once \override MultiMeasureRest.transparent = ##t",
+            "before",
+        )
+        fermata_markup = abjad.Markup(
+            rf'\markup \center-column {{ \abs-fontsize #10 \musicglyph "scripts.{fermata}" }}'
+        )
+        invisible_ts_command = abjad.LilyPondLiteral(
+            r"\once \override Score.TimeSignature.stencil = ##f",
+            "before",
+        )
+        before_barline_command = abjad.LilyPondLiteral(
+            r"\once \override Score.BarLine.transparent = ##f", "absolute_before"
+        )
+        after_barline_command = abjad.LilyPondLiteral(
+            r"\once \override Score.BarLine.transparent = ##f", "absolute_after"
+        )
+        leaf_ts = abjad.get.indicator(leaf, abjad.TimeSignature)
+        leaf_indicators = [
+            _
+            for _ in abjad.get.indicators(leaf)
+            if not isinstance(_, abjad.TimeSignature)
+        ]
+
+        abjad.attach(transparent_literal, mm_rest)
+        abjad.attach(invisible_ts_command, mm_rest)
+        abjad.attach(before_barline_command, mm_rest)
+        abjad.attach(after_barline_command, mm_rest)
+        abjad.attach(leaf_ts, mm_rest)
+        abjad.attach(fermata_markup, mm_rest)
+        for indicator in leaf_indicators:
+            abjad.attach(indicator, mm_rest)
+
+        abjad.mutate.replace(leaf, mm_rest)
+
+    if blank is True:
+
+        if voice_names is not None:
+            voices = [score[_] in voice_names]
+        else:
+            voices = abjad.select.components(score["Staff Group"], abjad.Voice)
+
+        for voice in voices:
+            all_measures = abjad.select.group_by_measure(voice)
+
+            start_command = abjad.LilyPondLiteral(
+                r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
+                "before",
+            )
+
+            stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
+
+            clef_whitespace = abjad.LilyPondLiteral(
+                r"\once \override Staff.Clef.X-extent = ##f \once \override Staff.Clef.extra-offset = #'(-2.25 . 0)",
+                "absolute_after",
+            )
+
+            for measure in measures:
+                selection = trinton.select_target(score[voice_name], (measure + 1,))
+                relevant_leaf = selection[0]
+                next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
+                abjad.attach(start_command, relevant_leaf)
+                if abjad.get.has_indicator(next_leaf, abjad.Clef):
+                    abjad.attach(clef_whitespace, relevant_leaf)
+                if last_measure is False:
+                    abjad.attach(stop_command, relevant_leaf)
+
+
 def make_fermata_measure(selection):
     duration = abjad.Duration((1, 4))
     skip = abjad.MultimeasureRest(1, multiplier=duration)
