@@ -181,11 +181,7 @@ def repeats(score, start_leaf, stop_leaf):
     trinton.attach(voice=score, leaves=stop_leaf, attachment=abjad.BarLine(":|."))
 
 
-def change_lines(
-    lines,
-    selector,
-    clef="treble",
-):
+def change_lines(lines, selector, clef="treble", invisible_barlines=True):
     def change(argument):
         _line_to_bar_extent = {
             1: "(-0.01 . 0.01)",
@@ -199,13 +195,14 @@ def change_lines(
         selections = selector(argument)
         for selection in selections:
             abjad.attach(abjad.Clef(clef), selection)
-            abjad.attach(
-                abjad.LilyPondLiteral(
-                    rf"\override Staff.BarLine.bar-extent = #'{_line_to_bar_extent[lines]}",
-                    site="after",
-                ),
-                selection,
-            )
+            if invisible_barlines is True:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        rf"\override Staff.BarLine.bar-extent = #'{_line_to_bar_extent[lines]}",
+                        site="after",
+                    ),
+                    selection,
+                )
             abjad.attach(
                 abjad.LilyPondLiteral(
                     rf"\staff-line-count {lines}",

@@ -69,6 +69,20 @@ def write_trill_span(score, voice, pitch, start_leaf, stop_leaf):
     )
 
 
+def trill_span_command(pitch=None, selector=trinton.pleaves()):
+    def span(argument):
+        selections = selector(argument)
+        it = iter(selections)
+
+        tups = [*zip(it, it)]
+
+        for tup in tups:
+            abjad.attach(abjad.StartTrillSpan(pitch=abjad.NamedPitch(pitch)), tup[0])
+            abjad.attach(abjad.StopTrillSpan(), tup[1])
+
+    return span
+
+
 def ottava(score, voice, start_ottava, stop_ottava, octave):
     for start, stop in zip(start_ottava, stop_ottava):
         start_va = abjad.Ottava(n=octave)

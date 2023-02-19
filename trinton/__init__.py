@@ -166,6 +166,7 @@ from .spanners import (
     id_spanner_command,
     ottava_command,
     spanner_command,
+    trill_span_command,
 )
 
 __all__ = [
