@@ -80,6 +80,33 @@ def fuse_sixteenths_preprocessor(groups):
     return preprocessor
 
 
+def thirty_seconds(
+    sequence,
+    *,
+    compound: abjad.typings.Duration = None,
+    remainder: int = None,
+):
+    assert isinstance(sequence, list), repr(sequence)
+    sequence = baca.sequence.split_divisions(
+        sequence, [(1, 32)], cyclic=True, compound=compound, remainder=remainder
+    )
+    return sequence
+
+
+def fuse_thirty_seconds_preprocessor(groups):
+    def preprocessor(divisions):
+        duration = abjad.sequence.sum(divisions)
+        divisions = [duration]
+        divisions = [thirty_seconds([_]) for _ in divisions]
+        divisions = abjad.sequence.flatten(divisions, depth=-1)
+        divisions = abjad.sequence.partition_by_counts(
+            divisions, groups, cyclic=True, overhang=True
+        )
+        return [sum(_) for _ in divisions]
+
+    return preprocessor
+
+
 def pure_quarters_preprocessor():
     def preprocessor(divisions):
         divisions = [baca.sequence.quarters([_]) for _ in divisions]

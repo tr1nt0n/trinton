@@ -2,6 +2,7 @@ import abjad
 import baca
 import evans
 import trinton
+from trinton import selectors
 from abjadext import rmakers
 from fractions import Fraction
 from itertools import cycle
@@ -781,6 +782,23 @@ def imbrication(
         )
     closing_literal = abjad.LilyPondLiteral(r"\oneVoice", site="after")
     abjad.attach(closing_literal, container)
+
+
+def call_imbrication(
+    pitches, name="Imbrication", articulation=">", beam=True, hocket=False
+):
+    def imbricate(argument):
+        trinton.imbrication(
+            selections=argument,
+            pitches=pitches,
+            name=name,
+            direction=abjad.UP,
+            articulation=articulation,
+            beam=beam,
+            hocket=hocket,
+        )
+
+    return imbricate
 
 
 # rest measures

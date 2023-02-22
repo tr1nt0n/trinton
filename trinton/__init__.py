@@ -28,6 +28,7 @@ from .commands import (
     force_accidentals_command,
     noteheads_only,
     imbrication,
+    call_imbrication,
     tremolo_lines,
     tremolo_command,
     transparent_noteheads,
@@ -107,6 +108,7 @@ from .preprocessors import (
     quarters_preprocessor,
     fuse_eighths_preprocessor,
     fuse_sixteenths_preprocessor,
+    fuse_thirty_seconds_preprocessor,
 )
 
 from .rhythm import (
