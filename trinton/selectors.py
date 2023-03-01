@@ -158,7 +158,7 @@ def group_logical_ties_by_measure(voice):
 
 def grace_selector():
     def selector(argument):
-        return abjad.select.leaves(argument, pitched=True, grace=True)
+        return baca.select.graces(argument)
 
     return selector
 

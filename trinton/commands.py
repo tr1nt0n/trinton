@@ -117,8 +117,40 @@ def change_notehead_command(notehead, selector):
     def change(argument):
         selections = selector(argument)
         leaves = abjad.select.leaves(selections, pitched=True)
-        for leaf in leaves:
-            abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
+        _overrides = {
+            "highest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bb)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bc)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0be)))))))",
+            "lowest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c4)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c5)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c7)))))))",
+        }
+
+        if notehead == "highest" or notehead == "lowest":
+            notehead_literal = abjad.LilyPondLiteral(_overrides[notehead], "before")
+
+            stem_literal = abjad.LilyPondLiteral(
+                r"\once \override NoteHead.stem-attachment = #'(0 . 0.75)"
+            )
+
+            ledger_literal = abjad.LilyPondLiteral(
+                r"\once \override NoteHead.no-ledgers = ##t"
+            )
+
+            accidental_literal = abjad.LilyPondLiteral(
+                r"\once \override Staff.AccidentalPlacement.right-padding = #0.6"
+            )
+
+            literals = [
+                stem_literal,
+                ledger_literal,
+                notehead_literal,
+                accidental_literal,
+            ]
+
+            for leaf in leaves:
+                for literal in literals:
+                    abjad.attach(literal, leaf)
+
+        else:
+            for leaf in leaves:
+                abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
 
     return change
 
