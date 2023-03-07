@@ -93,11 +93,11 @@ def select_leaves_in_tie(tie_indices, leaf_indices):
     return selector
 
 
-def select_leaves_by_index(indices, pitched=None):
+def select_leaves_by_index(indices, pitched=None, grace=None):
     def selector(argument):
         out = []
         for index in indices:
-            out.append(abjad.select.leaf(argument, index, pitched=pitched))
+            out.append(abjad.select.leaf(argument, index, pitched=pitched, grace=grace))
         return out
 
     return selector
