@@ -376,6 +376,7 @@ def make_music(
 
             selections = abjad.mutate.eject_contents(container)
             abjad.mutate.replace(target, selections)
+            # abjad.mutate.replace(target, container)
 
         elif isinstance(arg, evans.RewriteMeterCommand):
             target_copy = abjad.mutate.copy(target[:])
@@ -391,6 +392,7 @@ def make_music(
     if beam_meter is True:
         print("Beaming meter ...")
         target = selector_function(voice)
+        target = abjad.select.leaves(target, grace=False)
         measures = abjad.select.group_by_measure(target)
         for i, shard in enumerate(measures):
             top_level_components = trinton.get_top_level_components_from_leaves(shard)
@@ -724,7 +726,9 @@ def fermata_measures(
     measures,
     fermata="ufermata",
     voice_names=None,
+    font_size="10",
     blank=True,
+    last_measure=False,
 ):
     measures = [_ - 1 for _ in measures]
 
@@ -741,7 +745,7 @@ def fermata_measures(
             "before",
         )
         fermata_markup = abjad.Markup(
-            rf'\markup \center-column {{ \abs-fontsize #10 \musicglyph "scripts.{fermata}" }}'
+            rf'\markup \center-column {{ \abs-fontsize #{font_size} \musicglyph "scripts.{fermata}" }}'
         )
         invisible_ts_command = abjad.LilyPondLiteral(
             r"\once \override Score.TimeSignature.stencil = ##f",
@@ -794,7 +798,7 @@ def fermata_measures(
             )
 
             for measure in measures:
-                selection = trinton.select_target(score[voice_name], (measure + 1,))
+                selection = trinton.select_target(voice, (measure + 1,))
                 relevant_leaf = selection[0]
                 next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
                 abjad.attach(start_command, relevant_leaf)

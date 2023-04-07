@@ -407,14 +407,12 @@ def rebar(
         for leaf in abjad.select.leaves(rest_target):
             if isinstance(leaf, abjad.Skip):
                 skip_duration = abjad.get.duration(leaf)
-                new_rest = abjad.Rest(skip_duration)
+                new_rest = abjad.MultimeasureRest(multiplier=skip_duration)
                 rest_indicators = [_ for _ in abjad.get.indicators(leaf)]
                 for indicator in rest_indicators:
                     abjad.detach(indicator, leaf)
                     abjad.attach(indicator, new_rest)
                 abjad.mutate.replace(leaf, new_rest)
-
-    rebeam_voices = [selector_function(_) for _ in rebeam]
 
     new_leaves = []
 
@@ -442,9 +440,9 @@ def rebar(
     abjad.mutate.replace(target, new_leaves)
 
     if rebeam is not None:
+        rebeam_voices = [selector_function(_) for _ in rebeam]
         for target in rebeam_voices:
             print("Rebeaming ...")
-            # beam_target = selector_function(voice)
             for leaf in abjad.select.leaves(target):
                 abjad.detach(abjad.StartBeam, leaf)
                 abjad.detach(abjad.StopBeam, leaf)

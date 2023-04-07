@@ -170,11 +170,15 @@ def exclude_graces():
     return selector
 
 
-def pleaves(exclude=None):
+def pleaves(exclude=None, grace=None):
     def selector(argument):
-        selections = baca.select.pleaves(argument)
+        selections = abjad.select.leaves(argument, pitched=True, grace=grace)
+        if grace is True or grace is None:
+            selections = abjad.select.leaves(selections)
+
         if exclude is not None:
             selections = abjad.select.exclude(selections, exclude)
+
         return selections
 
     return selector
@@ -199,7 +203,7 @@ def group_selections(voice, leaves, groups=None):
         return new_out
 
 
-def select_target(voice, measure_number_range=(1, 3)):
+def select_target(voice, measure_number_range=(1, 3), grace=True):
     if len(measure_number_range) == 1:
         indices = [_ - 1 for _ in measure_number_range]
     else:
@@ -226,8 +230,15 @@ def select_target(voice, measure_number_range=(1, 3)):
 
     for component in voice[:]:
         span = abjad.get.timespan(component)
+        container = abjad.Container()
         if span.intersects_timespan(relevant_timespan) is True:
+            before_grace = abjad.get.before_grace_container(component)
+            after_grace = abjad.get.after_grace_container(component)
+            if before_grace is not None and grace is True:
+                out.append(before_grace)
             out.append(component)
+            if after_grace is not None and grace is True:
+                out.append(after_grace)
 
     return out
 
@@ -255,11 +266,14 @@ def group_selections(selector, groups):
     return group
 
 
-def ranged_selector(ranges, nested=False, pitched=None):
+def ranged_selector(ranges, nested=False, pitched=None, grace=None):
     def selector(argument):
         out = []
         for range in ranges:
-            selection = [abjad.select.leaf(argument, _, pitched=pitched) for _ in range]
+            selection = [
+                abjad.select.leaf(argument, _, pitched=pitched, grace=grace)
+                for _ in range
+            ]
             out.append(selection)
         if nested is True:
             return out

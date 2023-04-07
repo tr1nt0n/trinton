@@ -527,7 +527,7 @@ def glissando(score, voice, start_gliss, stop_gliss):
         )
 
 
-def glissando_command(selector, tweaks=[], zero_padding=False):
+def glissando_command(selector, tweaks=[], zero_padding=False, no_ties=False):
     def command(argument):
         selections = selector(argument)
         for selection in selections:
@@ -547,6 +547,9 @@ def glissando_command(selector, tweaks=[], zero_padding=False):
                     ),
                     leaf,
                 )
+            if no_ties is True:
+                for leaf in selection:
+                    abjad.detach(abjad.Tie, leaf)
 
     return command
 
@@ -844,7 +847,7 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
         voices = abjad.iterate.components(score["Staff Group"], abjad.Staff)
 
     for voice in voices:
-        shards = abjad.select.group_by_measure(voice)
+        shards = abjad.select.group_by_measure(abjad.select.leaves(voice))
         relevant_shards = []
         for shard in shards:
             if (
