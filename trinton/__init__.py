@@ -65,6 +65,7 @@ from .makers import (
     on_beat_grace_container,
     OnBeatGraceHandler,
     fermata_measures,
+    make_custom_dynamic,
 )
 
 from .markup import (

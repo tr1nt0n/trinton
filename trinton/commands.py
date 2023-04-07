@@ -155,9 +155,10 @@ def change_notehead_command(notehead, selector):
     return change
 
 
-def noteheads_only(duration_log="2"):
+def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
     def only_noteheads(argument):
-        for leaf in abjad.select.leaves(argument, pitched=True):
+        selections = selector(argument)
+        for leaf in selections:
             abjad.attach(
                 abjad.LilyPondLiteral(r"\once \override Stem.stencil = ##f", "before"),
                 leaf,
@@ -503,7 +504,7 @@ def tremolo_lines(selector, lines):
     return tremolo
 
 
-def tremolo_command(selector):
+def tremolo_command(selector=selectors.pleaves()):
     def trem(argument):
         selections = selector(argument)
         for selection in selections:

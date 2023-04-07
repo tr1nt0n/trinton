@@ -140,7 +140,13 @@ def write_id_spanner(
 
 
 def hooked_spanner_command(
-    string, selector, padding=7, direction=None, right_padding=1, full_string=False
+    string,
+    selector,
+    padding=7,
+    direction=None,
+    right_padding=1,
+    full_string=False,
+    style="dashed-line-with-hook",
 ):
     if full_string is True:
         markup = abjad.Markup(string)
@@ -149,20 +155,13 @@ def hooked_spanner_command(
         markup = abjad.Markup(rf'\markup \upright {{ "{string}" }}')
 
     def attach_spanner(argument):
-        if direction == "down":
-            start_text_span = abjad.StartTextSpan(
-                left_text=markup,
-                right_text=None,
-                style="dashed-line-with-up-hook",
-                right_padding=-right_padding,
-            )
-        else:
-            start_text_span = abjad.StartTextSpan(
-                left_text=markup,
-                right_text=None,
-                style="dashed-line-with-hook",
-                right_padding=-right_padding,
-            )
+        start_text_span = abjad.StartTextSpan(
+            left_text=markup,
+            right_text=None,
+            style=style,
+            right_padding=-right_padding,
+        )
+
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
 
         selections = selector(argument)

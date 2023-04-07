@@ -727,6 +727,7 @@ def fermata_measures(
     fermata="ufermata",
     voice_names=None,
     font_size="10",
+    clef_whitespace=True,
     blank=True,
     last_measure=False,
 ):
@@ -769,7 +770,7 @@ def fermata_measures(
         abjad.attach(before_barline_command, mm_rest)
         abjad.attach(after_barline_command, mm_rest)
         abjad.attach(leaf_ts, mm_rest)
-        abjad.attach(fermata_markup, mm_rest)
+        abjad.attach(fermata_markup, mm_rest, direction=abjad.DOWN)
         for indicator in leaf_indicators:
             abjad.attach(indicator, mm_rest)
 
@@ -783,7 +784,7 @@ def fermata_measures(
             voices = abjad.select.components(score["Staff Group"], abjad.Voice)
 
         for voice in voices:
-            all_measures = abjad.select.group_by_measure(voice)
+            all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
 
             start_command = abjad.LilyPondLiteral(
                 r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
@@ -800,12 +801,30 @@ def fermata_measures(
             for measure in measures:
                 selection = trinton.select_target(voice, (measure + 1,))
                 relevant_leaf = selection[0]
-                next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
                 abjad.attach(start_command, relevant_leaf)
-                if abjad.get.has_indicator(next_leaf, abjad.Clef):
-                    abjad.attach(clef_whitespace, relevant_leaf)
                 if last_measure is False:
                     abjad.attach(stop_command, relevant_leaf)
+
+    if clef_whitespace is True:
+        if voice_names is not None:
+            voices = [score[_] in voice_names]
+        else:
+            voices = abjad.select.components(score["Staff Group"], abjad.Voice)
+
+        for voice in voices:
+            all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
+
+            clef_whitespace = abjad.LilyPondLiteral(
+                r"\once \override Staff.Clef.X-extent = ##f \once \override Staff.Clef.extra-offset = #'(-2.25 . 0)",
+                "absolute_after",
+            )
+
+            for measure in measures:
+                selection = trinton.select_target(voice, (measure + 1,))
+                relevant_leaf = selection[0]
+                next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
+                if abjad.get.has_indicator(next_leaf, abjad.Clef):
+                    abjad.attach(clef_whitespace, relevant_leaf)
 
 
 def make_fermata_measure(selection):
@@ -889,3 +908,12 @@ def cache_leaves(score):
     measure_dicts = [dict(zip(list(range(1, len(l[1]) + 1)), l[1])) for l in lists]
     dictionary = dict(zip([l[0] for l in lists], measure_dicts))
     return dictionary
+
+
+# indicator makers
+
+
+def make_custom_dynamic(dynamic):
+    return abjad.LilyPondLiteral(
+        rf'_ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))', "after"
+    )
