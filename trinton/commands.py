@@ -215,7 +215,12 @@ def repeats(score, start_leaf, stop_leaf):
     trinton.attach(voice=score, leaves=stop_leaf, attachment=abjad.BarLine(":|."))
 
 
-def change_lines(lines, selector, clef="treble", invisible_barlines=True):
+def change_lines(
+    lines,
+    selector=selectors.select_leaves_by_index([0], pitched=True),
+    clef="treble",
+    invisible_barlines=True,
+):
     def change(argument):
         _line_to_bar_extent = {
             1: "(-0.01 . 0.01)",
