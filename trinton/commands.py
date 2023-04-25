@@ -113,7 +113,7 @@ def pitched_notehead_change(voice, pitches, notehead):
                 abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
 
 
-def change_notehead_command(notehead, selector):
+def change_notehead_command(notehead, selector=selectors.pleaves()):
     def change(argument):
         selections = selector(argument)
         leaves = abjad.select.leaves(selections, pitched=True)
@@ -238,7 +238,7 @@ def change_lines(
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         rf"\override Staff.BarLine.bar-extent = #'{_line_to_bar_extent[lines]}",
-                        site="after",
+                        site="before",
                     ),
                     selection,
                 )

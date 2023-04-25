@@ -147,6 +147,8 @@ def hooked_spanner_command(
     right_padding=1,
     full_string=False,
     style="dashed-line-with-hook",
+    hspace=None,
+    command="",
 ):
     if full_string is True:
         markup = abjad.Markup(string)
@@ -156,6 +158,7 @@ def hooked_spanner_command(
 
     def attach_spanner(argument):
         start_text_span = abjad.StartTextSpan(
+            command=r"\startTextSpan" + command,
             left_text=markup,
             right_text=None,
             style=style,
@@ -187,7 +190,12 @@ def hooked_spanner_command(
                     tup[1],
                 )
             abjad.attach(bundle, tup[0]),
-            abjad.attach(abjad.StopTextSpan(), tup[1])
+            abjad.attach(
+                abjad.StopTextSpan(
+                    command=r"\stopTextSpan" + command,
+                ),
+                tup[1],
+            )
 
     return attach_spanner
 
@@ -196,6 +204,7 @@ def arrow_spanner_command(
     l_string,
     r_string,
     selector,
+    style="dashed-line-with-arrow",
     padding=7,
     direction=None,
     tempo=False,
@@ -213,7 +222,7 @@ def arrow_spanner_command(
             start_text_span = abjad.StartTextSpan(
                 left_text=abjad.Markup(l_string),
                 right_text=abjad.Markup(r_string),
-                style="dashed-line-with-arrow",
+                style=style,
                 right_padding=r_padding,
             )
 
@@ -221,7 +230,7 @@ def arrow_spanner_command(
             start_text_span = abjad.StartTextSpan(
                 left_text=abjad.Markup(rf'\markup \upright {{ "{l_string}" }}'),
                 right_text=abjad.Markup(rf"\markup \upright {{ {r_string} }}"),
-                style="dashed-line-with-arrow",
+                style=style,
                 right_padding=r_padding,
             )
 
@@ -253,139 +262,6 @@ def arrow_spanner_command(
             abjad.attach(abjad.StopTextSpan(), tup[1])
 
     return attach_spanner
-
-
-# def spanner_command(
-#     strings,
-#     selector,
-#     style="dashed-line-with-arrow",
-#     padding=7,
-#     right_padding=None,
-#     direction=None,
-#     full_string=False,
-#     command="",
-#     end_hook=False,
-#     continuous=True
-# ):
-#     def attach_spanner(argument):
-#         all_but_last_string = strings[:]
-#         del all_but_last_string[-1]
-#
-#         if right_padding is not None:
-#             r_padding = right_padding * -1
-#
-#         else:
-#             r_padding = right_padding
-#
-#         if full_string is True:
-#             start_spans = [
-#                 abjad.StartTextSpan(
-#                     command=r"\startTextSpan" + command,
-#                     left_text=abjad.Markup(_),
-#                     style=style,
-#                     right_padding=r_padding,
-#                 )
-#                 for _ in all_but_last_string
-#             ]
-#
-#         else:
-#             start_spans = [
-#                 abjad.StartTextSpan(
-#                     command=r"\startTextSpan" + command,
-#                     left_text=abjad.Markup(rf'\markup \upright {{ "{_}" }}'),
-#                     style=style,
-#                     right_padding=r_padding,
-#                 )
-#                 for _ in all_but_last_string
-#             ]
-#
-#         start_spans = [
-#             abjad.bundle(_, rf"- \tweak padding #{padding}") for _ in start_spans
-#         ]
-#
-#         selections = selector(argument)
-#
-#         if continuous is True:
-#
-#             selections = abjad.select.exclude(selections, [-1])
-#
-#         if direction == "down":
-#             abjad.attach(
-#                 abjad.LilyPondLiteral(
-#                     r"\textSpannerDown",
-#                     "before",
-#                 ),
-#                 selections[0],
-#             )
-#             abjad.attach(
-#                 abjad.LilyPondLiteral(
-#                     r"\textSpannerUp",
-#                     "after",
-#                 ),
-#                 selections[-1],
-#             )
-#
-#         it = iter(selections)
-#
-#         tups = [*zip(it, it)]
-#
-#         for tup, span in zip(tups, start_spans):
-#             abjad.attach(span, tup[0]),
-#             abjad.attach(
-#                 abjad.StopTextSpan(command=r"\stopTextSpan" + command), tup[-1]
-#             )
-#
-#         if continuous is True:
-#
-#             if full_string is True:
-#                 if end_hook is True:
-#                     last_span = abjad.StartTextSpan(
-#                         command=r"\startTextSpan" + command,
-#                         left_text=abjad.Markup(strings[-1]),
-#                         style="dashed-line-with-hook",
-#                         right_padding=-2.5,
-#                     )
-#                 else:
-#                     last_span = abjad.StartTextSpan(
-#                         command=r"\startTextSpan" + command,
-#                         left_text=abjad.Markup(strings[-2]),
-#                         right_text=abjad.Markup(strings[-1]),
-#                         style=style,
-#                         right_padding=r_padding,
-#                     )
-#
-#             else:
-#                 if end_hook is True:
-#                     last_span = abjad.StartTextSpan(
-#                         command=r"\startTextSpan" + command,
-#                         left_text=abjad.Markup(
-#                             rf'\markup \upright {{ "{strings[-1]}" }}'
-#                         ),
-#                         style="dashed-line-with-hook",
-#                         right_padding=-2.5,
-#                     )
-#
-#                 else:
-#                     last_span = abjad.StartTextSpan(
-#                         command=r"\startTextSpan" + command,
-#                         left_text=abjad.Markup(
-#                             rf'\markup \upright {{ "{strings[-2]}" }}'
-#                         ),
-#                         right_text=abjad.Markup(
-#                             rf"\markup \upright {{ {strings[-1]} }}"
-#                         ),
-#                         style=style,
-#                         right_padding=r_padding,
-#                     )
-#
-#             last_span = abjad.bundle(last_span, rf"- \tweak padding #{padding}")
-#             abjad.attach(last_span, selections[-2]),
-#
-#             abjad.attach(
-#                 abjad.StopTextSpan(command=r"\stopTextSpan" + command), selections[-1]
-#             )
-#
-#     return attach_spanner
 
 
 def spanner_command(

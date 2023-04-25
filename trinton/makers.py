@@ -816,7 +816,7 @@ def fermata_measures(
 
             clef_whitespace = abjad.LilyPondLiteral(
                 r"\once \override Staff.Clef.X-extent = ##f \once \override Staff.Clef.extra-offset = #'(-2.25 . 0)",
-                "absolute_after",
+                "before",
             )
 
             for measure in measures:
@@ -824,7 +824,7 @@ def fermata_measures(
                 relevant_leaf = selection[0]
                 next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
                 if abjad.get.has_indicator(next_leaf, abjad.Clef):
-                    abjad.attach(clef_whitespace, relevant_leaf)
+                    abjad.attach(clef_whitespace, next_leaf)
 
 
 def make_fermata_measure(selection):
@@ -913,7 +913,14 @@ def cache_leaves(score):
 # indicator makers
 
 
-def make_custom_dynamic(dynamic):
-    return abjad.LilyPondLiteral(
-        rf'_ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))', "after"
-    )
+def make_custom_dynamic(dynamic, direction=None):
+    if direction == abjad.UP:
+        return abjad.LilyPondLiteral(
+            rf'^ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))',
+            "after",
+        )
+    else:
+        return abjad.LilyPondLiteral(
+            rf'_ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))',
+            "after",
+        )
