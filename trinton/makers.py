@@ -922,5 +922,5 @@ def make_custom_dynamic(dynamic, direction=None):
     else:
         return abjad.LilyPondLiteral(
             rf'_ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))',
-            "after",
+            site="closing",
         )
