@@ -60,12 +60,12 @@ def attach_multiple(score, voice, attachments, leaves, direction=None):
             )
 
 
-def attachment_command(attachments, selector, direction=None):
+def attachment_command(attachments, selector, direction=None, tag=None):
     def command(argument):
         selections = selector(argument)
         for selection in selections:
             for attachment in attachments:
-                abjad.attach(attachment, selection, direction=direction)
+                abjad.attach(attachment, selection, direction=direction, tag=tag)
 
     return command
 
@@ -874,17 +874,23 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
                 r"\once \override Staff.BarLine.transparent = ##f", "absolute_before"
             )
             abjad.attach(
-                rest_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
+                rest_literal,
+                invisible_rest,
             )
-            abjad.attach(
-                bar_literal, invisible_rest, tag=abjad.Tag("applying invisibility")
-            )
+            abjad.attach(bar_literal, invisible_rest, tag=abjad.Tag("+SCORE"))
             for indicator in indicators:
                 abjad.attach(
-                    indicator, invisible_rest, tag=abjad.Tag("applying indicators")
+                    indicator,
+                    invisible_rest,
                 )
             if cutaway == "blank":
-                multimeasure_rest = abjad.Skip(1, multiplier=(multiplier))
+                mm_rest_literal = abjad.LilyPondLiteral(
+                    r"\once \override MultiMeasureRest.transparent = ##t", "before"
+                )
+                multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
+                abjad.attach(
+                    mm_rest_literal, multimeasure_rest, tag=abjad.Tag("+SCORE")
+                )
                 start_command = abjad.LilyPondLiteral(
                     r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
                     site="before",
@@ -900,14 +906,8 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
                 r"\stopStaff \startStaff", site="after"
             )
             if cutaway is True or cutaway == "blank":
-                abjad.attach(
-                    start_command, invisible_rest, tag=abjad.Tag("applying cutaway")
-                )
-                abjad.attach(
-                    stop_command,
-                    multimeasure_rest,
-                    tag=abjad.Tag("applying cutaway"),
-                )
+                abjad.attach(start_command, invisible_rest, tag=abjad.Tag("+SCORE"))
+                abjad.attach(stop_command, multimeasure_rest, tag=abjad.Tag("+SCORE"))
                 both_rests = [invisible_rest, multimeasure_rest]
                 abjad.mutate.replace(shard, both_rests[:])
             else:

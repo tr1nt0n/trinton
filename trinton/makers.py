@@ -601,15 +601,24 @@ def render_file(score, segment_path, build_path, segment_name, includes):
     score_file = abjad.LilyPondFile(
         items=assembled_includes,
     )
+    parts_string = abjad.tag.deactivate(
+        abjad.lilypond(score_file, tags=True), abjad.Tag("+SCORE")
+    )
+    parts_string = parts_string[0]
+    parts_file = abjad.LilyPondFile(items=[parts_string])
     directory = segment_path
     pdf_path = pathlib.Path(f"{directory}/illustration{segment_name}.pdf")
     ly_path = pathlib.Path(f"{directory}/illustration{segment_name}.ly")
+    parts_path = pathlib.Path(f"{build_path}/{segment_name}_parts.ly")
     if pdf_path.exists():
         pdf_path.unlink()
     if ly_path.exists():
         ly_path.unlink()
+    if parts_path.exists():
+        parts_path.unlink()
     print("Persisting ...")
-    abjad.persist.as_ly(score_file, ly_path)
+    abjad.persist.as_ly(score_file, ly_path, tags=True)
+    abjad.persist.as_ly(parts_file, parts_path, tags=True)
     if ly_path.exists():
         print("Rendering ...")
         os.system(f"run-lilypond {ly_path}")
@@ -618,8 +627,13 @@ def render_file(score, segment_path, build_path, segment_name, includes):
         os.system(f"open {pdf_path}")
     with open(ly_path) as pointer_1:
         score_lines = pointer_1.readlines()
-        lines = score_lines[6:-1]
+        lines = score_lines[10:-1]
         with open(f"{build_path}/{segment_name}.ly", "w") as fp:
+            fp.writelines(lines)
+    with open(parts_path) as pointer_1:
+        score_lines = pointer_1.readlines()
+        lines = score_lines[14:-1]
+        with open(f"{build_path}/{segment_name}_parts.ly", "w") as fp:
             fp.writelines(lines)
 
 
