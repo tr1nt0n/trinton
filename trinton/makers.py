@@ -931,7 +931,7 @@ def make_custom_dynamic(dynamic, direction=None):
     if direction == abjad.UP:
         return abjad.LilyPondLiteral(
             rf'^ #(make-dynamic-script (markup #:whiteout #:italic "{dynamic}"))',
-            "after",
+            "closing",
         )
     else:
         return abjad.LilyPondLiteral(

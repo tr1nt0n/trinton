@@ -243,9 +243,11 @@ def select_target(voice, measure_number_range=(1, 3), grace=True):
     return out
 
 
-def logical_ties(first=False, pitched=None):
+def logical_ties(first=False, pitched=None, exclude=None):
     def selector(argument):
         ties = abjad.select.logical_ties(argument, pitched=pitched)
+        if exclude is not None:
+            ties = abjad.select.exclude(ties, exclude)
         if first is True:
             out = []
             for tie in ties:

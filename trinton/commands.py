@@ -865,17 +865,13 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
 
         for i, shard in enumerate(relevant_shards):
             indicators = abjad.get.indicators(shard[0])
-            multiplier = abjad.get.duration(shard) / 2
-            invisible_rest = abjad.Rest(1, multiplier=(multiplier))
+            multiplier = abjad.get.duration(shard)
+            invisible_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
             rest_literal = abjad.LilyPondLiteral(
-                r"\once \override Rest.transparent = ##t", "before"
+                r"\once \override MultiMeasureRest.transparent = ##t", "opening"
             )
             bar_literal = abjad.LilyPondLiteral(
                 r"\once \override Staff.BarLine.transparent = ##f", "absolute_before"
-            )
-            abjad.attach(
-                rest_literal,
-                invisible_rest,
             )
             abjad.attach(bar_literal, invisible_rest, tag=abjad.Tag("+SCORE"))
             for indicator in indicators:
@@ -884,19 +880,12 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
                     invisible_rest,
                 )
             if cutaway == "blank":
-                mm_rest_literal = abjad.LilyPondLiteral(
-                    r"\once \override MultiMeasureRest.transparent = ##t", "before"
-                )
-                multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
-                abjad.attach(
-                    mm_rest_literal, multimeasure_rest, tag=abjad.Tag("+SCORE")
-                )
+                abjad.attach(rest_literal, invisible_rest, tag=abjad.Tag("+SCORE"))
                 start_command = abjad.LilyPondLiteral(
                     r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
                     site="before",
                 )
             else:
-                multimeasure_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
                 start_command = abjad.LilyPondLiteral(
                     r"\stopStaff \once \override Staff.StaffSymbol.line-count = #1 \startStaff",
                     site="before",
@@ -907,12 +896,10 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
             )
             if cutaway is True or cutaway == "blank":
                 abjad.attach(start_command, invisible_rest, tag=abjad.Tag("+SCORE"))
-                abjad.attach(stop_command, multimeasure_rest, tag=abjad.Tag("+SCORE"))
-                both_rests = [invisible_rest, multimeasure_rest]
-                abjad.mutate.replace(shard, both_rests[:])
+                abjad.attach(stop_command, invisible_rest, tag=abjad.Tag("+SCORE"))
+                abjad.mutate.replace(shard, invisible_rest)
             else:
-                both_rests = [invisible_rest, multimeasure_rest]
-                abjad.mutate.replace(shard, both_rests[:])
+                abjad.mutate.replace(shard, invisible_rest)
 
 
 def fill_empty_staves_with_skips(voice):
