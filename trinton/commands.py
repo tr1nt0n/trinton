@@ -150,7 +150,11 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
 
         else:
             for leaf in leaves:
-                abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
+                if isinstance(leaf, abjad.Chord):
+                    for head in leaf.note_heads:
+                        abjad.tweak(head, rf"\tweak style #'{notehead}")
+                else:
+                    abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
 
     return change
 
