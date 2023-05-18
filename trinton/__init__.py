@@ -38,6 +38,8 @@ from .commands import (
     invisible_tuplet_brackets,
     annotate_leaves,
     change_lines,
+    artificial_harmonics,
+    invisible_accidentals_command,
 )
 
 from .makers import (

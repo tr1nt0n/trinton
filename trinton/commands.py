@@ -106,6 +106,20 @@ def change_notehead(voice, leaves, notehead):
             )
 
 
+def artificial_harmonics(selector=selectors.pleaves()):
+    def change_noteheads(argument):
+        selections = selector(argument)
+        for leaf in selections:
+            if isinstance(leaf, abjad.Chord) is False:
+                pass
+
+            else:
+                noteheads = leaf.note_heads
+                abjad.tweak(noteheads[1], rf"\tweak style #'harmonic")
+
+    return change_noteheads
+
+
 def pitched_notehead_change(voice, pitches, notehead):
     for leaf in abjad.select.leaves(voice, pitched=True):
         for pitch in pitches:
@@ -362,6 +376,21 @@ def force_accidentals_command(selector, after_ties=False):
     return force
 
 
+def invisible_accidentals_command(selector=selectors.pleaves()):
+    def invisible(argument):
+        selections = selector(argument)
+
+        for selection in selections:
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override Accidental.stencil = ##f", "before"
+                ),
+                selection,
+            )
+
+    return invisible
+
+
 # tuplets
 
 
@@ -437,9 +466,13 @@ def fuse_tuplet_rests_command():
     return fuse
 
 
-def invisible_tuplet_brackets():
+def invisible_tuplet_brackets(selector=None):
     def command(argument):
-        for tuplet in abjad.select.tuplets(argument):
+        if selector is None:
+            selections = abjad.select.tuplets(argument)
+        else:
+            selections = selector(argument)
+        for tuplet in selections:
             abjad.attach(
                 abjad.LilyPondLiteral(
                     "\once \override TupletBracket.stencil = ##f", "before"
