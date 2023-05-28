@@ -36,3 +36,26 @@ multiple-staccato = \markup {
     \override #'(font-name . "ekmelos")
     \char ##xf42F
 }
+
+gridato-twist-bow = \markup {
+    \hspace #0.5
+    \fontsize #6
+    \override #'(font-name . "ekmelos")
+    \char ##xe80B
+}
+
+#(append! default-script-alist
+   (list
+    `(gridatotwistbow
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,gridato-twist-bow)
+           (avoid-slur . around)
+           (direction . ,DOWN)
+           (padding . 0.20)
+           (script-priority . 150)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+twist-bow = #(make-articulation 'gridatotwistbow)

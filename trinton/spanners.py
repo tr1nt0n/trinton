@@ -274,6 +274,7 @@ def spanner_command(
     full_string=False,
     command="",
     end_hook=False,
+    end_hook_style="dashed-line-with-hook",
 ):
     def attach_spanner(argument):
         if full_string is True:
@@ -312,7 +313,7 @@ def spanner_command(
             last_span = abjad.StartTextSpan(
                 command=r"\startTextSpan" + command,
                 left_text=markups[1],
-                style="dashed-line-with-hook",
+                style=end_hook_style,
                 right_padding=-1.5,
             )
 
@@ -356,7 +357,7 @@ def spanner_command(
             last_span = abjad.StartTextSpan(
                 command=r"\startTextSpan" + command,
                 left_text=markups[-1],
-                style="dashed-line-with-hook",
+                style=end_hook_style,
                 right_padding=-1.5,
             )
 
