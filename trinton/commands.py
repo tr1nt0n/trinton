@@ -17,32 +17,26 @@ import os
 # attachment functions
 
 
-def attach(voice, leaves, attachment, direction=None):
+def attach(voice, leaves, attachment, direction=None, tag=None):
     if direction is not None:
         if leaves == all:
             for leaf in abjad.select.leaves(voice, pitched=True):
-                abjad.attach(attachment, leaf, direction=direction)
+                abjad.attach(attachment, leaf, direction=direction, tag=tag)
         else:
             for number in leaves:
                 sel = abjad.select.leaf(voice, number)
-                abjad.attach(attachment, sel, direction=direction)
+                abjad.attach(attachment, sel, direction=direction, tag=tag)
     else:
         if leaves == all:
             for leaf in abjad.select.leaves(voice, pitched=True):
-                abjad.attach(
-                    attachment,
-                    leaf,
-                )
+                abjad.attach(attachment, leaf, tag=tag)
         else:
             for number in leaves:
                 sel = abjad.select.leaf(voice, number)
-                abjad.attach(
-                    attachment,
-                    sel,
-                )
+                abjad.attach(attachment, sel, tag=tag)
 
 
-def attach_multiple(score, voice, attachments, leaves, direction=None):
+def attach_multiple(score, voice, attachments, leaves, direction=None, tag=None):
     if direction is not None:
         for attachment in attachments:
             trinton.attach(
@@ -50,13 +44,12 @@ def attach_multiple(score, voice, attachments, leaves, direction=None):
                 leaves=leaves,
                 attachment=attachment,
                 direction=direction,
+                tag=tag,
             )
     else:
         for attachment in attachments:
             trinton.attach(
-                voice=score[voice],
-                leaves=leaves,
-                attachment=attachment,
+                voice=score[voice], leaves=leaves, attachment=attachment, tag=tag
             )
 
 
@@ -882,7 +875,9 @@ def call_imbrication(
 # rest measures
 
 
-def whiteout_empty_staves(score, voice_names=None, cutaway=True):
+def whiteout_empty_staves(
+    score, voice_names=None, cutaway=True, tag=abjad.Tag("+SCORE")
+):
     print("Making empty staves ...")
     if voice_names is not None:
         voices = [score[_] for _ in voice_names]
@@ -910,14 +905,14 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
             bar_literal = abjad.LilyPondLiteral(
                 r"\once \override Staff.BarLine.transparent = ##f", "absolute_before"
             )
-            abjad.attach(bar_literal, invisible_rest, tag=abjad.Tag("+SCORE"))
+            abjad.attach(bar_literal, invisible_rest, tag=tag)
             for indicator in indicators:
                 abjad.attach(
                     indicator,
                     invisible_rest,
                 )
             if cutaway == "blank":
-                abjad.attach(rest_literal, invisible_rest, tag=abjad.Tag("+SCORE"))
+                abjad.attach(rest_literal, invisible_rest, tag=tag)
                 start_command = abjad.LilyPondLiteral(
                     r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
                     site="before",
@@ -932,8 +927,8 @@ def whiteout_empty_staves(score, voice_names=None, cutaway=True):
                 r"\stopStaff \startStaff", site="after"
             )
             if cutaway is True or cutaway == "blank":
-                abjad.attach(start_command, invisible_rest, tag=abjad.Tag("+SCORE"))
-                abjad.attach(stop_command, invisible_rest, tag=abjad.Tag("+SCORE"))
+                abjad.attach(start_command, invisible_rest, tag=tag)
+                abjad.attach(stop_command, invisible_rest, tag=tag)
                 abjad.mutate.replace(shard, invisible_rest)
             else:
                 abjad.mutate.replace(shard, invisible_rest)

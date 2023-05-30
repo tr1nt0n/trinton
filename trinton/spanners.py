@@ -149,6 +149,7 @@ def hooked_spanner_command(
     style="dashed-line-with-hook",
     hspace=None,
     command="",
+    tag=None,
 ):
     if full_string is True:
         markup = abjad.Markup(string)
@@ -181,6 +182,7 @@ def hooked_spanner_command(
                         "before",
                     ),
                     tup[0],
+                    tag=tag,
                 )
                 abjad.attach(
                     abjad.LilyPondLiteral(
@@ -188,13 +190,15 @@ def hooked_spanner_command(
                         "after",
                     ),
                     tup[1],
+                    tag=tag,
                 )
-            abjad.attach(bundle, tup[0]),
+            abjad.attach(bundle, tup[0], tag=tag),
             abjad.attach(
                 abjad.StopTextSpan(
                     command=r"\stopTextSpan" + command,
                 ),
                 tup[1],
+                tag=tag,
             )
 
     return attach_spanner
@@ -404,6 +408,7 @@ def id_spanner_command(
     style="dashed-line-with-arrow",
     padding=7,
     right_padding=None,
+    tag=None,
 ):
     def attach_spanner(argument):
         selections = selector(argument)
@@ -442,7 +447,7 @@ def id_spanner_command(
         tups = [*zip(it, it)]
 
         for tup in tups:
-            abjad.attach(bundle, tup[0])
-            abjad.attach(termination, tup[1])
+            abjad.attach(bundle, tup[0], tag=tag)
+            abjad.attach(termination, tup[1], tag=tag)
 
     return attach_spanner
