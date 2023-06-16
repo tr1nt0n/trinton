@@ -63,11 +63,11 @@ def attachment_command(attachments, selector, direction=None, tag=None):
     return command
 
 
-def linear_attachment_command(attachments, selector, direction=None):
+def linear_attachment_command(attachments, selector, direction=None, tag=None):
     def command(argument):
         selections = selector(argument)
         for selection, attachment in zip(selections, attachments):
-            abjad.attach(attachment, selection, direction=direction)
+            abjad.attach(attachment, selection, direction=direction, tag=tag)
 
     return command
 
@@ -876,7 +876,7 @@ def call_imbrication(
 
 
 def whiteout_empty_staves(
-    score, voice_names=None, cutaway=True, tag=abjad.Tag("+SCORE")
+    score, voice_names=None, cutaway=True, tag=abjad.Tag("+SCORE"), last_segment=False
 ):
     print("Making empty staves ...")
     if voice_names is not None:

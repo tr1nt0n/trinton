@@ -279,6 +279,7 @@ def spanner_command(
     command="",
     end_hook=False,
     end_hook_style="dashed-line-with-hook",
+    tag=None,
 ):
     def attach_spanner(argument):
         if full_string is True:
@@ -383,18 +384,20 @@ def spanner_command(
         ]
 
         for tup, span in zip(tups, start_spans):
-            abjad.attach(span, tup[0]),
+            abjad.attach(span, tup[0], tag=tag),
             abjad.attach(
-                abjad.StopTextSpan(command=r"\stopTextSpan" + command), tup[-1]
+                abjad.StopTextSpan(command=r"\stopTextSpan" + command), tup[-1], tag=tag
             )
 
         if len(strings) > 2 or end_hook is True:
             last_span = abjad.bundle(last_span, rf"- \tweak padding #{padding}")
 
-            abjad.attach(last_span, last_pair[0])
+            abjad.attach(last_span, last_pair[0], tag=tag)
 
             abjad.attach(
-                abjad.StopTextSpan(command=r"\stopTextSpan" + command), last_pair[-1]
+                abjad.StopTextSpan(command=r"\stopTextSpan" + command),
+                last_pair[-1],
+                tag=tag,
             )
 
     return attach_spanner
