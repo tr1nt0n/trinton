@@ -150,6 +150,7 @@ def hooked_spanner_command(
     hspace=None,
     command="",
     tag=None,
+    tweaks=None,
 ):
     if full_string is True:
         markup = abjad.Markup(string)
@@ -167,6 +168,10 @@ def hooked_spanner_command(
         )
 
         bundle = abjad.bundle(start_text_span, rf"- \tweak padding #{padding}")
+
+        if tweaks is not None:
+            for tweak in tweaks:
+                bundle = abjad.bundle(bundle, tweak)
 
         selections = selector(argument)
 
@@ -273,6 +278,7 @@ def spanner_command(
     selector,
     style="dashed-line-with-arrow",
     padding=7,
+    tweaks=None,
     right_padding=None,
     direction=None,
     full_string=False,
@@ -382,6 +388,10 @@ def spanner_command(
         start_spans = [
             abjad.bundle(span, rf"- \tweak padding #{padding}") for span in start_spans
         ]
+
+        if tweaks is not None:
+            for tweak in tweaks:
+                start_spans = [abjad.bundle(span, tweak) for span in start_spans]
 
         for tup, span in zip(tups, start_spans):
             abjad.attach(span, tup[0], tag=tag),

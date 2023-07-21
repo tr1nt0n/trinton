@@ -231,28 +231,31 @@ def change_lines(
     selector=selectors.select_leaves_by_index([0], pitched=True),
     clef="treble",
     invisible_barlines=True,
+    tag=abjad.Tag("+SCORE"),
 ):
     def change(argument):
-        _line_to_bar_extent = {
-            1: "(-0.01 . 0.01)",
-            2: "(-0.5 . 0.5)",
-            3: "(-1 . 1)",
-            4: "(-1.5 . 1.5)",
-            5: "(-2 . 2)",
-            6: "(-2.5 . 2.5)",
-        }
 
         selections = selector(argument)
         for selection in selections:
             abjad.attach(abjad.Clef(clef), selection)
             if invisible_barlines is True:
-                abjad.attach(
-                    abjad.LilyPondLiteral(
-                        rf"\override Staff.BarLine.bar-extent = #'{_line_to_bar_extent[lines]}",
-                        site="before",
-                    ),
-                    selection,
-                )
+                if lines == 1:
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\override Staff.BarLine.bar-extent = #'(-0.01 . 0.01)",
+                            site="before",
+                        ),
+                        selection,
+                        tag=tag,
+                    )
+                else:
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\revert Staff.BarLine.bar-extent", site="before"
+                        ),
+                        selection,
+                        tag=tag,
+                    )
             abjad.attach(
                 abjad.LilyPondLiteral(
                     rf"\staff-line-count {lines}",

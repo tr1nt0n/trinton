@@ -1,0 +1,72 @@
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.5)  17 JUL 2023 21:02
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**install.tex
+(./install.tex
+LaTeX2e <2020-10-01> patch level 4
+L3 programming layer <2021-02-18>
+(/usr/local/texlive/2021/texmf-dist/tex/latex/base/docstrip.tex
+\blockLevel=\count175
+\emptyLines=\count176
+\processedLines=\count177
+\commentsRemoved=\count178
+\commentsPassed=\count179
+\codeLinesPassed=\count180
+\TotalprocessedLines=\count181
+\TotalcommentsRemoved=\count182
+\TotalcommentsPassed=\count183
+\TotalcodeLinesPassed=\count184
+\NumberOfFiles=\count185
+\inFile=\read2
+\inputcheck=\read3
+\off@0=\count186
+\off@1=\count187
+\off@2=\count188
+\off@3=\count189
+\off@4=\count190
+\off@5=\count191
+\off@6=\count192
+\off@7=\count193
+\off@8=\count194
+\off@9=\count195
+\off@10=\count196
+\off@11=\count197
+\off@12=\count198
+\off@13=\count199
+\off@14=\count266
+\off@15=\count267
+\@maxfiles=\count268
+\@maxoutfiles=\count269
+
+Utility: `docstrip' v2.6a <2020-07-07>
+English documentation    <2020-07-11>
+
+**********************************************************
+* This program converts documented macro-files into fast *
+* loadable files by stripping off (nearly) all comments! *
+**********************************************************
+
+********************************************************
+* No Configuration file found, using default settings. *
+********************************************************
+
+! 
+**************************************************
+* Could not find your \batchfile=xcolor.ins.
+**************************************************.
+\processbatchFile ...****************************}
+                                                  \fi \else \ifDefault \Msg ...
+l.1136 \process@first@batchfile
+                               
+? X
+ 
+Here is how much of TeX's memory you used:
+ 309 strings out of 476919
+ 3405 string characters out of 5821840
+ 295624 words of memory out of 5000000
+ 20407 multiletter control sequences out of 15000+600000
+ 403430 words of font info for 27 fonts, out of 8000000 for 9000
+ 1348 hyphenation exceptions out of 8191
+ 12i,0n,15p,116b,10s stack positions out of 5000i,500n,10000p,200000b,80000s
+No pages of output.
