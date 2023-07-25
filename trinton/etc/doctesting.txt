@@ -1,0 +1,6 @@
+cd ~
+python
+import doctest
+import relevant_library
+
+doctest.testfile("full path of file to test", module_relative=False)

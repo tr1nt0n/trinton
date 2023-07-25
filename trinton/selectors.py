@@ -109,16 +109,12 @@ def select_leaves_by_index(indices, pitched=None, grace=None):
     return selector
 
 
-def patterned_leaf_index_selector(
-    indices,
-    period,
-    pitched=None,
-):
+def patterned_leaf_index_selector(indices, period, pitched=None, grace=None):
     def selector(argument):
         out = []
         index = []
         pattern = abjad.Pattern(indices=indices, period=period)
-        leaves = abjad.select.leaves(argument, pitched=pitched)
+        leaves = abjad.select.leaves(argument, pitched=pitched, grace=grace)
         for i in range(len(leaves)):
             if pattern.matches_index(i, len(leaves)):
                 index.append(i)
@@ -129,12 +125,14 @@ def patterned_leaf_index_selector(
     return selector
 
 
-def patterned_tie_index_selector(indices, period, first=False, pitched=None):
+def patterned_tie_index_selector(
+    indices, period, first=False, pitched=None, grace=None
+):
     def selector(argument):
         out = []
         index = []
         pattern = abjad.Pattern(indices=indices, period=period)
-        ties = abjad.select.logical_ties(argument, pitched=pitched)
+        ties = abjad.select.logical_ties(argument, pitched=pitched, grace=grace)
         for i in range(len(ties)):
             if pattern.matches_index(i, len(ties)):
                 index.append(i)
