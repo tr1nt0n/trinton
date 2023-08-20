@@ -51,10 +51,21 @@ def logistic_map(x, r, n):
 
     """
 
+    # if n > 9:
+    #     raise Exception("n must be a whole number smaller than 10")
+
     for i in range(1, n):
         x = x * r * (1 - x)
 
-    digits = [int(_) for _ in str(x)]
+    # digits = [int(_) for _ in str(x)]
+    digits = []
+
+    for _ in str(x):
+        if _ == "." or _ == "-" or _ == "e" or _ == "+":
+            pass
+
+        else:
+            digits.append(int(_))
 
     return digits
 

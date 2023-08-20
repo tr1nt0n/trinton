@@ -500,3 +500,86 @@ def remove_redundant_time_signatures(score):
                 ),
                 next_leaf,
             )
+
+
+def rewrite_meter_command(boundary_depth=-2):
+    def rewrite(argument):
+        parentage = abjad.get.parentage(abjad.select.leaf(argument, 0))
+        outer_context = parentage.components[-1]
+        global_context = outer_context["Global Context"]
+        argument_timespans = [abjad.get.timespan(_) for _ in argument]
+        start_offset = argument_timespans[0].offsets[0]
+        stop_offset = argument_timespans[-1].offsets[-1]
+        relevant_timespan = abjad.Timespan(start_offset, stop_offset)
+
+        relevant_leaves = []
+
+        for leaf in abjad.select.leaves(global_context):
+            span = abjad.get.timespan(leaf)
+            if span.intersects_timespan(relevant_timespan) is True:
+                relevant_leaves.append(leaf)
+
+        signature_instances = [
+            abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+        ]
+
+        container = abjad.Container()
+
+        container.extend(abjad.mutate.copy(argument))
+
+        tuplets = abjad.select.tuplets(container)
+
+        tuplet_copies = []
+        if len(tuplets) > 0:
+            for tuplet in tuplets:
+                tuplet_parent = abjad.get.parentage(tuplet).parent
+                if isinstance(tuplet_parent, abjad.Tuplet):
+                    pass
+
+                else:
+                    tuplet_first_leaf = abjad.select.leaf(tuplet, 0)
+                    tuplet_previous_leaf = abjad.select.with_previous_leaf(
+                        tuplet_first_leaf
+                    )[0]
+                    if abjad.get.has_indicator(tuplet_previous_leaf, abjad.Tie):
+                        abjad.detach(abjad.Tie, tuplet_previous_leaf)
+                        abjad.attach(
+                            abjad.Markup(r'\markup {"tie previous leaf"}'),
+                            tuplet_first_leaf,
+                        )
+                    tuplet_duration = abjad.get.duration(tuplet)
+                    leaf = abjad.Note("c''1", multiplier=tuplet_duration)
+                    tuplet_last_leaf = abjad.select.leaf(tuplet, -1)
+                    tuplet_copy = abjad.mutate.copy(tuplet)
+                    if abjad.get.has_indicator(tuplet_last_leaf, abjad.Tie):
+                        abjad.attach(abjad.Tie(), abjad.select.leaf(tuplet_copy, -1))
+                    tuplet_copies.append(tuplet_copy)
+                    abjad.mutate.replace(tuplet, leaf)
+
+        container_contents = abjad.mutate.eject_contents(container)
+
+        metered_staff = rmakers.wrap_in_time_signature_staff(
+            container_contents, signature_instances
+        )
+
+        rmakers.rewrite_meter(metered_staff, boundary_depth=boundary_depth)
+
+        placeholders = []
+
+        for leaf in abjad.select.leaves(metered_staff, pitched=True):
+            if leaf.written_pitch.number == 12:
+                placeholders.append(leaf)
+
+        for tie, tuplet in zip(abjad.select.logical_ties(placeholders), tuplet_copies):
+            abjad.mutate.replace(tie, tuplet)
+
+        for leaf in abjad.select.leaves(metered_staff):
+            if abjad.get.has_indicator(leaf, abjad.Markup):
+                previous_leaf = abjad.select.with_previous_leaf(leaf)[0]
+                abjad.detach(abjad.Markup, leaf)
+                abjad.attach(abjad.Tie(), previous_leaf)
+
+        selections = abjad.mutate.eject_contents(metered_staff)
+        abjad.mutate.replace(argument, selections)
+
+    return rewrite

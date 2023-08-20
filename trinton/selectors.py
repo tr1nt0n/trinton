@@ -247,7 +247,13 @@ def select_target(voice, measure_number_range=(1, 3), grace=True):
     return out
 
 
-def logical_ties(first=False, pitched=None, exclude=None, grace=None):
+def logical_ties(
+    first=False,
+    all_except_first=False,
+    pitched=None,
+    exclude=None,
+    grace=None,
+):
     def selector(argument):
         ties = abjad.select.logical_ties(argument, pitched=pitched, grace=grace)
         if exclude is not None:
@@ -256,6 +262,13 @@ def logical_ties(first=False, pitched=None, exclude=None, grace=None):
             out = []
             for tie in ties:
                 out.append(tie[0])
+            return out
+        if all_except_first is True:
+            out = []
+            for tie in ties:
+                relevant_leaves = tie[1:]
+                for leaf in relevant_leaves:
+                    out.append(leaf)
             return out
         else:
             return ties

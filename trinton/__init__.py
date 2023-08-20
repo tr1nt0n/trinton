@@ -89,6 +89,7 @@ from .meter import (
     rewrite_meter_by_measure,
     rebar,
     remove_redundant_time_signatures,
+    rewrite_meter_command,
 )
 
 from .pitch import (

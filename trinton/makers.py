@@ -91,6 +91,7 @@ def make_score_template(
                     name_string = f"{extract_instrument_name(sub_item)} {name_counts[extract_instrument_name(sub_item)]}"
                 else:
                     name_string = f"{extract_instrument_name(sub_item)}"
+
                 staff = abjad.Staff(
                     [
                         abjad.Voice(
@@ -142,8 +143,8 @@ def make_empty_score(
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
     for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-        for rest in [filler((1, 1), multiplier=_) for _ in time_signatures]:
-            voice.append(rest)
+        for measure_filler in [filler((1, 1), multiplier=_) for _ in time_signatures]:
+            voice.append(measure_filler)
 
     return score
 
@@ -376,14 +377,16 @@ def make_music(
 
             selections = abjad.mutate.eject_contents(container)
             abjad.mutate.replace(target, selections)
-            # abjad.mutate.replace(target, container)
 
         elif isinstance(arg, evans.RewriteMeterCommand):
             target_copy = abjad.mutate.copy(target[:])
+
             metered_staff = rmakers.wrap_in_time_signature_staff(
                 target_copy, signature_instances
             )
+
             arg(metered_staff)
+
             selections = abjad.mutate.eject_contents(metered_staff)
             abjad.mutate.replace(target, selections)
         else:
@@ -437,6 +440,7 @@ def on_beat_grace_container(
     font_size=-3,
     grace_voice_number=1,
     leaf_duration=None,
+    name=None,
 ):
     def _site(n):
         return abjad.Tag(f"abjad.on_beat_grace_container({n})")
@@ -448,7 +452,7 @@ def on_beat_grace_container(
         message += f"   {repr(anchor_voice_selection)}"
         raise Exception(message)
     on_beat_grace_container = abjad.OnBeatGraceContainer(
-        contents, leaf_duration=leaf_duration
+        contents, leaf_duration=leaf_duration, name=name
     )
     anchor_leaf = abjad._iterlib._get_leaf(anchor_voice_selection, 0)
     anchor_voice = abjad.parentage.Parentage(anchor_leaf).get(abjad.score.Voice)
@@ -640,51 +644,6 @@ def render_file(score, segment_path, build_path, segment_name, includes):
         lines = score_lines[14:-1]
         with open(f"{build_path}/{segment_name}_parts.ly", "w") as fp:
             fp.writelines(lines)
-
-
-# def render_file(score, segment_path, build_path, segment_name, includes):
-#     print("Rendering file ...")
-#     score_block = abjad.Block(name="score")
-#     score_block.items.append(score)
-#     assembled_includes = [f'\\include "{path}"' for path in includes]
-#     assembled_includes.append(score_block)
-#     score_file = abjad.LilyPondFile(
-#         items=assembled_includes,
-#     )
-#     parts_string = abjad.tag.deactivate(
-#         abjad.lilypond(score_file, tags=True), abjad.Tag("+SCORE")
-#     )
-#     parts_string = parts_string[0]
-#     parts_file = abjad.LilyPondFile(items=[parts_string])
-#     directory = segment_path
-#     pdf_path = pathlib.Path(f"{directory}/illustration{segment_name}.pdf")
-#     ly_path = pathlib.Path(f"{directory}/illustration{segment_name}.ly")
-#     parts_path = pathlib.Path(f"{build_path}/{segment_name}_parts.ly")
-#     if pdf_path.exists():
-#         pdf_path.unlink()
-#     if ly_path.exists():
-#         ly_path.unlink()
-#     if parts_path.exists():
-#         parts_path.unlink()
-#     print("Persisting ...")
-#     abjad.persist.as_ly(score_file, ly_path, tags=True)
-#     abjad.persist.as_ly(parts_file, parts_path, tags=True)
-#     if ly_path.exists():
-#         print("Rendering ...")
-#         os.system(f"run-lilypond {ly_path}")
-#     if pdf_path.exists():
-#         print("Opening ...")
-#         os.system(f"open {pdf_path}")
-#     with open(ly_path) as pointer_1:
-#         score_lines = pointer_1.readlines()
-#         lines = score_lines[10:-1]
-#         with open(f"{build_path}/{segment_name}.ly", "w") as fp:
-#             fp.writelines(lines)
-#     with open(parts_path) as pointer_1:
-#         score_lines = pointer_1.readlines()
-#         lines = score_lines[14:-1]
-#         with open(f"{build_path}/{segment_name}_parts.ly", "w") as fp:
-#             fp.writelines(lines)
 
 
 def extract_parts(score):
