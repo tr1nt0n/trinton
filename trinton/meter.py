@@ -564,6 +564,11 @@ def rewrite_meter_command(boundary_depth=-2):
 
         rmakers.rewrite_meter(metered_staff, boundary_depth=boundary_depth)
 
+        leaves = abjad.select.leaves(metered_staff)
+        for leaf in leaves:
+            abjad.detach(abjad.StartBeam, leaf)
+            abjad.detach(abjad.StopBeam, leaf)
+
         placeholders = []
 
         for leaf in abjad.select.leaves(metered_staff, pitched=True):

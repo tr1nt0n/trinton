@@ -579,6 +579,7 @@ def glissando_command(selector, tweaks=[], zero_padding=False, no_ties=False):
                 zero_padding=zero_padding,
             )
             middle_leaves = abjad.select.exclude(selection, [0, -1])
+            all_but_last_leaf = abjad.select.exclude(selection, [-1])
             for leaf in middle_leaves:
                 abjad.attach(
                     abjad.LilyPondLiteral(
@@ -587,7 +588,7 @@ def glissando_command(selector, tweaks=[], zero_padding=False, no_ties=False):
                     leaf,
                 )
             if no_ties is True:
-                for leaf in selection:
+                for leaf in all_but_last_leaf:
                     abjad.detach(abjad.Tie, leaf)
 
     return command

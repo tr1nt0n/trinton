@@ -401,8 +401,9 @@ def spanner_command(
 
         if len(strings) > 2 or end_hook is True:
             last_span = abjad.bundle(last_span, rf"- \tweak padding #{padding}")
-            for tweak in tweaks:
-                last_span = abjad.bundle(last_span, tweak)
+            if tweaks is not None:
+                for tweak in tweaks:
+                    last_span = abjad.bundle(last_span, tweak)
 
             abjad.attach(last_span, last_pair[0], tag=tag)
 

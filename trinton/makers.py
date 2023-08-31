@@ -804,7 +804,16 @@ def fermata_measures(
         if voice_names is not None:
             voices = [score[_] in voice_names]
         else:
-            voices = abjad.select.components(score["Staff Group"], abjad.Voice)
+            component_voices = abjad.select.components(
+                score["Staff Group"], abjad.Voice
+            )
+            voices = []
+
+            for voice in component_voices:
+                if voice.name[-6:] == "Anchor" or voice.name[:-4] == "temp":
+                    pass
+                else:
+                    voices.append(voice)
 
         for voice in voices:
             all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
