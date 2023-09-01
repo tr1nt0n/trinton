@@ -918,7 +918,10 @@ def whiteout_empty_staves(
             if cutaway == "blank":
                 abjad.attach(rest_literal, invisible_rest, tag=tag)
                 start_command = abjad.LilyPondLiteral(
-                    r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
+                    [
+                        r"\stopStaff \once \override Staff.StaffSymbol.line-count = #0 \startStaff",
+                        r"\once \override Staff.TimeSignature.transparent = ##t",
+                    ],
                     site="before",
                 )
             else:
