@@ -300,3 +300,44 @@ def ranged_selector(ranges, nested=False, pitched=None, grace=None):
             return selection
 
     return selector
+
+
+def notehead_selector(chord_indices, head_indices_lists):
+    def selector(argument):
+
+        chords = abjad.select.chords(argument)
+
+        out = []
+
+        for chord_index, head_indices in zip(chord_indices, head_indices_lists):
+            chord = chords[chord_index]
+
+            note_heads = chord.note_heads
+
+            for head_index in head_indices:
+                head = note_heads[head_index]
+                out.append(head)
+
+        return out
+
+    return selector
+
+
+def durational_selector(
+    durations, preselector=abjad.select.logical_ties, preprolated=True, first=False
+):
+    def selector(argument):
+        selections = preselector(argument)
+        logical_ties = abjad.select.logical_ties(selections)
+        out = []
+        for duration in durations:
+            for tie in logical_ties:
+                tie_duration = abjad.get.duration(tie, preprolated=preprolated)
+                if tie_duration == duration:
+                    out.append(tie)
+        if first is True:
+            out = [_[0] for _ in out]
+
+        return out
+
+    return selector

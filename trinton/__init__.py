@@ -144,6 +144,8 @@ from .selectors import (
     logical_ties,
     group_selections,
     ranged_selector,
+    notehead_selector,
+    durational_selector,
 )
 
 from .sequence import (

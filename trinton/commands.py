@@ -187,6 +187,10 @@ def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
                 leaf,
             )
             abjad.attach(
+                abjad.LilyPondLiteral(r"\once \override Tie.stencil = ##f", "before"),
+                leaf,
+            )
+            abjad.attach(
                 abjad.LilyPondLiteral(
                     rf"\once \override NoteHead.duration-log = {duration_log}", "before"
                 ),

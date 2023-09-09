@@ -802,7 +802,7 @@ def fermata_measures(
     if blank is True:
 
         if voice_names is not None:
-            voices = [score[_] in voice_names]
+            voices = [score[_] for _ in voice_names]
         else:
             component_voices = abjad.select.components(
                 score["Staff Group"], abjad.Voice
@@ -839,7 +839,7 @@ def fermata_measures(
 
     if clef_whitespace is True:
         if voice_names is not None:
-            voices = [score[_] in voice_names]
+            voices = [score[_] for _ in voice_names]
         else:
             voices = abjad.select.components(score["Staff Group"], abjad.Voice)
 
