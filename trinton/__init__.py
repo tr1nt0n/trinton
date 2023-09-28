@@ -121,6 +121,8 @@ from .rhythm import (
     force_rest,
     beam_groups,
     call_rmaker,
+    handwrite_nested_tuplets,
+    intermittent_voice_with_selector,
 )
 
 from .selectors import (

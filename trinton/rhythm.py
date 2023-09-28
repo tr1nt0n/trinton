@@ -65,3 +65,109 @@ def call_rmaker(rmaker, selector):
         rmaker(selections)
 
     return call
+
+
+def respell_tuplets(tuplets):
+    for tuplet in tuplets:
+        prolation = tuplet.implied_prolation
+        if prolation.denominator == 3 and prolation.numerator % 2 == 0:
+            rmakers.force_diminution(tuplet)
+        if prolation.denominator == 5 and prolation.numerator % 3 == 0:
+            rmakers.force_augmentation(tuplet)
+        if prolation.denominator == 7 and prolation.numerator % 4 == 0:
+            rmakers.force_augmentation(tuplet)
+        if prolation.denominator == 7 and prolation.numerator % 5 == 0:
+            rmakers.force_augmentation(tuplet)
+        if prolation.denominator == 7 and prolation.numerator % 6 == 0:
+            rmakers.force_diminution(tuplet)
+        if prolation.denominator == 9 and prolation.numerator % 5 == 0:
+            rmakers.force_augmentation(tuplet)
+        if prolation.denominator == 9 and prolation.numerator % 7 == 0:
+            rmakers.force_diminution(tuplet)
+        if prolation.denominator % 9 == 0 and prolation.numerator % 11 == 0:
+            rmakers.force_augmentation(tuplet)
+            tuplet.denominator = 11
+        if prolation.denominator % 10 == 0 and prolation.numerator % 11 == 0:
+            rmakers.force_augmentation(tuplet)
+        if prolation.denominator == 15 and prolation.numerator % 2 == 0:
+            rmakers.force_augmentation(tuplet)
+
+
+def handwrite_nested_tuplets(
+    tuplet_ratios,
+    preprocessor=None,
+    nested_ratios=None,
+    triple_nested_ratios=None,
+    nested_vectors=None,
+    nested_period=None,
+    triple_nested_vectors=None,
+    triple_nested_period=None,
+):
+    def make_figures(divisions):
+
+        first_layer_tuplets = rmakers.tuplet(divisions, tuplet_ratios)
+        container = abjad.Container(first_layer_tuplets)
+        rmakers.rewrite_dots(container)
+        rmakers.trivialize(container)
+        rmakers.rewrite_rest_filled(container)
+        rmakers.rewrite_sustained(container)
+
+        if nested_ratios is not None:
+            period_selector = trinton.patterned_tie_index_selector(
+                nested_vectors, nested_period
+            )
+            selections = period_selector(container)
+
+            durations = [abjad.get.duration(_, preprolated=True) for _ in selections]
+            tuplets = rmakers.tuplet(durations, nested_ratios)
+            rmakers.rewrite_dots(tuplets)
+            rmakers.trivialize(tuplets)
+            rmakers.rewrite_rest_filled(tuplets)
+            rmakers.rewrite_sustained(tuplets)
+
+            for tie, tuplet in zip(selections, tuplets):
+                abjad.mutate.replace(tie, tuplet)
+
+        if triple_nested_ratios is not None:
+            second_layer_tuplets = []
+            for tuplet in abjad.select.tuplets(container):
+                tuplet_parent = abjad.get.parentage(tuplet).parent
+                if isinstance(tuplet_parent, abjad.Tuplet):
+                    second_layer_tuplets.append(tuplet)
+
+            period_selector = trinton.patterned_tie_index_selector(
+                triple_nested_vectors, triple_nested_period
+            )
+            selections = period_selector(second_layer_tuplets)
+
+            durations = [abjad.get.duration(_, preprolated=True) for _ in selections]
+            tuplets = rmakers.tuplet(durations, triple_nested_ratios)
+            rmakers.rewrite_dots(tuplets)
+            rmakers.trivialize(tuplets)
+            rmakers.rewrite_rest_filled(tuplets)
+            rmakers.rewrite_sustained(tuplets)
+
+            for tie, tuplet in zip(selections, tuplets):
+                abjad.mutate.replace(tie, tuplet)
+
+        rmakers.extract_trivial(container)
+        respell_tuplets(abjad.select.tuplets(container))
+
+        selections = abjad.mutate.eject_contents(container)
+        return selections
+
+    return make_figures
+
+
+def intermittent_voice_with_selector(selector, rmaker, voice_name, direction=abjad.UP):
+    def make_voice(argument):
+        selections = selector(argument)
+        handler = evans.IntermittentVoiceHandler(
+            rhythm_handler=evans.RhythmHandler(rmaker),
+            direction=direction,
+            voice_name=voice_name,
+        )
+
+        handler(selections)
+
+    return make_voice
