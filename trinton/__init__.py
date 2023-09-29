@@ -123,6 +123,7 @@ from .rhythm import (
     call_rmaker,
     handwrite_nested_tuplets,
     intermittent_voice_with_selector,
+    respell_tuplets,
 )
 
 from .selectors import (
