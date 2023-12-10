@@ -394,6 +394,119 @@ def invisible_accidentals_command(selector=selectors.pleaves()):
 # tuplets
 
 
+class NoteheadBracketMaker:
+    r"""
+    Writes tuplet brackets with inserted note head.
+
+    .. container:: example
+
+        >>> tuplet = abjad.Tuplet((3, 2), "cs'8 d'8")
+        >>> tuplet_2 = abjad.Tuplet((2, 3), components=[abjad.Note(0, (3, 8)), tuplet])
+        >>> staff = abjad.Staff()
+        >>> staff.append(tuplet_2)
+        >>> staff.extend([abjad.Note("c'4"), abjad.Note("cs'8"), abjad.Note("d'8")])
+        >>> new_brackets = evans.NoteheadBracketMaker()
+        >>> new_brackets(staff)
+        >>> score = abjad.Score([staff])
+        >>> moment = "#(ly:make-moment 1 25)"
+        >>> abjad.setting(score).proportional_notation_duration = moment
+        >>> file = abjad.LilyPondFile(
+        ...     items=[
+        ...         "#(set-default-paper-size \"a4\" \'portrait)",
+        ...         r"#(set-global-staff-size 16)",
+        ...         "\\include \'Users/gregoryevans/abjad/abjad/scm/abjad.ily\'",
+        ...         score,
+        ...     ],
+        ... )
+        ...
+        >>> abjad.show(file) # doctest: +SKIP
+
+        .. docs::
+
+            >>> print(abjad.lilypond(staff))
+            \new Staff
+            {
+                \tweak TupletNumber.text #(tuplet-number::append-note-wrapper(tuplet-number::non-default-tuplet-fraction-text 3 2) (ly:make-duration 2 0))
+                \times 2/3
+                {
+                    c'4.
+                    \tweak text #tuplet-number::calc-fraction-text
+                    \tweak TupletNumber.text #(tuplet-number::append-note-wrapper(tuplet-number::non-default-tuplet-fraction-text 2 3) (ly:make-duration 3 0))
+                    \times 3/2
+                    {
+                        cs'8
+                        d'8
+                    }
+                }
+                c'4
+                cs'8
+                d'8
+            }
+
+    """
+
+    def __call__(self, selections):
+        return self._transform_brackets(selections)
+
+    def __str__(self):
+        return f"<{type(self).__name__}()>"
+
+    def __repr__(self):
+        return f"<{type(self).__name__}()>"
+
+    def _assemble_notehead(self, head_dur):
+        duration_map = {
+            "1": "0",
+            "2": "1",
+            "4": "2",
+            "8": "3",
+            "16": "4",
+            "32": "5",
+            "64": "6",
+            "128": "7",
+        }
+        pair = head_dur.pair
+        dot_parts = []
+        while 1 < pair[0]:
+            dot_part = (1, pair[1])
+            dot_parts.append(dot_part)
+            head_dur -= abjad.Duration(dot_part)
+            pair = head_dur.pair
+        duration_string = duration_map[f"{pair[1]}"]
+        dot_string = ""
+        # for _ in dot_parts:
+        #     dot_string += "."
+
+        return duration_string, len(dot_string)
+
+    def _transform_brackets(self, selections):
+        for tuplet in abjad.select.tuplets(selections):
+            rests = abjad.select.rests(tuplet)
+            for rest_group in abjad.select.group_by_contiguity(rests):
+                parental_groups = abjad.select.group_by(
+                    rest_group, predicate=lambda _: abjad.get.parentage(_).parent
+                )
+                for parental_group in parental_groups:
+                    abjad.mutate.fuse(parental_group)
+            inner_durs = []
+            for _ in tuplet[:]:
+                if isinstance(_, abjad.Tuplet):
+                    inner_durs.append(_.multiplied_duration)
+                else:
+                    inner_durs.append(_.written_duration)
+            tuplet_dur = sum(inner_durs)
+            colon_string = tuplet.colon_string
+            parsed_colon_string = colon_string.split(":")
+            colon_string_pair = (parsed_colon_string[0], parsed_colon_string[-1])
+            imp_num, imp_den = colon_string_pair
+            head_dur = tuplet_dur / float(imp_num)
+            dur_pair = self._assemble_notehead(head_dur)
+            abjad.tweak(
+                tuplet,
+                rf"\tweak TupletNumber.text #(tuplet-number::append-note-wrapper(tuplet-number::non-default-tuplet-fraction-text {imp_num} {imp_den}) (ly:make-duration {dur_pair[0]} {dur_pair[1]}))",
+            )
+
+
 def tuplet_brackets(score, all_staves):
     new_brackets = evans.NoteheadBracketMaker()
 
@@ -403,7 +516,7 @@ def tuplet_brackets(score, all_staves):
 
 def notehead_bracket_command(selector=None):
     def call_handler(argument):
-        handler = evans.NoteheadBracketMaker()
+        handler = NoteheadBracketMaker()
         if selector is not None:
             selections = selector(argument)
             handler(selections)
@@ -629,7 +742,7 @@ def unbeam_quarters(selections):
                 abjad.attach(abjad.StopBeam(), leaf3)
 
 
-def beam_durations(divisions, beam_rests=False):
+def beam_durations(divisions, beam_rests=False, preprolated=True):
     def func(selections):
         selections = abjad.select.leaves(selections)
 
@@ -645,7 +758,8 @@ def beam_durations(divisions, beam_rests=False):
         for leaf in selections:
             group.append(leaf)
 
-            if abjad.get.duration(group) == new_durations[0]:
+            if abjad.get.duration(group, preprolated=preprolated) == new_durations[0]:
+                rmakers.unbeam(group)
                 abjad.beam(group, beam_rests=beam_rests)
                 group.clear()
                 new_durations.pop(0)

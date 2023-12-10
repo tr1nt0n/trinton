@@ -496,7 +496,7 @@ def remove_redundant_time_signatures(score):
             abjad.attach(
                 abjad.LilyPondLiteral(
                     r"\once \override Score.TimeSignature.stencil = ##f",
-                    "before",
+                    site="before",
                 ),
                 next_leaf,
             )

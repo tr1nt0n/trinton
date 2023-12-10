@@ -441,6 +441,7 @@ def on_beat_grace_container(
     grace_voice_number=1,
     leaf_duration=None,
     name=None,
+    no_stem_direction=False,
 ):
     def _site(n):
         return abjad.Tag(f"abjad.on_beat_grace_container({n})")
@@ -478,7 +479,12 @@ def on_beat_grace_container(
     if not do_not_beam:
         abjad.beam(on_beat_grace_container[:])
     if not do_not_slash:
-        literal = abjad.LilyPondLiteral(r"\slash")
+        if len(container) == 1:
+            literal = abjad.LilyPondLiteral(
+                r"""\once \override Flag.stroke-style = #"grace" """, site="before"
+            )
+        else:
+            literal = abjad.LilyPondLiteral(r"\my-hack-slash", site="before")
         abjad.attach(literal, on_beat_grace_container[0], tag=_site(2))
     if not do_not_slur:
         abjad.slur(on_beat_grace_container[:])

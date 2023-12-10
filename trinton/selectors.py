@@ -250,6 +250,7 @@ def select_target(voice, measure_number_range=(1, 3), grace=True):
 def logical_ties(
     first=False,
     all_except_first=False,
+    last=False,
     pitched=None,
     exclude=None,
     grace=None,
@@ -269,6 +270,11 @@ def logical_ties(
                 relevant_leaves = tie[1:]
                 for leaf in relevant_leaves:
                     out.append(leaf)
+            return out
+        if last is True:
+            out = []
+            for tie in ties:
+                out.append(tie[-1])
             return out
         else:
             return ties
@@ -341,3 +347,46 @@ def durational_selector(
         return out
 
     return selector
+
+
+# def group_by_duration(durations, preselector=None, preprolated=True):
+#     def selector(argument):
+#         if preselector is not None:
+#             selections = preselector(argument)
+#         else:
+#             selections = argument
+#
+#         out = []
+#         group = []
+#         for selection in abjad.select.components(selections, abjad.Note):
+#             group_duration = abjad.get.duration(group, preprolated=preprolated)
+#             relevant_duration = durations[0]
+#             if isinstance(relevant_duration, abjad.TimeSignature):
+#                 relevant_duration = relevant_duration.duration
+#             else:
+#                 relevant_duration = relevant_duration
+#
+#             if group_duration == relevant_duration:
+#                 out_group = []
+#                 for selection in group:
+#                     out_group.append(selection)
+#                 out.append(out_group)
+#                 # group.clear()
+#                 durations.pop(0)
+#                 group.append(selection)
+#
+#             else:
+#                 group.append(selection)
+#
+#             print("")
+#             print(f"selection: {selection}")
+#             print("")
+#             print(f"relevant duration: {relevant_duration}")
+#             print("")
+#             print(f"group duration: {group_duration}")
+#             print("")
+#             print(f"group contents: {group}")
+#             print("")
+#
+#         return out
+#     return selector

@@ -149,6 +149,7 @@ from .selectors import (
     ranged_selector,
     notehead_selector,
     durational_selector,
+    # group_by_duration,
 )
 
 from .sequence import (

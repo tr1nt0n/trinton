@@ -59,3 +59,19 @@ gridato-twist-bow = \markup {
            ))))
 
 twist-bow = #(make-articulation 'gridatotwistbow)
+
+#(append! default-script-alist
+   (list
+    `(multiplestaccato
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,multiple-staccato)
+           (avoid-slur . around)
+           (direction . ,DOWN)
+           (padding . 0.20)
+           (script-priority . 150)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+ricochet = #(make-articulation 'multiplestaccato)

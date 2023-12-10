@@ -67,30 +67,76 @@ def call_rmaker(rmaker, selector):
     return call
 
 
+# def respell_tuplets(tuplets):
+#     for tuplet in tuplets:
+#         prolation = tuplet.implied_prolation
+#         if prolation.denominator == 3 and prolation.numerator % 2 == 0:
+#             rmakers.force_diminution(tuplet)
+#         if prolation.denominator == 5 and prolation.numerator % 3 == 0:
+#             rmakers.force_augmentation(tuplet)
+#         if prolation.denominator == 7 and prolation.numerator % 4 == 0:
+#             rmakers.force_augmentation(tuplet)
+#         if prolation.denominator == 7 and prolation.numerator % 5 == 0:
+#             rmakers.force_augmentation(tuplet)
+#         if prolation.denominator == 7 and prolation.numerator % 6 == 0:
+#             rmakers.force_diminution(tuplet)
+#         if prolation.denominator == 9 and prolation.numerator % 5 == 0:
+#             rmakers.force_augmentation(tuplet)
+#         if prolation.denominator == 9 and prolation.numerator % 7 == 0:
+#             rmakers.force_diminution(tuplet)
+#         if prolation.denominator % 9 == 0 and prolation.numerator % 11 == 0:
+#             rmakers.force_augmentation(tuplet)
+#             tuplet.denominator = 11
+#         if prolation.denominator % 10 == 0 and prolation.numerator % 11 == 0:
+#             rmakers.force_augmentation(tuplet)
+#         if prolation.denominator == 15 and prolation.numerator % 2 == 0:
+#             rmakers.force_augmentation(tuplet)
+
+
 def respell_tuplets(tuplets):
     for tuplet in tuplets:
         prolation = tuplet.implied_prolation
-        if prolation.denominator == 3 and prolation.numerator % 2 == 0:
-            rmakers.force_diminution(tuplet)
-        if prolation.denominator == 5 and prolation.numerator % 3 == 0:
-            rmakers.force_augmentation(tuplet)
-        if prolation.denominator == 7 and prolation.numerator % 4 == 0:
-            rmakers.force_augmentation(tuplet)
-        if prolation.denominator == 7 and prolation.numerator % 5 == 0:
-            rmakers.force_augmentation(tuplet)
-        if prolation.denominator == 7 and prolation.numerator % 6 == 0:
-            rmakers.force_diminution(tuplet)
-        if prolation.denominator == 9 and prolation.numerator % 5 == 0:
-            rmakers.force_augmentation(tuplet)
-        if prolation.denominator == 9 and prolation.numerator % 7 == 0:
-            rmakers.force_diminution(tuplet)
-        if prolation.denominator % 9 == 0 and prolation.numerator % 11 == 0:
-            rmakers.force_augmentation(tuplet)
-            tuplet.denominator = 11
-        if prolation.denominator % 10 == 0 and prolation.numerator % 11 == 0:
-            rmakers.force_augmentation(tuplet)
-        if prolation.denominator == 15 and prolation.numerator % 2 == 0:
-            rmakers.force_augmentation(tuplet)
+        numerator = prolation.denominator
+        denominator = prolation.numerator
+        duration = tuplet.multiplied_duration.pair
+        duration_numerator = duration[0]
+        duration_denominator = duration[-1]
+
+        if denominator % duration_numerator != 0:
+
+            if denominator % 3 == 0 and denominator != 9:
+                denominator = denominator * 3
+                numerator = numerator * 3
+            else:
+                denominator = denominator * duration_numerator
+                numerator = numerator * duration_numerator
+
+            tuplet.multiplier = (denominator, numerator)
+
+        if numerator == 3 and denominator == 2:
+            pass
+
+        else:
+            double_denominator = denominator * 2
+            half_denominator = int(denominator / 2)
+
+            current_difference = abs(numerator - denominator)
+            double_difference = abs(numerator - double_denominator)
+            half_difference = abs(numerator - half_denominator)
+
+            difference_array = [current_difference, double_difference, half_difference]
+            difference_array = sorted(difference_array)
+
+            smallest = difference_array[0]
+
+            if smallest == current_difference:
+                pass
+
+            if smallest == half_difference:
+                rmakers.force_diminution(tuplet)
+
+            if smallest == double_difference:
+                rmakers.force_augmentation(tuplet)
 
 
 def handwrite_nested_tuplets(
