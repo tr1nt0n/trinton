@@ -102,6 +102,9 @@ def respell_tuplets(tuplets):
         duration_numerator = duration[0]
         duration_denominator = duration[-1]
 
+        new_multiplier = Fraction(denominator, numerator)
+        tuplet.multiplier = (new_multiplier.numerator, new_multiplier.denominator)
+
         if denominator % duration_numerator != 0:
 
             if denominator % 3 == 0 and denominator != 9:

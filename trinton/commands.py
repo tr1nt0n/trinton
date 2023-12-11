@@ -464,6 +464,8 @@ class NoteheadBracketMaker:
             "32": "5",
             "64": "6",
             "128": "7",
+            "256": "8",
+            "512": "9",
         }
         pair = head_dur.pair
         dot_parts = []
