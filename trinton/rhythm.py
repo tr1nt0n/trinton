@@ -117,7 +117,22 @@ def respell_tuplets(tuplets):
             tuplet.multiplier = (denominator, numerator)
 
         if numerator == 3 and denominator == 2:
-            pass
+            tuplet_leaves = abjad.select.leaves(tuplet)
+            tuplet_duration_denominator = duration[-1]
+            target_duration = abjad.Duration(1, tuplet_duration_denominator * 4)
+            target_durations = []
+            non_target_durations = []
+
+            for leaf in tuplet_leaves:
+                if abjad.get.duration(leaf, preprolated=True) == target_duration:
+                    target_durations.append(leaf)
+                else:
+                    non_target_durations.append(leaf)
+            if len(target_durations) > len(non_target_durations):
+                tuplet.multiplier = (4, 6)
+
+            else:
+                pass
 
         else:
             double_denominator = denominator * 2
