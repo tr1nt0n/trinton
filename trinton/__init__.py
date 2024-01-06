@@ -124,6 +124,7 @@ from .rhythm import (
     handwrite_nested_tuplets,
     intermittent_voice_with_selector,
     respell_tuplets,
+    aftergrace_command,
 )
 
 from .selectors import (

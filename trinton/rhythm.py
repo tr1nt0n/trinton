@@ -235,3 +235,48 @@ def intermittent_voice_with_selector(selector, rmaker, voice_name, direction=abj
         handler(selections)
 
     return make_voice
+
+
+def aftergrace_command(
+    notes_string="c'16",
+    selector=trinton.selectors.pleaves(),
+    slash=False,
+    glissando=False,
+):
+    def grace(argument):
+        selections = selector(argument)
+
+        ties = abjad.select.logical_ties(selections)
+
+        containers = [abjad.AfterGraceContainer(notes_string) for _ in ties]
+
+        if slash is True:
+            for container in containers:
+                literal = abjad.LilyPondLiteral(
+                    r'\once \override Flag.stroke-style = #"grace"',
+                )
+
+                abjad.attach(literal, container[0])
+
+        for container, tie in zip(containers, ties):
+            abjad.attach(container, tie[-1])
+
+            if glissando is True:
+                with_next_leaf = abjad.select.with_next_leaf(tie)
+                abjad.glissando(
+                    with_next_leaf,
+                    hide_middle_note_heads=True,
+                    allow_repeats=True,
+                    allow_ties=True,
+                    zero_padding=True,
+                )
+                for leaf in tie:
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\once \override Dots.staff-position = #2", "before"
+                        ),
+                        leaf,
+                    )
+                    abjad.detach(abjad.Tie, leaf)
+
+    return grace
