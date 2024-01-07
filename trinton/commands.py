@@ -607,7 +607,7 @@ def invisible_tuplet_brackets(selector=None):
 # tremoli
 
 
-def unmeasured_stem_tremolo(selections):
+def unmeasured_stem_tremolo(selections, direction=None):
     for leaf in selections:
         if leaf.written_duration == abjad.Duration(1, 64):
             abjad.attach(abjad.StemTremolo(512), leaf)
@@ -639,6 +639,15 @@ def unmeasured_stem_tremolo(selections):
         elif leaf.written_duration >= abjad.Duration(1, 4):
             abjad.attach(abjad.StemTremolo(32), leaf)
 
+        if direction is not None:
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    rf"\once \override Staff.StemTremolo.direction = #{direction}",
+                    site="before",
+                ),
+                leaf,
+            )
+
 
 def tremolo_lines(selector, lines):
     _lines_to_multiplier = {
@@ -661,11 +670,11 @@ def tremolo_lines(selector, lines):
     return tremolo
 
 
-def tremolo_command(selector=selectors.pleaves()):
+def tremolo_command(selector=selectors.pleaves(), direction=None):
     def trem(argument):
         selections = selector(argument)
         for selection in selections:
-            unmeasured_stem_tremolo([selection])
+            unmeasured_stem_tremolo([selection], direction=direction)
 
     return trem
 
