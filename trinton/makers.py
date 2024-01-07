@@ -753,9 +753,9 @@ def make_sc_file(score, tempo, current_directory):
 def fermata_measures(
     score,
     measures,
-    fermata="ufermata",
+    fermata="middle-fermata",
     voice_names=None,
-    font_size="10",
+    font_size=10,
     clef_whitespace=True,
     blank=True,
     last_measure=False,
@@ -774,8 +774,9 @@ def fermata_measures(
             r"\once \override MultiMeasureRest.transparent = ##t",
             "before",
         )
-        fermata_markup = abjad.Markup(
-            rf'\markup \center-column {{ \abs-fontsize #{font_size} \musicglyph "scripts.{fermata}" }}'
+        fermata_markup = abjad.Markup(f"\{fermata}")
+        fermata_markup = abjad.bundle(
+            fermata_markup, rf"- \tweak font-size #'{font_size}"
         )
         invisible_ts_command = abjad.LilyPondLiteral(
             r"\once \override Score.TimeSignature.stencil = ##f",

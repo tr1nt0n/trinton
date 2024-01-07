@@ -75,3 +75,54 @@ twist-bow = #(make-articulation 'gridatotwistbow)
            ))))
 
 ricochet = #(make-articulation 'multiplestaccato)
+
+% fermatas
+
+extremely-short-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xf69E
+    }
+}
+
+very-short-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xe4C2
+    }
+}
+
+short-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xe4C4
+    }
+}
+
+middle-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xe4C0
+    }
+}
+
+long-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xe4C6
+    }
+}
+
+very-long-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xe4C8
+    }
+}
+
+extremely-long-fermata = \markup {
+    \center-column {
+        \override #'(font-name . "ekmelos")
+        \char ##xf6A0
+    }
+}
