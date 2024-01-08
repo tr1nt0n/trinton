@@ -832,11 +832,6 @@ def fermata_measures(
 
             stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
 
-            clef_whitespace = abjad.LilyPondLiteral(
-                r"\once \override Staff.Clef.X-extent = ##f \once \override Staff.Clef.extra-offset = #'(-2.25 . 0)",
-                "absolute_after",
-            )
-
             for measure in measures:
                 selection = trinton.select_target(voice, (measure + 1,))
                 relevant_leaf = selection[0]
@@ -853,9 +848,12 @@ def fermata_measures(
         for voice in voices:
             all_measures = abjad.select.group_by_measure(abjad.select.leaves(voice))
 
-            clef_whitespace = abjad.LilyPondLiteral(
-                r"\once \override Staff.Clef.X-extent = ##f \once \override Staff.Clef.extra-offset = #'(-2.25 . 0)",
-                "before",
+            clef_whitespace_literal = abjad.LilyPondLiteral(
+                [
+                    r"\once \override Staff.Clef.X-extent = ##f",
+                    r"\once \override Staff.Clef.extra-offset = #'(-2.5 . 0)",
+                ],
+                site="absolute_before",
             )
 
             for measure in measures:
@@ -863,7 +861,7 @@ def fermata_measures(
                 relevant_leaf = selection[0]
                 next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
                 if abjad.get.has_indicator(next_leaf, abjad.Clef):
-                    abjad.attach(clef_whitespace, next_leaf)
+                    abjad.attach(clef_whitespace_literal, next_leaf)
 
 
 def make_fermata_measure(selection):

@@ -103,6 +103,7 @@ from .pitch import (
     durational_pitch_association,
     pitch_by_hand,
     pitch_with_selector_command,
+    octavation,
 )
 
 from .preprocessors import (

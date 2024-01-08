@@ -116,3 +116,20 @@ def pitch_with_selector_command(pitch_list, selector, forget=False, as_ratios=Fa
         handler(selections)
 
     return pitch
+
+
+def octavation(selector=trinton.selectors.pleaves(), octave=1):
+    def octavate(argument):
+        selections = selector(argument)
+        semitones = octave * 12
+        for selection in selections:
+            if isinstance(selection, abjad.NoteHead):
+                current_pitch = selection.written_pitch
+                current_numbered_pitch = current_pitch.number
+                new_pitch = abjad.NumberedPitch(current_numbered_pitch + semitones)
+                new_pitch_name = new_pitch.name
+                selection.written_pitch = new_pitch_name
+            else:
+                abjad.mutate.transpose(selection, semitones)
+
+    return octavate
