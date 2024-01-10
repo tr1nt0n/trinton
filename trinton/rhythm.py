@@ -93,7 +93,7 @@ def call_rmaker(rmaker, selector):
 #             rmakers.force_augmentation(tuplet)
 
 
-def respell_tuplets(tuplets):
+def respell_tuplets(tuplets, rewrite_brackets=True):
     for tuplet in tuplets:
         prolation = tuplet.implied_prolation
         numerator = prolation.denominator
@@ -155,6 +155,16 @@ def respell_tuplets(tuplets):
 
             if smallest == double_difference:
                 rmakers.force_augmentation(tuplet)
+
+        if rewrite_brackets is True:
+            if abjad.Duration(duration) < abjad.Duration(3, 16):
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override TupletBracket.bracket-visibility = ##f",
+                        site="before",
+                    ),
+                    abjad.select.leaf(tuplet, 0),
+                )
 
 
 def handwrite_nested_tuplets(
