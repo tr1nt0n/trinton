@@ -40,6 +40,7 @@ from .commands import (
     change_lines,
     artificial_harmonics,
     invisible_accidentals_command,
+    vertical_accidentals,
 )
 
 from .makers import (
@@ -125,10 +126,12 @@ from .rhythm import (
     handwrite_nested_tuplets,
     intermittent_voice_with_selector,
     respell_tuplets,
+    respell_tuplets_command,
     aftergrace_command,
 )
 
 from .selectors import (
+    pitched_selector,
     exclude_tuplets,
     tuplets,
     select_tuplets_by_annotation,

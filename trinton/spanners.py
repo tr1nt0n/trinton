@@ -94,7 +94,7 @@ def ottava(score, voice, start_ottava, stop_ottava, octave):
         )
 
 
-def ottava_command(selector, octave=1):
+def ottava_command(selector, octave=1, tweaks=None):
     def wrap(argument):
         selections = selector(argument)
         it = iter(selections)
@@ -102,8 +102,15 @@ def ottava_command(selector, octave=1):
         tups = [*zip(it, it)]
 
         for tup in tups:
-            abjad.attach(abjad.Ottava(n=octave), tup[0])
-            abjad.attach(abjad.Ottava(n=0, site="after"), tup[1])
+            start_ottava = abjad.Ottava(n=octave)
+            stop_ottava = abjad.Ottava(n=0, site="after")
+
+            if tweaks is not None:
+                for tweak in tweaks:
+                    start_ottava = abjad.bundle(start_ottava, tweak)
+
+            abjad.attach(start_ottava, tup[0])
+            abjad.attach(stop_ottava, tup[1])
 
     return wrap
 

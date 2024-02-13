@@ -331,6 +331,30 @@ def ficta_command(selector):
     return suggest
 
 
+def vertical_accidentals(selector):
+    def suggest(argument):
+        selections = selector(argument)
+        ties = abjad.select.logical_ties(selections, pitched=True)
+        for tie in ties:
+            first_leaf = tie[0]
+            first_leaf_pitch = first_leaf.written_pitch
+            accidental = first_leaf_pitch.accidental
+            accidental_name = accidental.name
+
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override Staff.Accidental.stencil = ##f", site="before"
+                ),
+                first_leaf,
+            )
+
+            abjad.attach(
+                abjad.Articulation(f"{accidental_name}-articulation"), first_leaf
+            )
+
+    return suggest
+
+
 def respell(selections):
     for tie in abjad.select.logical_ties(selections):
         if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
@@ -674,7 +698,11 @@ def tremolo_command(selector=selectors.pleaves(), direction=None):
     def trem(argument):
         selections = selector(argument)
         for selection in selections:
-            unmeasured_stem_tremolo([selection], direction=direction)
+            if isinstance(selection, abjad.LogicalTie):
+                for leaf in abjad.select.leaves(selection):
+                    unmeasured_stem_tremolo([leaf], direction=direction)
+            else:
+                unmeasured_stem_tremolo([selection], direction=direction)
 
     return trem
 

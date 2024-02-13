@@ -349,6 +349,23 @@ def durational_selector(
     return selector
 
 
+def pitched_selector(pitches):
+    def selector(argument):
+        out = []
+        for pitch in pitches:
+            for leaf in abjad.select.leaves(argument, pitched=True):
+                if isinstance(leaf, abjad.Chord):
+                    pass
+                else:
+                    written_pitch = leaf.written_pitch
+                    pitch_class = written_pitch.pitch_class
+                    if pitch_class == abjad.NamedPitchClass(pitch):
+                        out.append(leaf)
+        return out
+
+    return selector
+
+
 # def group_by_duration(durations, preselector=None, preprolated=True):
 #     def selector(argument):
 #         if preselector is not None:

@@ -6,21 +6,36 @@ tremolo-largo = \markup {
     \hspace #0.6
     \fontsize #3.5
     \override #'(font-name . "ekmelos")
-    \char ##xe220
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe220
+    }
 }
 
 tremolo-moderato = \markup {
     \hspace #0.6
     \fontsize #3.5
     \override #'(font-name . "ekmelos")
-    \char ##xe221
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe221
+    }
 }
 
 tremolo-stretto = \markup {
     \hspace #0.6
     \fontsize #3.5
     \override #'(font-name . "ekmelos")
-    \char ##xe222
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe222
+    }
 }
 
 multiple-staccato = \markup {
@@ -51,9 +66,9 @@ gridato-twist-bow = \markup {
            (stencil . ,ly:text-interface::print)
            (text . ,gridato-twist-bow)
            (avoid-slur . around)
-           (direction . ,DOWN)
            (padding . 0.20)
            (script-priority . 150)
+           (side-relative-direction . ,DOWN)
            (skyline-horizontal-padding . 0.20)
            (toward-stem-shift . 0.5)
            ))))
@@ -67,14 +82,94 @@ twist-bow = #(make-articulation 'gridatotwistbow)
            (stencil . ,ly:text-interface::print)
            (text . ,multiple-staccato)
            (avoid-slur . around)
-           (direction . ,DOWN)
            (padding . 0.20)
            (script-priority . 150)
+           (side-relative-direction . ,DOWN)
            (skyline-horizontal-padding . 0.20)
            (toward-stem-shift . 0.5)
            ))))
 
 ricochet = #(make-articulation 'multiplestaccato)
+
+% accidentals
+
+flat-markup = \markup {
+    \fontsize #1 {
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            \accidental #-1/2
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(flat-list
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,flat-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+flat-articulation = #(make-articulation 'flat-list)
+
+sharp-markup = \markup {
+    \fontsize #1 {
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            \accidental #1/2
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(sharp-list
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,sharp-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+sharp-articulation = #(make-articulation 'sharp-list)
+
+natural-markup = \markup {
+    \fontsize #1 {
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            \accidental #0
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(natural-list
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,natural-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+natural-articulation = #(make-articulation 'natural-list)
 
 % fermatas
 

@@ -167,6 +167,15 @@ def respell_tuplets(tuplets, rewrite_brackets=True):
                 )
 
 
+def respell_tuplets_command(selector=abjad.select.tuplets, rewrite_brackets=True):
+    def respell(argument):
+        selections = selector(argument)
+
+        respell_tuplets(tuplets=selections, rewrite_brackets=rewrite_brackets)
+
+    return respell
+
+
 def handwrite_nested_tuplets(
     tuplet_ratios,
     preprocessor=None,
@@ -176,6 +185,7 @@ def handwrite_nested_tuplets(
     nested_period=None,
     triple_nested_vectors=None,
     triple_nested_period=None,
+    extract_trivial_tuplets=True,
 ):
     def make_figures(divisions):
 
@@ -188,7 +198,7 @@ def handwrite_nested_tuplets(
 
         if nested_ratios is not None:
             period_selector = trinton.patterned_tie_index_selector(
-                nested_vectors, nested_period
+                nested_vectors, nested_period, pitched=True
             )
             selections = period_selector(container)
 
@@ -210,7 +220,7 @@ def handwrite_nested_tuplets(
                     second_layer_tuplets.append(tuplet)
 
             period_selector = trinton.patterned_tie_index_selector(
-                triple_nested_vectors, triple_nested_period
+                triple_nested_vectors, triple_nested_period, pitched=True
             )
             selections = period_selector(second_layer_tuplets)
 
@@ -224,7 +234,9 @@ def handwrite_nested_tuplets(
             for tie, tuplet in zip(selections, tuplets):
                 abjad.mutate.replace(tie, tuplet)
 
-        rmakers.extract_trivial(container)
+        if extract_trivial_tuplets is True:
+            rmakers.extract_trivial(container)
+
         respell_tuplets(abjad.select.tuplets(container))
 
         selections = abjad.mutate.eject_contents(container)
@@ -252,6 +264,7 @@ def aftergrace_command(
     selector=trinton.selectors.pleaves(),
     slash=False,
     glissando=False,
+    invisible=False,
 ):
     def grace(argument):
         selections = selector(argument)
@@ -267,6 +280,21 @@ def aftergrace_command(
                 )
 
                 abjad.attach(literal, container[0])
+
+        if invisible is True:
+            for container in containers:
+                first_leaf = abjad.select.leaf(container, 0)
+                abjad.override(first_leaf).NoteHead.transparent = True
+                literal = abjad.LilyPondLiteral(
+                    [
+                        r"\once \override Stem.stencil = ##f",
+                        r"\once \override Flag.stencil = ##f",
+                        r"\once \override NoteHead.no-ledgers = ##t",
+                        r"\once \override Accidental.stencil = ##f",
+                    ],
+                    site="before",
+                )
+                abjad.attach(literal, first_leaf)
 
         for container, tie in zip(containers, ties):
             abjad.attach(container, tie[-1])
