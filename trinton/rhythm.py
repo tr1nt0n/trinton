@@ -259,6 +259,229 @@ def intermittent_voice_with_selector(selector, rmaker, voice_name, direction=abj
     return make_voice
 
 
+class IntermittentVoiceHandler(evans.handlers.Handler):
+    r"""
+    IntermittentVoiceHandler
+
+    .. container:: example
+
+        >>> ph_up = evans.PitchHandler([8, 8.5, 9, 9.5, 9, 8.5], forget=False)
+        >>> ph_down = evans.PitchHandler([0, 1, 2, 3, 4, 5], forget=False)
+        >>> s = abjad.Staff([abjad.Voice("c'4 c'8 c'8 c'8 c'4.", name="Voice1")], name="Staff1")
+        >>> ph_down(s)
+        >>> maker = evans.talea([1, 2, 3, 4], 8, extra_counts=[1, 0, -1])
+        >>> handler = evans.RhythmHandler(maker, forget=False)
+        >>> def rhythm_function(durations):
+        ...     nested_music = handler(durations)
+        ...     container = abjad.Container()
+        ...     for _ in nested_music:
+        ...         container.append(_)
+        ...     tuplet_target = abjad.select.tuplets(container)
+        ...     rmakers.trivialize(tuplet_target)
+        ...     tuplet_target = abjad.select.tuplets(container)
+        ...     rmakers.extract_trivial(tuplet_target)
+        ...     tuplet_target = abjad.select.tuplets(container)
+        ...     rmakers.rewrite_rest_filled(tuplet_target)
+        ...     tuplet_target = abjad.select.tuplets(container)
+        ...     rmakers.rewrite_sustained(tuplet_target)
+        ...     music = abjad.mutate.eject_contents(container)
+        ...     return music
+        ...
+        >>> ivh = evans.IntermittentVoiceHandler(rhythm_function, direction=abjad.UP)
+        >>> sel1 = abjad.select.leaf(s["Voice1"], 0)
+        >>> sel2 = abjad.select.leaf(s["Voice1"], 2)
+        >>> sel3 = abjad.select.leaves(s["Voice1"])
+        >>> sel3_get = abjad.select.get(sel3, [3, 4])
+        >>> ivh(sel1)
+        >>> ivh(sel2)
+        >>> ivh(sel3_get)
+        >>> ph_up = evans.PitchHandler([8, 8.5, 9, 9.5, 9, 8.5], forget=False)
+        >>> for voice in abjad.select.components(s, abjad.Voice):
+        ...     if voice.name == "intermittent_voice":
+        ...         ph_up(voice)
+        ...
+        >>> score = abjad.Score([s])
+        >>> moment = "#(ly:make-moment 1 25)"
+        >>> abjad.setting(score).proportional_notation_duration = moment
+        >>> file = abjad.LilyPondFile(
+        ...     items=[
+        ...         "#(set-default-paper-size \"a4\" \'portrait)",
+        ...         r"#(set-global-staff-size 16)",
+        ...         "\\include \'Users/gregoryevans/abjad/abjad/scm/abjad.ily\'",
+        ...         score,
+        ...     ],
+        ... )
+        ...
+        >>> abjad.show(file) # doctest: +SKIP
+
+        .. docs::
+
+            >>> print(abjad.lilypond(s))
+            \context Staff = "Staff1"
+            {
+                \context Voice = "Voice1"
+                {
+                    <<
+                        \context Voice = "Voice1"
+                        {
+                            \voiceTwo
+                            c'4
+                        }
+                        \context Voice = "intermittent_voice"
+                        {
+                            \times 2/3
+                            {
+                                \voiceOne
+                                af'8
+                                aqf'4
+                            }
+                        }
+                    >>
+                    \oneVoice
+                    cs'8
+                    <<
+                        \context Voice = "Voice1"
+                        {
+                            \voiceTwo
+                            d'8
+                        }
+                        \context Voice = "intermittent_voice"
+                        {
+                            \voiceOne
+                            a'8
+                        }
+                    >>
+                    \oneVoice
+                    <<
+                        \context Voice = "Voice1"
+                        {
+                            \voiceTwo
+                            ef'8
+                            e'4.
+                        }
+                        \context Voice = "intermittent_voice"
+                        {
+                            \tweak text #tuplet-number::calc-fraction-text
+                            \times 4/3
+                            {
+                                \voiceOne
+                                aqs'4
+                                a'8
+                            }
+                        }
+                    >>
+                    \oneVoice
+                }
+            }
+
+    """
+
+    def __init__(
+        self,
+        rhythm_handler,
+        direction=abjad.UP,
+        cluster=False,
+        cluster_color="#(rgb-color 0.56 0.85 0.6)",
+        voice_name="intermittent_voice",
+        from_components=False,
+        preprocessor=None,
+        temp_name="temp",
+    ):
+        self.rhythm_handler = rhythm_handler
+        self.direction = direction
+        self.cluster = cluster
+        self.cluster_color = cluster_color
+        self.voice_name = voice_name
+        self.from_components = from_components
+        self.preprocessor = preprocessor
+        self.temp_name = temp_name
+
+    def __call__(
+        self,
+        selections,
+    ):
+        selections = selections
+        self._add_voice(selections)
+
+    def _add_voice(self, selections):
+        if self.direction == abjad.UP:
+            literal1 = abjad.LilyPondLiteral(r"\voiceTwo")
+            literal2 = abjad.LilyPondLiteral(r"\voiceOne")
+        else:
+            literal1 = abjad.LilyPondLiteral(r"\voiceOne")
+            literal2 = abjad.LilyPondLiteral(r"\voiceTwo")
+        closing_literal = abjad.LilyPondLiteral(r"\oneVoice", site="after")
+        if isinstance(selections, list):
+            duration = [abjad.get.duration(selections[:])]
+        else:
+            duration = [abjad.get.duration(selections)]
+        if self.preprocessor is not None:
+            duration = self.preprocessor(duration)
+        container = abjad.Container(simultaneous=True)
+        original_voice = abjad.Voice(name=self._find_parent(selections))
+        intermittent_voice = abjad.Voice(name=self.voice_name)
+        if self.cluster is False:
+            new_components = self._make_components(duration)[:]
+            for new_component in new_components:
+                intermittent_voice.append(new_component)
+        else:
+            new_components = self._make_components(duration)
+            intermittent_voice.append(new_components)
+        selections = evans.get_top_level_components_from_leaves(selections)
+        abjad.mutate.wrap(selections, original_voice)
+        abjad.mutate.wrap(original_voice, container)
+        container.append(intermittent_voice)
+        if self.direction != "neutral":
+            abjad.attach(literal1, abjad.select.leaf(original_voice, 0))
+            abjad.attach(literal2, abjad.select.leaf(intermittent_voice, 0))
+            abjad.attach(closing_literal, container)
+
+    def _find_parent(self, selections):
+        first_leaf = abjad.select.leaf(selections, 0)
+        parentage = abjad.get.parentage(first_leaf)
+        parent_voice = abjad.select.components(parentage, abjad.Voice)
+        return f"{parent_voice[0].name} " + self.temp_name
+
+    def _make_components(self, duration):
+        if self.from_components is False:
+            components = self.rhythm_handler(duration)
+        else:
+            components = self.rhythm_handler
+        if self.cluster is True:
+            # components.append(abjad.Note("c'16"))
+            # opening = abjad.LilyPondLiteral(
+            #     r"\afterGrace 15/16 ", site="before"
+            # )  # maybe allow fraction to be configurable (cont.)
+            # closing = abjad.LilyPondLiteral(
+            #     "{ ", site="after"
+            # )  # (cont. ^) or simply call rmaker on duration including following leaf?
+            # close_grace = abjad.LilyPondLiteral(" }", site="after")
+            # target = abjad.select.leaf(components, -2)
+            # abjad.attach(opening, target)
+            # abjad.attach(closing, target)
+            # abjad.attach(close_grace, components[-1])
+            target = abjad.select.leaf(components, -1)
+            if isinstance(target, abjad.Note):
+                p = target.written_pitch
+                grace_n = abjad.Note(p, (1, 16))
+            elif isinstance(target, abjad.Chord):
+                p = target.written_pitches
+                grace_n = abjad.Chord(p, (1, 16))
+            after_g = abjad.AfterGraceContainer([grace_n])
+            abjad.attach(after_g, target)
+            components = abjad.Cluster(components)
+            overrides = abjad.LilyPondLiteral(
+                [
+                    r"\override Staff.ClusterSpanner.style = #'ramp",
+                    r"\override Staff.ClusterSpanner.layer = #-10",
+                    rf"\override Staff.ClusterSpanner.color = {self.cluster_color}",
+                ],
+                site="before",
+            )
+            abjad.attach(overrides, components)
+        return components
+
+
 def aftergrace_command(
     notes_string="c'16",
     selector=trinton.selectors.pleaves(),

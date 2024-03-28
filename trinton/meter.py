@@ -572,8 +572,12 @@ def rewrite_meter_command(boundary_depth=-2):
         placeholders = []
 
         for leaf in abjad.select.leaves(metered_staff, pitched=True):
-            if leaf.written_pitch.number == 12:
-                placeholders.append(leaf)
+            if isinstance(leaf, abjad.Chord):
+                pass
+
+            else:
+                if leaf.written_pitch.number == 12:
+                    placeholders.append(leaf)
 
         for tie, tuplet in zip(abjad.select.logical_ties(placeholders), tuplet_copies):
             abjad.mutate.replace(tie, tuplet)

@@ -41,6 +41,7 @@ from .commands import (
     artificial_harmonics,
     invisible_accidentals_command,
     vertical_accidentals,
+    continuous_glissando,
 )
 
 from .makers import (
@@ -76,6 +77,8 @@ from .markup import (
     write_startmarkups,
     write_marginmarkups,
     return_fraction_string_list,
+    boxed_markup,
+    notation_markup,
 )
 
 from .meter import (
@@ -128,6 +131,7 @@ from .rhythm import (
     respell_tuplets,
     respell_tuplets_command,
     aftergrace_command,
+    IntermittentVoiceHandler,
 )
 
 from .selectors import (

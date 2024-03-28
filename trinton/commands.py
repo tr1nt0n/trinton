@@ -750,6 +750,69 @@ def glissando_command(selector, tweaks=[], zero_padding=False, no_ties=False):
     return command
 
 
+def continuous_glissando(
+    selector=trinton.selectors.pleaves(), no_ties=False, tweaks=None, zero_padding=False
+):
+    def command(argument):
+        selections = selector(argument)
+        dots_selections = abjad.select.leaves(selections)
+        selections = abjad.select.logical_ties(selections)
+        selections = abjad.select.exclude(selections, [-1])
+
+        singletons = []
+        multiples = []
+
+        for tie in selections:
+            if len(tie) > 1:
+                multiples.append(tie)
+
+            else:
+                singletons.append(tie)
+
+        for tie in singletons:
+            abjad.attach(abjad.Glissando(zero_padding=zero_padding), tie[0])
+
+        for tie in multiples:
+            glissando_group = abjad.select.with_next_leaf(tie)
+
+            if tweaks is not None:
+                abjad.glissando(
+                    glissando_group,
+                    *tweaks,
+                    hide_middle_note_heads=True,
+                    allow_repeats=True,
+                    allow_ties=True,
+                    zero_padding=zero_padding,
+                )
+
+            else:
+                abjad.glissando(
+                    glissando_group,
+                    hide_middle_note_heads=True,
+                    allow_repeats=True,
+                    allow_ties=True,
+                    zero_padding=zero_padding,
+                )
+
+            if no_ties is True:
+                for leaf in tie:
+                    abjad.detach(abjad.Tie, leaf)
+
+        abjad.attach(
+            abjad.LilyPondLiteral(
+                r"\override Dots.staff-position = #2", site="absolute_before"
+            ),
+            dots_selections[0],
+        )
+
+        abjad.attach(
+            abjad.LilyPondLiteral(r"\revert Dots.staff-position", site="before"),
+            dots_selections[-1],
+        )
+
+    return command
+
+
 # beaming
 
 
