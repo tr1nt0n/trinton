@@ -97,21 +97,44 @@ def notation_markup(
     for arg in args:
         arg(music)
 
-    new_time_signatures = []
+    if len(time_signatures) > 1:
+        new_time_signatures = []
 
-    for time_signature, previous_time_signature in zip(
-        time_signatures[:], trinton.rotated_sequence(time_signatures, -1)
-    ):
-        if previous_time_signature == time_signature:
-            bundle = abjad.bundle(time_signature, r"\tweak stencil ##f")
+        for time_signature, previous_time_signature in zip(
+            time_signatures[:], trinton.rotated_sequence(time_signatures, -1)
+        ):
+            if previous_time_signature == time_signature:
+                bundle = abjad.bundle(time_signature, r"\tweak stencil ##f")
 
-            new_time_signatures.append(bundle)
-        else:
-            new_time_signatures.append(time_signature)
+                new_time_signatures.append(bundle)
+            else:
+                new_time_signatures.append(time_signature)
 
-    grouped_music = abjad.select.group_by_measure(music)
+    else:
+        new_time_signatures = time_signatures
+
+    component_voices = abjad.select.components(music, abjad.Voice)
+
+    component_voices = component_voices[1:]
+
+    if len(component_voices) > 1:
+        grouped_music = abjad.select.group_by_measure(component_voices[0])
+    else:
+        grouped_music = abjad.select.group_by_measure(music)
+
     for measure, time_signature in zip(grouped_music, new_time_signatures):
         abjad.attach(time_signature, abjad.select.leaf(measure, 0))
+        if len(component_voices) > 1:
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    [
+                        r"\once \override Voice.Rest.transparent = ##t",
+                        r"\once \override Voice.Dots.transparent = ##t",
+                    ],
+                    site="before",
+                ),
+                abjad.select.leaf(measure, 0),
+            )
 
     if beam_meter is True:
         measures = abjad.select.group_by_measure(music)
@@ -156,6 +179,9 @@ def notation_markup(
     \context {{
     \Staff
     \consists Time_signature_engraver
+    \override TimeSignature.whiteout-style = #'outline
+    \override TimeSignature.whiteout = 1
+    \override TimeSignature.layer = 20
     }}
     }}
     }} }}"""

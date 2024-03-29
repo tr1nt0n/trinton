@@ -386,6 +386,7 @@ class IntermittentVoiceHandler(evans.handlers.Handler):
         from_components=False,
         preprocessor=None,
         temp_name="temp",
+        tag=None,
     ):
         self.rhythm_handler = rhythm_handler
         self.direction = direction
@@ -395,6 +396,7 @@ class IntermittentVoiceHandler(evans.handlers.Handler):
         self.from_components = from_components
         self.preprocessor = preprocessor
         self.temp_name = temp_name
+        self.tag = tag
 
     def __call__(
         self,
@@ -419,7 +421,7 @@ class IntermittentVoiceHandler(evans.handlers.Handler):
             duration = self.preprocessor(duration)
         container = abjad.Container(simultaneous=True)
         original_voice = abjad.Voice(name=self._find_parent(selections))
-        intermittent_voice = abjad.Voice(name=self.voice_name)
+        intermittent_voice = abjad.Voice(name=self.voice_name, tag=self.tag)
         if self.cluster is False:
             new_components = self._make_components(duration)[:]
             for new_component in new_components:

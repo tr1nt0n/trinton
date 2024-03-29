@@ -502,26 +502,34 @@ def remove_redundant_time_signatures(score):
             )
 
 
-def rewrite_meter_command(boundary_depth=-2):
+def rewrite_meter_command(voice_name=None, boundary_depth=-2, time_signatures=None):
     def rewrite(argument):
-        parentage = abjad.get.parentage(abjad.select.leaf(argument, 0))
-        outer_context = parentage.components[-1]
-        global_context = outer_context["Global Context"]
-        argument_timespans = [abjad.get.timespan(_) for _ in argument]
-        start_offset = argument_timespans[0].offsets[0]
-        stop_offset = argument_timespans[-1].offsets[-1]
-        relevant_timespan = abjad.Timespan(start_offset, stop_offset)
+        if voice_name is not None:
+            argument = argument[voice_name]
+        else:
+            argument = argument
+        if time_signatures is None:
+            parentage = abjad.get.parentage(abjad.select.leaf(argument, 0))
+            outer_context = parentage.components[-1]
+            global_context = outer_context["Global Context"]
+            argument_timespans = [abjad.get.timespan(_) for _ in argument]
+            start_offset = argument_timespans[0].offsets[0]
+            stop_offset = argument_timespans[-1].offsets[-1]
+            relevant_timespan = abjad.Timespan(start_offset, stop_offset)
 
-        relevant_leaves = []
+            relevant_leaves = []
 
-        for leaf in abjad.select.leaves(global_context):
-            span = abjad.get.timespan(leaf)
-            if span.intersects_timespan(relevant_timespan) is True:
-                relevant_leaves.append(leaf)
+            for leaf in abjad.select.leaves(global_context):
+                span = abjad.get.timespan(leaf)
+                if span.intersects_timespan(relevant_timespan) is True:
+                    relevant_leaves.append(leaf)
 
-        signature_instances = [
-            abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
-        ]
+            signature_instances = [
+                abjad.get.indicator(_, abjad.TimeSignature) for _ in relevant_leaves
+            ]
+
+        else:
+            signature_instances = time_signatures
 
         container = abjad.Container()
 
