@@ -652,6 +652,42 @@ def render_file(score, segment_path, build_path, segment_name, includes):
             fp.writelines(lines)
 
 
+def render_parts(score, part_name, build_path, segment_name, includes):
+    print("Rendering file ...")
+    score_block = abjad.Block(name="score")
+    score_block.items.append(score)
+    assembled_includes = [f'\\include "{path}"' for path in includes]
+    assembled_includes.append(score_block)
+    file = abjad.LilyPondFile(
+        items=assembled_includes,
+    )
+    music_string = abjad.tag.deactivate(
+        abjad.lilypond(file, tags=True), abjad.Tag("+SCORE")
+    )
+    music_string = music_string[0]
+    lily_file = abjad.LilyPondFile(items=[music_string])
+    pdf_path = pathlib.Path(f"{build_path}/{part_name}_part.pdf")
+    segment_path = pathlib.Path(f"{build_path}/{segment_name}_parts.ly")
+    part_path = pathlib.Path(f"{build_path}/{part_name}_part.ly")
+    if pdf_path.exists():
+        pdf_path.unlink()
+    if segment_path.exists():
+        segment_path.unlink()
+    print("Persisting ...")
+    abjad.persist.as_ly(lily_file, segment_path, tags=True)
+    with open(segment_path) as pointer_1:
+        score_lines = pointer_1.readlines()
+        lines = score_lines[14:-1]
+        with open(f"{segment_path}", "w") as fp:
+            fp.writelines(lines)
+    if part_path.exists():
+        print("Rendering ...")
+        os.system(f"run-lilypond {part_path}")
+    if pdf_path.exists():
+        print("Opening ...")
+        os.system(f"open {pdf_path}")
+
+
 def extract_parts(score):
     print("Extracting parts ...")
     for count, staff in enumerate(

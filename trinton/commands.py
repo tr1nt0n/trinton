@@ -171,28 +171,17 @@ def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
         selections = selector(argument)
         for leaf in selections:
             abjad.attach(
-                abjad.LilyPondLiteral(r"\once \override Stem.stencil = ##f", "before"),
-                leaf,
-            )
-            abjad.attach(
-                abjad.LilyPondLiteral(r"\once \override Beam.stencil = ##f", "before"),
-                leaf,
-            )
-            abjad.attach(
-                abjad.LilyPondLiteral(r"\once \override Flag.stencil = ##f", "before"),
-                leaf,
-            )
-            abjad.attach(
-                abjad.LilyPondLiteral(r"\once \override Dots.stencil = ##f", "before"),
-                leaf,
-            )
-            abjad.attach(
-                abjad.LilyPondLiteral(r"\once \override Tie.stencil = ##f", "before"),
-                leaf,
-            )
-            abjad.attach(
                 abjad.LilyPondLiteral(
-                    rf"\once \override NoteHead.duration-log = {duration_log}", "before"
+                    [
+                        r"\once \override RepeatTie.transparent = ##t",
+                        r"\once \override Stem.stencil = ##f",
+                        r"\once \override Beam.stencil = ##f",
+                        r"\once \override Flag.stencil = ##f",
+                        r"\once \override Dots.stencil = ##f",
+                        r"\once \override Tie.stencil = ##f",
+                        rf"\once \override NoteHead.duration-log = {duration_log}",
+                    ],
+                    site="before",
                 ),
                 leaf,
             )
@@ -1185,9 +1174,12 @@ def fill_empty_staves_with_skips(voice):
         abjad.mutate.replace(shard, invisible_rest)
 
 
-def invisible_rests():
+def invisible_rests(selector=None):
     def rests(argument):
-        rests = abjad.select.rests(argument)
+        if selector is not None:
+            rests = selector(argument)
+        else:
+            rests = abjad.select.rests(argument)
         for rest in rests:
             rest_literal = abjad.LilyPondLiteral(
                 r"\once \override Rest.transparent = ##t", "before"

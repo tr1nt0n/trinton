@@ -48,6 +48,7 @@ from .makers import (
     make_score_template,
     write_time_signatures,
     render_file,
+    render_parts,
     make_rhythm_selections,
     append_rhythm_selections,
     make_and_append_rhythm_selections,
