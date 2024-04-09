@@ -51,7 +51,12 @@ def return_fraction_string_list(tups):
 
 
 def boxed_markup(
-    string, tweaks=None, column="center-column", font_name="Bodoni72 Book", fontsize=2
+    string,
+    tweaks=None,
+    column="\center-column",
+    font_name="Bodoni72 Book",
+    fontsize=2,
+    string_only=False,
 ):
     if isinstance(string, list):
         lines = [f"\line {{ {_} }} " for _ in string]
@@ -59,7 +64,7 @@ def boxed_markup(
         lines = "".join(lines)
 
         markup = abjad.Markup(
-            rf"""\markup \override #'(font-name . " {font_name} ") \override #'(style . "box") \override #'(box-padding . 0.5) \whiteout \box \fontsize #{fontsize} {{ \\{column} {{ { lines } }} }}""",
+            rf"""\markup \override #'(font-name . " {font_name} ") \override #'(style . "box") \override #'(box-padding . 0.5) \whiteout \box \fontsize #{fontsize} {{ {column} {{ { lines } }} }}""",
         )
 
     else:
@@ -71,7 +76,10 @@ def boxed_markup(
         for tweak in tweaks:
             markup = abjad.bundle(markup, tweak)
 
-    return markup
+    if string_only is True:
+        return markup.string
+    else:
+        return markup
 
 
 def notation_markup(

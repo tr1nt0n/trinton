@@ -117,20 +117,31 @@ def respell_tuplets(tuplets, rewrite_brackets=True):
             tuplet.multiplier = (denominator, numerator)
 
         if numerator == 3 and denominator == 2:
-            tuplet_contents = abjad.get.contents(tuplet)[1:]
-            tuplet_duration_denominator = duration[-1]
-            target_duration = abjad.Duration(1, tuplet_duration_denominator * 4)
-            target_durations = []
-            non_target_durations = []
+            # tuplet_contents = abjad.get.contents(tuplet)[1:]
+            # tuplet_duration_denominator = duration[-1]
+            # target_duration = abjad.Duration(1, tuplet_duration_denominator * 4)
+            # target_durations = []
+            # non_target_durations = []
+            #
+            # for item in tuplet_contents:
+            #     if abjad.get.duration(item, preprolated=True) <= target_duration:
+            #         target_durations.append(item)
+            #     else:
+            #         non_target_durations.append(item)
 
-            for item in tuplet_contents:
-                if abjad.get.duration(item, preprolated=True) <= target_duration:
-                    target_durations.append(item)
-                else:
-                    non_target_durations.append(item)
-            if len(target_durations) > len(non_target_durations):
+            def sextuplet_or_not(triplet):
+                dotted_duration = abjad.Duration(duration) / 2
+                checked_notes = []
+                for item in abjad.get.contents(triplet)[1:]:
+                    checked_duration = abjad.get.duration(checked_notes)
+                    if checked_duration != dotted_duration:
+                        checked_notes.append(item)
+                    else:
+                        return True
+                        break
+
+            if sextuplet_or_not(triplet=tuplet) is True:
                 tuplet.multiplier = (4, 6)
-
             else:
                 pass
 

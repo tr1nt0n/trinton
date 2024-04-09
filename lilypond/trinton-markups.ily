@@ -38,6 +38,42 @@ tremolo-stretto = \markup {
     }
 }
 
+tremolo-largo-large = \markup {
+    \hspace #0.6
+    \fontsize #8
+    \override #'(font-name . "ekmelos")
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe220
+    }
+}
+
+tremolo-moderato-large = \markup {
+    \hspace #0.6
+    \fontsize #8
+    \override #'(font-name . "ekmelos")
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe221
+    }
+}
+
+tremolo-stretto-large = \markup {
+    \hspace #0.6
+    \fontsize #8
+    \override #'(font-name . "ekmelos")
+    \override #'(whiteout-style . "outline")
+    \override #'(whiteout . 1)
+    \override #'(layer . 20)
+    {
+        \char ##xe222
+    }
+}
+
 multiple-staccato = \markup {
     \hspace #0.6
     \fontsize #3.5

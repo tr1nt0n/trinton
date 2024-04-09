@@ -335,8 +335,12 @@ def music_command(
 def replace_with_rhythm_selection(rhythmhandler, selector):
     def replace(argument):
         selection = selector(argument)
+        indicators = abjad.get.indicators(selection[0])
         duration = abjad.get.duration(selection)
         rhythm_selections = rhythmhandler([duration])
+        for indicator in indicators:
+            abjad.attach(indicator, abjad.select.leaf(rhythm_selections, 0))
+        rmakers.unbeam(rhythm_selections)
         abjad.mutate.replace(selection, rhythm_selections)
 
     return replace
@@ -795,6 +799,7 @@ def fermata_measures(
     clef_whitespace=True,
     blank=True,
     last_measure=False,
+    padding=None,
 ):
     measures = [_ - 1 for _ in measures]
 
@@ -814,6 +819,10 @@ def fermata_measures(
         fermata_markup = abjad.bundle(
             fermata_markup, rf"- \tweak font-size #'{font_size}"
         )
+        if padding is not None:
+            fermata_markup = abjad.bundle(
+                fermata_markup, rf"- \tweak padding {padding}"
+            )
         invisible_ts_command = abjad.LilyPondLiteral(
             r"\once \override Score.TimeSignature.stencil = ##f",
             "before",
