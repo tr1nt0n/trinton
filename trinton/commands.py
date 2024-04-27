@@ -169,6 +169,7 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
 def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
     def only_noteheads(argument):
         selections = selector(argument)
+        logical_ties = abjad.select.logical_ties(selections, pitched=True)
         for leaf in selections:
             abjad.attach(
                 abjad.LilyPondLiteral(
@@ -185,6 +186,10 @@ def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
                 ),
                 leaf,
             )
+        for tie in logical_ties:
+            relevant_leaves = abjad.select.exclude(abjad.select.leaves(tie), [0])
+            for leaf in relevant_leaves:
+                abjad.override(leaf).NoteHead.transparent = True
 
     return only_noteheads
 

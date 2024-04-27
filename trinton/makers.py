@@ -800,6 +800,7 @@ def fermata_measures(
     blank=True,
     last_measure=False,
     padding=None,
+    tag=abjad.Tag("+SCORE"),
 ):
     measures = [_ - 1 for _ in measures]
 
@@ -876,13 +877,21 @@ def fermata_measures(
             )
 
             stop_command = abjad.LilyPondLiteral(r"\stopStaff \startStaff", "after")
+            invisibility_literal = abjad.LilyPondLiteral(
+                [
+                    r"\once \override MultiMeasureRest.transparent = ##t",
+                    r"\once \override Rest.transparent = ##t",
+                ],
+                "before",
+            )
 
             for measure in measures:
                 selection = trinton.select_target(voice, (measure + 1,))
                 relevant_leaf = selection[0]
-                abjad.attach(start_command, relevant_leaf)
+                abjad.attach(start_command, relevant_leaf, tag=tag)
+                abjad.attach(invisibility_literal, relevant_leaf, tag=tag)
                 if last_measure is False:
-                    abjad.attach(stop_command, relevant_leaf)
+                    abjad.attach(stop_command, relevant_leaf, tag=tag)
 
     if clef_whitespace is True:
         if voice_names is not None:
@@ -906,7 +915,7 @@ def fermata_measures(
                 relevant_leaf = selection[0]
                 next_leaf = abjad.select.with_next_leaf(relevant_leaf)[-1]
                 if abjad.get.has_indicator(next_leaf, abjad.Clef):
-                    abjad.attach(clef_whitespace_literal, next_leaf)
+                    abjad.attach(clef_whitespace_literal, next_leaf, tag=tag)
 
 
 def make_fermata_measure(selection):

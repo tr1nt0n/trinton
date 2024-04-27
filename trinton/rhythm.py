@@ -248,7 +248,7 @@ def handwrite_nested_tuplets(
         if extract_trivial_tuplets is True:
             rmakers.extract_trivial(container)
 
-        respell_tuplets(abjad.select.tuplets(container))
+        respell_tuplets(abjad.select.tuplets(container), rewrite_brackets=False)
 
         selections = abjad.mutate.eject_contents(container)
         return selections
