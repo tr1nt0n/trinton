@@ -16,7 +16,7 @@ from .commands import (
     reduce_tuplets,
     unbeam_quarters,
     fuse_tuplet_rests,
-    respell,
+    respell_accidentals_command,
     beam_durations,
     attachment_command,
     linear_attachment_command,
@@ -42,6 +42,9 @@ from .commands import (
     invisible_accidentals_command,
     vertical_accidentals,
     continuous_glissando,
+    parenthesize_notehead_command,
+    tweak_command,
+    annotate_leaves_locally,
 )
 
 from .makers import (
@@ -71,6 +74,8 @@ from .makers import (
     OnBeatGraceHandler,
     fermata_measures,
     make_custom_dynamic,
+    iteratively_replace_with_rhythm_selection,
+    make_combination_tone_wav,
 )
 
 from .markup import (
@@ -133,6 +138,7 @@ from .rhythm import (
     respell_tuplets_command,
     aftergrace_command,
     IntermittentVoiceHandler,
+    duration_line,
 )
 
 from .selectors import (
@@ -274,7 +280,7 @@ __all__ = [
     "continuous_beams",
     "make_ts_pair_list",
     "remove_all",
-    "respell",
+    "respell_accidentals_command",
     "remove_adjacent",
     "extract_instrument_name",
     "treat_tuplets",

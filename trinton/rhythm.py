@@ -13,18 +13,18 @@ import pathlib
 import os
 
 
-def treat_tuplets(non_power_of_two=False):
-    def treatment(selections):
-        tuplets = abjad.select.tuplets(selections)
+def treat_tuplets(selector=abjad.select.tuplets, non_power_of_two=False):
+    def treatment(argument):
+        tuplets = selector(argument)
         rmakers.rewrite_dots(tuplets)
-        tuplets = abjad.select.tuplets(selections)
+        tuplets = selector(argument)
         rmakers.trivialize(tuplets)
-        tuplets = abjad.select.tuplets(selections)
+        tuplets = selector(argument)
         rmakers.rewrite_rest_filled(tuplets)
         if non_power_of_two is False:
-            tuplets = abjad.select.tuplets(selections)
+            tuplets = selector(argument)
             rmakers.rewrite_sustained(tuplets)
-        tuplets = abjad.select.tuplets(selections)
+        tuplets = selector(argument)
         rmakers.extract_trivial(tuplets)
 
     return treatment
@@ -501,6 +501,7 @@ def aftergrace_command(
     slash=False,
     glissando=False,
     invisible=False,
+    pitch_matching=False,
 ):
     def grace(argument):
         selections = selector(argument)
@@ -533,6 +534,10 @@ def aftergrace_command(
                 abjad.attach(literal, first_leaf)
 
         for container, tie in zip(containers, ties):
+            if pitch_matching is True:
+                grace = abjad.select.leaf(container, 0, pitched=True, grace=True)
+                grace.written_pitch = tie[0].written_pitch
+
             abjad.attach(container, tie[-1])
 
             if glissando is True:
@@ -554,3 +559,179 @@ def aftergrace_command(
                     abjad.detach(abjad.Tie, leaf)
 
     return grace
+
+
+def duration_line(
+    selector=trinton.selectors.pleaves(),
+    color=False,
+    sustained=False,
+    visible_grace=False,
+    on_beat_graces=False,
+):
+    def line(argument):
+        selections = selector(argument)
+        if on_beat_graces is True:
+            pties = abjad.select.logical_ties(
+                selections,
+                pitched=True,
+            )
+        else:
+            pties = abjad.select.logical_ties(selections, pitched=True, grace=False)
+
+        if sustained is True:
+
+            relevant_leaf = pties[-1][-1]
+
+            if isinstance(relevant_leaf, abjad.Chord):
+                tie_pitches = relevant_leaf.written_pitches
+                pitch_string = " "
+                for pitch in tie_pitches:
+                    pitch_string += pitch.get_name()
+                    pitch_string += " "
+                container = abjad.AfterGraceContainer(f"<{pitch_string}>16")
+            else:
+                tie_pitch = relevant_leaf.written_pitch.get_name()
+                container = abjad.AfterGraceContainer(f"{tie_pitch}16")
+
+            abjad.attach(container, relevant_leaf)
+
+            with_grace = abjad.select.with_next_leaf(pties)
+
+            abjad.override(with_grace[-1]).NoteHead.transparent = True
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override NoteHead.no-ledgers = ##t", "before"
+                ),
+                with_grace[-1],
+            )
+            abjad.attach(
+                abjad.LilyPondLiteral(
+                    r"\once \override Accidental.stencil = ##f", "before"
+                ),
+                with_grace[-1],
+            )
+
+            if visible_grace is True:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r'\once \override Flag.stroke-style = #"grace"', "before"
+                    ),
+                    with_grace[-1],
+                )
+
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override NoteHead.X-extent = #'(0 . 0)", "opening"
+                    ),
+                    with_grace[-1],
+                )
+
+                for leaf in abjad.select.leaves(with_grace):
+                    abjad.detach(abjad.Tie, leaf)
+
+            for leaf in abjad.select.leaves(with_grace):
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override Dots.staff-position = #2", "before"
+                    ),
+                    leaf,
+                )
+
+            if color is False:
+                abjad.glissando(
+                    with_grace,
+                    hide_middle_note_heads=True,
+                    allow_repeats=True,
+                    allow_ties=True,
+                    zero_padding=True,
+                )
+
+            else:
+                abjad.glissando(
+                    with_grace,
+                    abjad.Tweak(rf"- \tweak color #{color}"),
+                    hide_middle_note_heads=True,
+                    allow_repeats=True,
+                    allow_ties=True,
+                    zero_padding=True,
+                )
+
+        else:
+
+            for tie in pties:
+                relevant_leaf = tie[-1]
+                if isinstance(relevant_leaf, abjad.Chord):
+                    tie_pitches = relevant_leaf.written_pitches
+                    pitch_string = " "
+                    for pitch in tie_pitches:
+                        pitch_string += pitch.get_name()
+                        pitch_string += " "
+                    container = abjad.AfterGraceContainer(f"<{pitch_string}>16")
+                else:
+                    tie_pitch = relevant_leaf.written_pitch.get_name()
+                    container = abjad.AfterGraceContainer(f"{tie_pitch}16")
+
+                abjad.attach(container, tie[-1])
+
+                with_grace = abjad.select.with_next_leaf(tie)
+
+                abjad.override(with_grace[-1]).NoteHead.transparent = True
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override NoteHead.no-ledgers = ##t", "before"
+                    ),
+                    with_grace[-1],
+                )
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\once \override Accidental.stencil = ##f", "before"
+                    ),
+                    with_grace[-1],
+                )
+
+                if visible_grace is True:
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r'\once \override Flag.stroke-style = #"grace"', "before"
+                        ),
+                        with_grace[-1],
+                    )
+
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\once \override NoteHead.X-extent = #'(0 . 0)", "opening"
+                        ),
+                        with_grace[-1],
+                    )
+
+                    for leaf in abjad.select.leaves(with_grace):
+                        abjad.detach(abjad.Tie, leaf)
+
+                for leaf in abjad.select.leaves(with_grace):
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\once \override Dots.staff-position = #2", "before"
+                        ),
+                        leaf,
+                    )
+
+                if color is False:
+                    abjad.glissando(
+                        with_grace,
+                        hide_middle_note_heads=True,
+                        allow_repeats=True,
+                        allow_ties=True,
+                        zero_padding=True,
+                    )
+
+                else:
+                    abjad.glissando(
+                        with_grace,
+                        abjad.Tweak(rf"- \tweak color #{color}"),
+                        hide_middle_note_heads=True,
+                        allow_repeats=True,
+                        allow_ties=True,
+                        zero_padding=True,
+                    )
+
+    return line

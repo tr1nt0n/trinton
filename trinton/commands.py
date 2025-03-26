@@ -127,33 +127,45 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
         _overrides = {
             "highest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bb)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bc)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0be)))))))",
             "lowest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c4)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c5)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c7)))))))",
+            "cluster": [
+                r"\once \override NoteHead.X-offset = 0",
+                r"\once \override Staff.Accidental.stencil = ##f",
+                r"\once \override Staff.Glissando.thickness = #8.25",
+                r"\once \override NoteHead.duration-log = 2",
+            ],
         }
 
-        if notehead == "highest" or notehead == "lowest":
+        if notehead == "highest" or notehead == "lowest" or notehead == "cluster":
             notehead_literal = abjad.LilyPondLiteral(_overrides[notehead], "before")
+            if notehead == "cluster":
+                for leaf in leaves:
+                    for head in leaf.note_heads:
+                        abjad.tweak(head, r"\tweak style #'la")
+                    abjad.attach(notehead_literal, leaf)
 
-            stem_literal = abjad.LilyPondLiteral(
-                r"\once \override NoteHead.stem-attachment = #'(0 . 0.75)"
-            )
+            if notehead == "highest" or notehead == "lowest":
+                stem_literal = abjad.LilyPondLiteral(
+                    r"\once \override NoteHead.stem-attachment = #'(0 . 0.75)"
+                )
 
-            ledger_literal = abjad.LilyPondLiteral(
-                r"\once \override NoteHead.no-ledgers = ##t"
-            )
+                ledger_literal = abjad.LilyPondLiteral(
+                    r"\once \override NoteHead.no-ledgers = ##t"
+                )
 
-            accidental_literal = abjad.LilyPondLiteral(
-                r"\once \override Staff.AccidentalPlacement.right-padding = #0.6"
-            )
+                accidental_literal = abjad.LilyPondLiteral(
+                    r"\once \override Staff.AccidentalPlacement.right-padding = #0.6"
+                )
 
-            literals = [
-                stem_literal,
-                ledger_literal,
-                notehead_literal,
-                accidental_literal,
-            ]
+                literals = [
+                    stem_literal,
+                    ledger_literal,
+                    notehead_literal,
+                    accidental_literal,
+                ]
 
-            for leaf in leaves:
-                for literal in literals:
-                    abjad.attach(literal, leaf)
+                for leaf in leaves:
+                    for literal in literals:
+                        abjad.attach(literal, leaf)
 
         else:
             for leaf in leaves:
@@ -166,22 +178,39 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
     return change
 
 
-def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
+def parenthesize_notehead_command(selector=abjad.select.chords, head_indices=[0]):
+    def parenthesize(argument):
+        selections = selector(argument)
+
+        for chord, head_index in zip(selections, head_indices):
+            note_heads = chord.note_heads
+            relevant_head = note_heads[head_index]
+            relevant_head.is_parenthesized = True
+
+    return parenthesize
+
+
+def noteheads_only(selector=selectors.pleaves(), duration_log="2", no_ledgers=False):
     def only_noteheads(argument):
         selections = selector(argument)
         logical_ties = abjad.select.logical_ties(selections, pitched=True)
+        literal_strings = [
+            r"\once \override RepeatTie.transparent = ##t",
+            r"\once \override Stem.stencil = ##f",
+            r"\once \override Beam.stencil = ##f",
+            r"\once \override Flag.stencil = ##f",
+            r"\once \override Dots.stencil = ##f",
+            r"\once \override Tie.stencil = ##f",
+            rf"\once \override NoteHead.duration-log = {duration_log}",
+        ]
+
+        if no_ledgers is True:
+            literal_strings.append(r"\once \override NoteHead.no-ledgers = ##t")
+
         for leaf in selections:
             abjad.attach(
                 abjad.LilyPondLiteral(
-                    [
-                        r"\once \override RepeatTie.transparent = ##t",
-                        r"\once \override Stem.stencil = ##f",
-                        r"\once \override Beam.stencil = ##f",
-                        r"\once \override Flag.stencil = ##f",
-                        r"\once \override Dots.stencil = ##f",
-                        r"\once \override Tie.stencil = ##f",
-                        rf"\once \override NoteHead.duration-log = {duration_log}",
-                    ],
+                    literal_strings,
                     site="before",
                 ),
                 leaf,
@@ -190,6 +219,15 @@ def noteheads_only(selector=selectors.pleaves(), duration_log="2"):
             relevant_leaves = abjad.select.exclude(abjad.select.leaves(tie), [0])
             for leaf in relevant_leaves:
                 abjad.override(leaf).NoteHead.transparent = True
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        [
+                            r"\once \override NoteHead.no-ledgers = ##t",
+                        ],
+                        site="before",
+                    ),
+                    leaf,
+                )
 
     return only_noteheads
 
@@ -325,40 +363,90 @@ def ficta_command(selector):
     return suggest
 
 
-def vertical_accidentals(selector):
+def vertical_accidentals(selector, direction=None):
     def suggest(argument):
         selections = selector(argument)
         ties = abjad.select.logical_ties(selections, pitched=True)
         for tie in ties:
             first_leaf = tie[0]
-            first_leaf_pitch = first_leaf.written_pitch
-            accidental = first_leaf_pitch.accidental
-            accidental_name = accidental.name
-
             abjad.attach(
                 abjad.LilyPondLiteral(
                     r"\once \override Staff.Accidental.stencil = ##f", site="before"
                 ),
                 first_leaf,
             )
+            if isinstance(first_leaf, abjad.Note):
+                first_leaf_pitch = first_leaf.written_pitch
+                accidental = first_leaf_pitch.accidental
+                accidental_name = accidental.name
+                if accidental_name == "quarter sharp":
+                    accidental_name = "quarter-sharp"
+                if accidental_name == "quarter flat":
+                    accidental_name = "quarter-flat"
 
-            abjad.attach(
-                abjad.Articulation(f"{accidental_name}-articulation"), first_leaf
-            )
+                abjad.attach(
+                    abjad.Articulation(f"{accidental_name}-articulation"),
+                    first_leaf,
+                    direction=direction,
+                )
+
+            if isinstance(first_leaf, abjad.Chord):
+                note_heads = first_leaf.note_heads
+                for note_head in note_heads:
+                    pitch = note_head.written_pitch
+                    accidental = pitch.accidental
+                    accidental_name = accidental.name
+                    if accidental_name == "quarter sharp":
+                        accidental_name = "quarter-sharp"
+                    if accidental_name == "quarter flat":
+                        accidental_name = "quarter-flat"
+                    abjad.attach(
+                        abjad.Articulation(f"{accidental_name}-articulation"),
+                        first_leaf,
+                        direction=direction,
+                    )
 
     return suggest
 
 
-def respell(selections):
-    for tie in abjad.select.logical_ties(selections):
-        if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
-            abjad.iterpitches.respell_with_flats(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("es"):
-            abjad.iterpitches.respell_with_flats(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("cf"):
-            abjad.iterpitches.respell_with_sharps(tie)
-        elif tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
-            abjad.iterpitches.respell_with_sharps(tie)
+def respell_accidentals_command(selector):
+    def respell(argument):
+        selections = selector(argument)
+        for tie in abjad.select.logical_ties(selections):
+            if isinstance(tie[0], abjad.Chord):
+                note_heads = tie[0].note_heads
+                for head in note_heads:
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("bff"):
+                        abjad.iterpitches.respell_with_sharps(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
+                        abjad.iterpitches.respell_with_flats(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("es"):
+                        abjad.iterpitches.respell_with_flats(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("cf"):
+                        abjad.iterpitches.respell_with_sharps(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
+                        abjad.iterpitches.respell_with_sharps(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("fss"):
+                        abjad.iterpitches.respell_with_flats(tie)
+                    if head.written_pitch.pitch_class == abjad.NamedPitchClass("eff"):
+                        abjad.iterpitches.respell_with_sharps(tie)
+            else:
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bff"):
+                    abjad.iterpitches.respell_with_sharps(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("bs"):
+                    abjad.iterpitches.respell_with_flats(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("es"):
+                    abjad.iterpitches.respell_with_flats(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("cf"):
+                    abjad.iterpitches.respell_with_sharps(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("ff"):
+                    abjad.iterpitches.respell_with_sharps(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("fss"):
+                    abjad.iterpitches.respell_with_flats(tie)
+                if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("eff"):
+                    abjad.iterpitches.respell_with_sharps(tie)
+
+    return respell
 
 
 def force_accidentals(voice, selector):
@@ -745,66 +833,101 @@ def glissando_command(selector, tweaks=[], zero_padding=False, no_ties=False):
 
 
 def continuous_glissando(
-    selector=trinton.selectors.pleaves(), no_ties=False, tweaks=None, zero_padding=False
+    selector=trinton.selectors.logical_ties(),
+    no_ties=False,
+    tweaks=None,
+    zero_padding=False,
+    invisible_center=False,
 ):
-    def command(argument):
+    def glissando(argument):
         selections = selector(argument)
-        dots_selections = abjad.select.leaves(selections)
-        selections = abjad.select.logical_ties(selections)
-        selections = abjad.select.exclude(selections, [-1])
+        selections = abjad.select.logical_ties(selections, pitched=True)
+        glissando_groups = abjad.select.group_by_contiguity(selections)
 
-        singletons = []
-        multiples = []
+        for group in glissando_groups:
+            if zero_padding is True:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\override Dots.staff-position = #2", site="absolute_before"
+                    ),
+                    abjad.select.leaf(group, 0),
+                )
 
-        for tie in selections:
-            if len(tie) > 1:
-                multiples.append(tie)
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\revert Dots.staff-position", site="before"
+                    ),
+                    abjad.select.leaf(group, -1),
+                )
 
-            else:
-                singletons.append(tie)
+            group = abjad.select.exclude(abjad.select.logical_ties(group), [-1])
 
-        for tie in singletons:
-            abjad.attach(abjad.Glissando(zero_padding=zero_padding), tie[0])
+            if invisible_center is True:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        [
+                            r"\override NoteHead.X-extent = #'(0 . 0)",
+                            r"\override NoteHead.transparent = ##t",
+                        ],
+                        site="before",
+                    ),
+                    abjad.select.leaf(group, 1),
+                )
 
-        for tie in multiples:
-            glissando_group = abjad.select.with_next_leaf(tie)
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        [r"\revert NoteHead.X-extent", r"\revert NoteHead.transparent"],
+                        site="absolute_after",
+                    ),
+                    abjad.select.leaf(group, -1),
+                )
+
+            singletons = []
+            multiples = []
+
+            for tie in abjad.select.logical_ties(group):
+                if len(tie) > 1:
+                    multiples.append(tie)
+
+                else:
+                    singletons.append(tie)
+
+            singleton_gliss = abjad.Glissando(zero_padding=zero_padding)
 
             if tweaks is not None:
-                abjad.glissando(
-                    glissando_group,
-                    *tweaks,
-                    hide_middle_note_heads=True,
-                    allow_repeats=True,
-                    allow_ties=True,
-                    zero_padding=zero_padding,
-                )
+                for tweak in tweaks:
+                    singleton_gliss = abjad.bundle(singleton_gliss, tweak)
 
-            else:
-                abjad.glissando(
-                    glissando_group,
-                    hide_middle_note_heads=True,
-                    allow_repeats=True,
-                    allow_ties=True,
-                    zero_padding=zero_padding,
-                )
+            for tie in singletons:
+                abjad.attach(singleton_gliss, tie[0])
 
-            if no_ties is True:
-                for leaf in tie:
-                    abjad.detach(abjad.Tie, leaf)
+            for tie in multiples:
+                glissando_group = abjad.select.with_next_leaf(tie)
 
-        abjad.attach(
-            abjad.LilyPondLiteral(
-                r"\override Dots.staff-position = #2", site="absolute_before"
-            ),
-            dots_selections[0],
-        )
+                if tweaks is not None:
+                    abjad.glissando(
+                        glissando_group,
+                        *tweaks,
+                        hide_middle_note_heads=True,
+                        allow_repeats=True,
+                        allow_ties=True,
+                        zero_padding=zero_padding,
+                    )
 
-        abjad.attach(
-            abjad.LilyPondLiteral(r"\revert Dots.staff-position", site="before"),
-            dots_selections[-1],
-        )
+                else:
+                    abjad.glissando(
+                        glissando_group,
+                        hide_middle_note_heads=True,
+                        allow_repeats=True,
+                        allow_ties=True,
+                        zero_padding=zero_padding,
+                    )
 
-    return command
+                if no_ties is True:
+                    for leaf in tie:
+                        abjad.detach(abjad.Tie, leaf)
+
+    return glissando
 
 
 # beaming
@@ -1230,3 +1353,27 @@ def annotate_leaves(score, prototype=abjad.Leaf):
             abjad.label.with_indices(voice, prototype=prototype)
         else:
             abjad.label.with_indices(voice)
+
+
+def annotate_leaves_locally(selector=abjad.select.leaves, direction=abjad.UP):
+    def annotate(argument):
+        leaves = selector(argument)
+        amount = len(leaves)
+
+        for leaf, i in zip(leaves, list(range(amount))):
+            abjad.attach(abjad.Markup(rf"\markup {i}"), leaf, direction=direction)
+
+    return annotate
+
+
+# tweaks
+
+
+def tweak_command(tweaks, selector=trinton.selectors.pleaves()):
+    def tweak_it(argument):
+        selections = selector(argument)
+        for selection in selections:
+            for new_tweak in tweaks:
+                abjad.tweak(selection, new_tweak)
+
+    return tweak_it

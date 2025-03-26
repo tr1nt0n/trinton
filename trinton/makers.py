@@ -6,12 +6,16 @@ from abjadext import rmakers
 from fractions import Fraction
 from itertools import cycle
 import quicktions
+import math
 import numpy
 import datetime
 import dataclasses
+import struct
 import typing
 import pathlib
 import os
+import sys
+import wave
 
 # time signatures
 
@@ -92,15 +96,21 @@ def make_score_template(
                 else:
                     name_string = f"{extract_instrument_name(sub_item)}"
 
-                staff = abjad.Staff(
-                    [
-                        abjad.Voice(
-                            name=f"{name_string} voice",
-                        ),
-                    ],
-                    name=f"{name_string} staff",
-                    lilypond_type=sub_type,
-                )
+                if sub_type != "TabStaff":
+                    staff = abjad.Staff(
+                        [
+                            abjad.Voice(
+                                name=f"{name_string} voice",
+                            ),
+                        ],
+                        name=f"{name_string} staff",
+                        lilypond_type=sub_type,
+                    )
+                else:
+                    staff = abjad.Staff(
+                        name=f"{name_string} staff",
+                        lilypond_type=sub_type,
+                    )
                 sub_group.append(staff)
                 name_counts[extract_instrument_name(sub_item)] += 1
             score["Staff Group"].append(sub_group)
@@ -142,9 +152,23 @@ def make_empty_score(
 
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
-    for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-        for measure_filler in [filler((1, 1), multiplier=_) for _ in time_signatures]:
-            voice.append(measure_filler)
+    # for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
+    #     for measure_filler in [filler((1, 1), multiplier=_) for _ in time_signatures]:
+    #         voice.append(measure_filler)
+
+    for staff in abjad.select.components(score["Staff Group"], abjad.Staff):
+        voices = abjad.select.components(staff, abjad.Voice)
+        if len(voices) > 0:
+            for voice in voices:
+                for measure_filler in [
+                    filler((1, 1), multiplier=_) for _ in time_signatures
+                ]:
+                    voice.append(measure_filler)
+        else:
+            for measure_filler in [
+                filler((1, 1), multiplier=_) for _ in time_signatures
+            ]:
+                staff.append(measure_filler)
 
     return score
 
@@ -332,16 +356,34 @@ def music_command(
     abjad.mutate.replace(target_leaves, container[:])
 
 
-def replace_with_rhythm_selection(rhythmhandler, selector):
+def replace_with_rhythm_selection(rhythmhandler, selector, preprolated=True):
     def replace(argument):
         selection = selector(argument)
-        indicators = abjad.get.indicators(selection[0])
-        duration = abjad.get.duration(selection)
+        indicators = abjad.get.indicators(abjad.select.leaf(selection, 0))
+        duration = abjad.get.duration(selection, preprolated=preprolated)
         rhythm_selections = rhythmhandler([duration])
         for indicator in indicators:
             abjad.attach(indicator, abjad.select.leaf(rhythm_selections, 0))
         rmakers.unbeam(rhythm_selections)
         abjad.mutate.replace(selection, rhythm_selections)
+
+    return replace
+
+
+def iteratively_replace_with_rhythm_selection(
+    rhythmhandler, selector, preprolated=True
+):
+    def replace(argument):
+        selections = selector(argument)
+        for selection in selections:
+            indicators = abjad.get.indicators(abjad.select.leaf(selection, 0))
+            duration = abjad.get.duration(selection, preprolated=preprolated)
+            rhythm_selections = rhythmhandler([duration])
+            rmakers.unbeam(rhythm_selections)
+            print("")
+            print(rhythm_selections)
+            print("")
+            abjad.mutate.replace(selection, rhythm_selections)
 
     return replace
 
@@ -739,6 +781,9 @@ def _extract_voice_info(score):
     return [_ for _ in zip(score_pitches, score_durations)]
 
 
+# synthesis
+
+
 def make_sc_file(score, tempo, current_directory):
 
     info = _extract_voice_info(score)
@@ -787,6 +832,76 @@ def make_sc_file(score, tempo, current_directory):
         fp.writelines(lines)
 
 
+def make_combination_tone_wav(
+    file_name, combination_tones, partial_pairs, sample_rate=44100
+):
+    print("writing files . . .")
+    text_record = open(f"{file_name}_notes.txt", "w")
+    sound_file = open(f"{file_name}.bin", "wb")
+    print(
+        "Frequency 1\tFrequency 2\tPartial 1\tPartial 2\tCombination Tone",
+        file=text_record,
+    )
+
+    if len(combination_tones) > len(partial_pairs):
+        partial_pairs = cycle(partial_pairs)
+    else:
+        combination_tones = cycle(combination_tones)
+
+    for combination_tone, partial_pair in zip(combination_tones, partial_pairs):
+        if isinstance(combination_tone, abjad.NamedPitch):
+            combination_tone = combination_tone.hertz
+        else:
+            combination_tone = combination_tone
+
+        dt = 1 / sample_rate  # seconds
+
+        t = 0
+
+        gain = 0
+
+        freq_1 = combination_tone * partial_pair[0]
+        freq_2 = combination_tone * partial_pair[-1]
+
+        print(
+            "\t",
+            freq_1,
+            "\t",
+            freq_2,
+            "\t",
+            partial_pair[0],
+            "\t",
+            partial_pair[-1],
+            "\t",
+            combination_tone,
+            file=text_record,
+        )
+
+        for _ in range(0, 200000):
+            v_1 = math.sin(t * freq_1 * 2 * math.pi)
+            v_2 = math.sin(t * freq_2 * 2 * math.pi)
+            faded_v_1 = v_1 * gain
+            faded_v_2 = v_2 * gain
+            bin_v_1 = int(faded_v_1 * 32767)
+            bin_v_2 = int(faded_v_2 * 32767)
+            sound_file.write(bin_v_1.to_bytes(2, "little", signed=True))
+            sound_file.write(bin_v_2.to_bytes(2, "little", signed=True))
+            if _ < 1000:
+                if gain < 1:
+                    gain = gain + (1 / 1000)
+
+            if _ > 199000:
+                if gain > 0:
+                    gain = gain - (1 / 1000)
+
+            t = t + dt
+
+    text_record.close()
+    sound_file.close()
+
+    print("finished writing files")
+
+
 # fermate
 
 
@@ -800,6 +915,7 @@ def fermata_measures(
     blank=True,
     last_measure=False,
     padding=None,
+    extra_offset=2.5,
     tag=abjad.Tag("+SCORE"),
 ):
     measures = [_ - 1 for _ in measures]
@@ -905,7 +1021,7 @@ def fermata_measures(
             clef_whitespace_literal = abjad.LilyPondLiteral(
                 [
                     r"\once \override Staff.Clef.X-extent = ##f",
-                    r"\once \override Staff.Clef.extra-offset = #'(-2.5 . 0)",
+                    rf"\once \override Staff.Clef.extra-offset = #'(-{extra_offset} . 0)",
                 ],
                 site="absolute_before",
             )

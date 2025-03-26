@@ -283,7 +283,7 @@ def arrow_spanner_command(
 def spanner_command(
     strings,
     selector,
-    style="dashed-line-with-arrow",
+    style="solid-line-with-arrow",
     padding=7,
     tweaks=None,
     right_padding=None,
@@ -292,6 +292,7 @@ def spanner_command(
     command="",
     end_hook=False,
     end_hook_style="dashed-line-with-hook",
+    end_hook_right_padding=1.5,
     tag=None,
 ):
     def attach_spanner(argument):
@@ -306,6 +307,8 @@ def spanner_command(
 
         else:
             r_padding = right_padding
+
+        end_hook_r_padding = end_hook_right_padding * -1
 
         if len(strings) < 3 and end_hook is False:
             start_spans = [
@@ -332,7 +335,7 @@ def spanner_command(
                 command=r"\startTextSpan" + command,
                 left_text=markups[1],
                 style=end_hook_style,
-                right_padding=-1.5,
+                right_padding=end_hook_r_padding,
             )
 
         if len(strings) > 2 and end_hook is False:
@@ -376,7 +379,7 @@ def spanner_command(
                 command=r"\startTextSpan" + command,
                 left_text=markups[-1],
                 style=end_hook_style,
-                right_padding=-1.5,
+                right_padding=end_hook_r_padding,
             )
 
         selections = selector(argument)

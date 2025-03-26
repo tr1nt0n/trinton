@@ -155,6 +155,58 @@ flat-markup = \markup {
 
 flat-articulation = #(make-articulation 'flat-list)
 
+quarter-flat-markup = \markup {
+    \fontsize #1 {
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            \accidental #-1/4
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(quarter-flat-list
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,quarter-flat-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+quarter-flat-articulation = #(make-articulation 'quarter-flat-list)
+
+quarter-sharp-markup = \markup {
+    \fontsize #1 {
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            \accidental #1/4
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(quarter-sharp-list
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,quarter-sharp-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+quarter-sharp-articulation = #(make-articulation 'quarter-sharp-list)
+
 sharp-markup = \markup {
     \fontsize #1 {
         \override #'(whiteout-style . "outline")
@@ -206,6 +258,83 @@ natural-markup = \markup {
            ))))
 
 natural-articulation = #(make-articulation 'natural-list)
+
+hammer-on-markup = \markup {
+    \fontsize #4 {
+        \override #'(font-name . "Bodoni72 Book")
+        \override #'(whiteout-style . "outline")
+        \override #'(whiteout . 1)
+        {
+            H
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(hammer-on-articulation
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,hammer-on-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+hammer-on = #(make-articulation 'hammer-on-articulation)
+
+tremolo-markup = \markup {
+    \fontsize #4.5
+    \override #'(font-name . "ekmelos")
+    {
+        \hspace #0.5
+        \char ##xe222
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(tremolomarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,tremolo-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+tremolo-articulation = #(make-articulation 'tremolomarkup)
+
+salzedo-thunder-markup = \markup {
+    \fontsize #5
+    \override #'(font-name . "ekmelos")
+    {
+        \hspace #0.5
+        \char ##xe686
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(salzedothundermarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,salzedo-thunder-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+salzedo-thunder = #(make-articulation 'salzedothundermarkup)
 
 % fermatas
 

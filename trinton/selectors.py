@@ -65,16 +65,26 @@ def select_tuplets_by_index(indices):
     return selector
 
 
-def select_logical_ties_by_index(indices, pitched=None, first=False, grace=None):
+def select_logical_ties_by_index(
+    indices, pitched=None, first=False, last=False, grace=None
+):
     def selector(argument):
         out = []
-        if first is True:
-            for index in indices:
-                out.append(
-                    abjad.select.logical_ties(argument, pitched=pitched, grace=grace)[
-                        index
-                    ][0]
-                )
+        if first is True or last is True:
+            if first is True:
+                for index in indices:
+                    out.append(
+                        abjad.select.logical_ties(
+                            argument, pitched=pitched, grace=grace
+                        )[index][0]
+                    )
+            if last is True:
+                for index in indices:
+                    out.append(
+                        abjad.select.logical_ties(
+                            argument, pitched=pitched, grace=grace
+                        )[index][-1]
+                    )
         else:
             for index in indices:
                 out.append(
@@ -130,7 +140,7 @@ def patterned_leaf_index_selector(
 
 
 def patterned_tie_index_selector(
-    indices, period, first=False, pitched=None, grace=None, exclude=None
+    indices, period, first=False, last=False, pitched=None, grace=None, exclude=None
 ):
     def selector(argument):
         out = []
@@ -142,9 +152,13 @@ def patterned_tie_index_selector(
         for i in range(len(ties)):
             if pattern.matches_index(i, len(ties)):
                 index.append(i)
-        if first is True:
-            for i in index:
-                out.append(ties[i][0])
+        if first is True or last is True:
+            if first is True:
+                for i in index:
+                    out.append(ties[i][0])
+            if last is True:
+                for i in index:
+                    out.append(ties[i][-1])
         else:
             for i in index:
                 out.append(ties[i])
@@ -340,15 +354,18 @@ def durational_selector(
 ):
     def selector(argument):
         selections = preselector(argument)
-        logical_ties = abjad.select.logical_ties(selections)
         out = []
         for duration in durations:
-            for tie in logical_ties:
-                tie_duration = abjad.get.duration(tie, preprolated=preprolated)
-                if tie_duration == duration:
-                    out.append(tie)
-        if first is True:
-            out = [_[0] for _ in out]
+            for selection in selections:
+                selection_duration = abjad.get.duration(
+                    selection, preprolated=preprolated
+                )
+                if selection_duration == duration:
+                    if first is True:
+                        leaf = abjad.select.leaf(selection, 0)
+                        out.append(leaf)
+                    else:
+                        out.append(selection)
 
         return out
 
