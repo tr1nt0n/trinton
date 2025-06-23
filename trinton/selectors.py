@@ -25,6 +25,24 @@ def exclude_tuplets():
     return selector
 
 
+def select_leaves_in_tuplet(pairs, cycle_leaves=True):
+    def selector(argument):
+        out = []
+
+        if cycle_leaves is True:
+            tuplets = abjad.select.tuplets(argument)
+        else:
+            tuplets = [abjad.select.tuplet(argument, _[0]) for _ in pairs]
+
+        for tuplet, leaf_index in zip(tuplets, cycle(pairs)):
+            leaf = abjad.select.leaf(tuplet, leaf_index[-1])
+            out.append(leaf)
+
+        return out
+
+    return selector
+
+
 def tuplets():
     def selector(argument):
 

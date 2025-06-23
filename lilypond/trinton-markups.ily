@@ -127,6 +127,105 @@ twist-bow = #(make-articulation 'gridatotwistbow)
 
 ricochet = #(make-articulation 'multiplestaccato)
 
+% woodwind articulations
+
+woodwind-open = \markup {
+    % \hspace #0.5
+    \override #'(layer . 3)
+    \override #'(whiteout . 1)
+    \override #'(whiteout-style . #'outline)
+    \fontsize #12
+    \override #'(font-name . "ekmelos")
+    {
+        \char ##xe5F9
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(woodwindopen
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,woodwind-open)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+wind-open = #(make-articulation 'woodwindopen)
+
+woodwind-half-closed = \markup {
+    % \hspace #0.5
+    \fontsize #12
+    \override #'(font-name . "ekmelos")
+    \char ##xe5F6
+}
+
+#(append! default-script-alist
+   (list
+    `(woodwindhalclosed
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,woodwind-half-closed)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+half-closed = #(make-articulation 'woodwindhalfclosed)
+
+woodwind-three-quarters-closed = \markup {
+    % \hspace #0.5
+    \fontsize #12
+    \override #'(font-name . "ekmelos")
+    \char ##xe5F5
+}
+
+#(append! default-script-alist
+   (list
+    `(woodwindthreequartersclosed
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,woodwind-three-quarters-closed)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+three-quarters-closed= #(make-articulation 'woodwindthreequartersclosed)
+
+woodwind-closed = \markup {
+    % \hspace #0.5
+    \fontsize #12
+    \override #'(font-name . "ekmelos")
+    \char ##xe5F4
+}
+
+#(append! default-script-alist
+   (list
+    `(woodwindclosed
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,woodwind-closed)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+wind-closed = #(make-articulation 'woodwindclosed)
+
 % accidentals
 
 flat-markup = \markup {

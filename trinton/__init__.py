@@ -45,6 +45,7 @@ from .commands import (
     parenthesize_notehead_command,
     tweak_command,
     annotate_leaves_locally,
+    manual_beam_positions,
 )
 
 from .makers import (
@@ -85,6 +86,7 @@ from .markup import (
     return_fraction_string_list,
     boxed_markup,
     notation_markup,
+    return_metronome_markup,
 )
 
 from .meter import (
@@ -165,6 +167,7 @@ from .selectors import (
     ranged_selector,
     notehead_selector,
     durational_selector,
+    select_leaves_in_tuplet,
     # group_by_duration,
 )
 

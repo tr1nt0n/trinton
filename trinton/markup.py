@@ -201,3 +201,78 @@ def notation_markup(
             markup = abjad.bundle(markup, tweak)
 
     return markup
+
+
+def return_metronome_markup(
+    note_value,
+    tempo,
+    padding,
+    metric_modulation=None,
+    site="after",
+    hspace=None,
+    string_only=False,
+):
+    _note_value_to_number_pair = {
+        "sixteenth": (4, 0),
+        "eighth": (3, 0),
+        "dotted eighth": (3, 1),
+        "quarter": (2, 0),
+        "dotted quarter": (2, 1),
+        "half": (1, 0),
+        "dotted half": (1, 1),
+        "whole": (0, 0),
+    }
+
+    if isinstance(tempo, tuple):
+        tempo_markup = f"""\\abjad-metronome-mark-mixed-number-markup #{_note_value_to_number_pair[note_value][0]} #{_note_value_to_number_pair[note_value][-1]} #2 #" {tempo[0]} " #" {tempo[1]} " #" {tempo[2]} " """
+
+    else:
+        tempo_markup = f"""\\abjad-metronome-mark-markup #{_note_value_to_number_pair[note_value][0]} #{_note_value_to_number_pair[note_value][-1]} #2 #" {tempo} " """
+
+    if metric_modulation is None:
+        literal_strings = [
+            r"^ \markup {",
+            rf"  \raise #{padding} \with-dimensions-from \null",
+            r"  \override #'(font-size . 5.5)",
+            r"  \concat {",
+            f"      {tempo_markup}",
+            r"  }",
+            r"}",
+        ]
+
+        if hspace is not None:
+            literal_strings.insert(1, rf"\hspace #{hspace}")
+
+        mark = abjad.LilyPondLiteral(
+            literal_strings,
+            site=site,
+        )
+
+    else:
+        literal_strings = [
+            r"^ \markup {",
+            r"  \hspace #-9",
+            rf"  \raise #{padding} \with-dimensions-from \null",
+            r"  \override #'(font-size . 5.5)",
+            r"  \concat {",
+            f"  [{abjad.lilypond(metric_modulation)[8:]}]",
+            r"      \hspace #1",
+            f"      {tempo_markup}",
+            r"  }",
+            r"}",
+        ]
+
+        mark = abjad.LilyPondLiteral(
+            literal_strings,
+            site=site,
+        )
+
+    if string_only is True:
+        mark = """\markup {"""
+
+        for single_string in literal_strings:
+            if single_string != r"^ \markup {" and single_string != r"  \hspace #-9":
+                # mark += "\n"
+                mark += single_string
+
+    return mark

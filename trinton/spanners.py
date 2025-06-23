@@ -396,12 +396,18 @@ def spanner_command(
         tups = [*zip(it, it)]
 
         start_spans = [
-            abjad.bundle(span, rf"- \tweak padding #{padding}") for span in start_spans
+            abjad.bundle(
+                span, abjad.Tweak(rf"- \tweak padding #{padding}", tag=tag), tag=tag
+            )
+            for span in start_spans
         ]
 
         if tweaks is not None:
             for tweak in tweaks:
-                start_spans = [abjad.bundle(span, tweak) for span in start_spans]
+                start_spans = [
+                    abjad.bundle(span, abjad.Tweak(tweak, tag=tag))
+                    for span in start_spans
+                ]
 
         for tup, span in zip(tups, start_spans):
             abjad.attach(span, tup[0], tag=tag),
@@ -410,10 +416,14 @@ def spanner_command(
             )
 
         if len(strings) > 2 or end_hook is True:
-            last_span = abjad.bundle(last_span, rf"- \tweak padding #{padding}")
+            last_span = abjad.bundle(
+                last_span, rf"- \tweak padding #{padding}", tag=tag
+            )
             if tweaks is not None:
                 for tweak in tweaks:
-                    last_span = abjad.bundle(last_span, tweak)
+                    last_span = abjad.bundle(
+                        last_span, abjad.Tweak(tweak, tag=tag), tag=tag
+                    )
 
             abjad.attach(last_span, last_pair[0], tag=tag)
 
