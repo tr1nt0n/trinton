@@ -276,3 +276,34 @@ def return_metronome_markup(
                 mark += single_string
 
     return mark
+
+
+def tempo_markup(
+    note_value,
+    tempo,
+    padding,
+    note_head_fontsize,
+    stem_length,
+    text_fontsize,
+    dotted=False,
+    fraction=None,
+    tempo_change=None,
+    site="after",
+    hspace=0,
+    string_only=False,
+):
+    if tempo_change is not None:
+        if dotted is False:
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book Italic") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{text_fontsize} {{ " {tempo_change} ( to " }} \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ "= {tempo} )" }} }} }}"""
+        else:
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book Italic") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{text_fontsize} {{ " {tempo_change} ( to " }} \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ ". = {tempo} )" }} }} }}"""
+    else:
+        if dotted is False:
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ "= {tempo}" }} }} }}"""
+        else:
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ ". = {tempo}" }} }} }}"""
+
+    if string_only is True:
+        return string
+    else:
+        return abjad.Markup(string)

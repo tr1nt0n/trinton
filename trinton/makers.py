@@ -152,23 +152,99 @@ def make_empty_score(
 
     trinton.write_time_signatures(ts=time_signatures, target=score["Global Context"])
 
-    # for voice in abjad.select.components(score["Staff Group"], abjad.Voice):
-    #     for measure_filler in [filler((1, 1), multiplier=_) for _ in time_signatures]:
-    #         voice.append(measure_filler)
-
     for staff in abjad.select.components(score["Staff Group"], abjad.Staff):
         voices = abjad.select.components(staff, abjad.Voice)
         if len(voices) > 0:
             for voice in voices:
+                if filler == abjad.Rest:
+                    for time_signature in time_signatures:
+                        if time_signature[0] % 9 != 0:
+                            if (
+                                time_signature[0] % 3 == 0
+                                or time_signature[0] % 7 == 0
+                                or trinton.is_power_of(a=time_signature[0], b=2) is True
+                            ):
+                                voice.append(filler(time_signature))
+                            else:
+                                if (
+                                    time_signature[0] % 5 == 0
+                                    and time_signature[0] != 15
+                                ):
+                                    numerator_list = []
+                                    for _ in range(time_signature[0]):
+                                        if sum(numerator_list) == time_signature[0]:
+                                            pass
+                                        else:
+                                            numerator_list.append(3)
+                                            numerator_list.append(2)
+                                    for _ in numerator_list:
+                                        voice.append(filler((_, time_signature[-1])))
+                                else:
+                                    first_rest = (3, time_signature[-1])
+                                    voice.append(filler(first_rest))
+                                    remainder = time_signature[0] - 3
+                                    gap_range = int(remainder / 2)
+                                    for _ in range(gap_range):
+                                        voice.append(filler((2, time_signature[-1])))
+
+                        if time_signature[0] % 9 == 0:
+                            numerator_list = []
+                            for _ in range(time_signature[0]):
+                                if sum(numerator_list) == time_signature[0]:
+                                    pass
+                                else:
+                                    numerator_list.append(3)
+                            for _ in numerator_list:
+                                voice.append(filler((_, time_signature[-1])))
+
+                else:
+                    for measure_filler in [
+                        filler((1, 1), multiplier=_) for _ in time_signatures
+                    ]:
+                        voice.append(measure_filler)
+        else:
+            if filler == abjad.Rest:
+                for time_signature in time_signatures:
+                    if time_signature[0] % 9 != 0:
+                        if (
+                            time_signature[0] % 3 == 0
+                            or time_signature[0] % 7 == 0
+                            or trinton.is_power_of(a=time_signature[0], b=2) is True
+                        ):
+                            staff.append(filler(time_signature))
+                        else:
+                            if time_signature[0] % 5 == 0 and time_signature[0] != 15:
+                                numerator_list = []
+                                for _ in range(time_signature[0]):
+                                    if sum(numerator_list) == time_signature[0]:
+                                        pass
+                                    else:
+                                        numerator_list.append(3)
+                                        numerator_list.append(2)
+                                for _ in numerator_list:
+                                    staff.append(filler((_, time_signature[-1])))
+                            else:
+                                first_rest = (3, time_signature[-1])
+                                voice.append(filler(first_rest))
+                                remainder = time_signature[0] - 3
+                                gap_range = int(remainder / 2)
+                                for _ in range(gap_range):
+                                    staff.append(filler((2, time_signature[-1])))
+
+                    if time_signature[0] % 9 == 0:
+                        numerator_list = []
+                        for _ in range(time_signature[0]):
+                            if sum(numerator_list) == time_signature[0]:
+                                pass
+                            else:
+                                numerator_list.append(3)
+                        for _ in numerator_list:
+                            staff.append(filler((_, time_signature[-1])))
+            else:
                 for measure_filler in [
                     filler((1, 1), multiplier=_) for _ in time_signatures
                 ]:
-                    voice.append(measure_filler)
-        else:
-            for measure_filler in [
-                filler((1, 1), multiplier=_) for _ in time_signatures
-            ]:
-                staff.append(measure_filler)
+                    staff.append(measure_filler)
 
     return score
 

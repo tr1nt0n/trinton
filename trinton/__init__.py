@@ -87,6 +87,7 @@ from .markup import (
     boxed_markup,
     notation_markup,
     return_metronome_markup,
+    tempo_markup,
 )
 
 from .meter import (
@@ -182,6 +183,9 @@ from .sequence import (
     return_middle_index,
     correct_redundant_floats,
     make_float,
+    get_intervals_from_numbers,
+    shuffle,
+    is_power_of,
 )
 
 from .spanners import (

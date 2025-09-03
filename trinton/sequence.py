@@ -115,3 +115,46 @@ def correct_redundant_floats(n):
 def make_float(n):
     n = float(n)
     return n
+
+
+def get_intervals_from_numbers(numbers, ordered=False, interval_classes=False):
+    out = []
+    numbers_final_index = len(numbers) - 1
+    for i, first_number in enumerate(numbers):
+        if i == numbers_final_index:
+            pass
+        else:
+            second_number = numbers[i + 1]
+            if ordered is True:
+                interval = second_number - first_number
+            else:
+                if second_number > first_number:
+                    interval = second_number - first_number
+                else:
+                    interval = first_number - second_number
+
+            if interval_classes is False:
+                interval = interval
+            else:
+                new_interval = interval % 12
+                if interval < 0:
+                    new_interval = new_interval * -1
+
+            out.append(interval)
+    return out
+
+
+def shuffle(lists):
+    out = []
+    for _ in range(len(lists[0])):
+        for l in lists:
+            out.append(l[_])
+    return out
+
+
+def is_power_of(a, b):
+    while a % b == 0:
+        a = a / b
+    if a == 1:
+        return True
+    return False
