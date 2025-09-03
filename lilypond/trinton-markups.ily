@@ -127,6 +127,74 @@ twist-bow = #(make-articulation 'gridatotwistbow)
 
 ricochet = #(make-articulation 'multiplestaccato)
 
+% bowing articulations
+
+au-talon-to-punta = \markup {
+    \hspace #-0.5
+    \override #'(font-name . "ekmelos")
+    {
+        \fontsize #8
+        {
+            \char ##xe610
+        }
+        \hspace #-0.77
+        \raise #-1 \with-dimensions-from \null
+        \fontsize #6
+        {
+            \char ##xeB62
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(talontopunta
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,au-talon-to-punta)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+talon-to-punta = #(make-articulation 'talontopunta)
+
+punta-to-au-talon = \markup {
+    \hspace #-0.5
+    \override #'(font-name . "ekmelos")
+    {
+        \fontsize #8
+        {
+            \char ##xe612
+        }
+        \hspace #-0.77
+        \raise #1.41 \with-dimensions-from \null
+        \fontsize #6
+        {
+            \char ##xeB62
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(puntatotalon
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,punta-to-au-talon)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+punta-to-talon = #(make-articulation 'puntatotalon)
+
 % woodwind articulations
 
 woodwind-open = \markup {
