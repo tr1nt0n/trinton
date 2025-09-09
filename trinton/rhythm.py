@@ -116,6 +116,13 @@ def respell_tuplets(tuplets, rewrite_brackets=True):
 
             tuplet.multiplier = (denominator, numerator)
 
+        # if trinton.is_power_of(a=duration_denominator, b=denominator) is False:
+        #     denominator = denominator * duration_numerator
+        #     numerator = numerator * duration_numerator
+        #     # tuplet.multiplier = (denominator, numerator)
+        #     new_multiplier = Fraction(denominator, numerator)
+        #     tuplet.multiplier = (new_multiplier.numerator, new_multiplier.denominator)
+
         if numerator == 3 and denominator == 2:
             # tuplet_contents = abjad.get.contents(tuplet)[1:]
             # tuplet_duration_denominator = duration[-1]
@@ -183,6 +190,18 @@ def respell_tuplets_command(selector=abjad.select.tuplets, rewrite_brackets=True
         selections = selector(argument)
 
         respell_tuplets(tuplets=selections, rewrite_brackets=rewrite_brackets)
+
+    return respell
+
+
+def respell_tuplets_by_hand(tuplets, multipliers):
+    def respell(argument):
+        selected_tuplets = [abjad.select.tuplet(argument, _) for _ in tuplets]
+
+        # for tuplet, multiplier in zip(selected_tuplets, multipliers):
+        #     abjad.override(tuplet).TupletNumber.text = rf"\markup {{ {multiplier[0]}:{multiplier[-1]} }}"
+        for tuplet, multiplier in zip(selected_tuplets, multipliers):
+            tuplet.multiplier = (multiplier[-1], multiplier[0])
 
     return respell
 

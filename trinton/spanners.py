@@ -487,3 +487,73 @@ def id_spanner_command(
             abjad.attach(termination, tup[1], tag=tag)
 
     return attach_spanner
+
+
+def graphic_bow_pressure_spanner(
+    selector=trinton.logical_ties(),
+    peaks=[0, 1, 4, 2],
+    peak_direction=abjad.DOWN,
+    anchor_point_step_sizes=[1, 0.5, 1, 0.25],  # must be greater than 1
+    divisions=[4, 5],
+    counts=[1, 3, 1, 2],
+    cyclic=True,
+    left_broken_text=None,
+    left_text=None,
+    right_padding=None,
+    right_text=None,
+    padding=2,
+    forget=False,
+    tag=None,
+):
+    if peak_direction == abjad.UP:
+        peaks = [0 - _ for _ in peaks]
+    cyc_peaks = evans.CyclicList(peaks, forget=forget)
+    if divisions is None:
+        divisions = [len(peaks)]
+    cyc_divisions = evans.CyclicList(divisions, forget=forget)
+    cyc_anchor_points = evans.CyclicList(anchor_point_step_sizes, forget=forget)
+
+    def returned_function(argument, counts=counts):
+        selections = selector(argument)
+        ties = abjad.select.logical_ties(selections, pitched=True)
+        if counts is None:
+            counts = [len(ties)]
+        groups = abjad.select.partition_by_counts(
+            ties, counts, cyclic=cyclic, overhang=cyclic
+        )
+        for group in groups:
+            final = abjad.select.leaf(group, -1)
+            # next_leaf = abjad.get.leaf(final, 1)
+            group.append(final)
+        for group in groups:
+            current_divisions = cyc_divisions(r=1)[0]
+            current_peaks = cyc_peaks(r=current_divisions)
+            current_anchor_point_step_sizes = cyc_anchor_points(r=current_divisions - 1)
+            normalized_step_sizes = evans.Sequence(
+                current_anchor_point_step_sizes
+            ).normalize_to_sum(1)
+            summed_steps = abjad.math.cumulative_sums(normalized_step_sizes)
+            zipped_peaks_and_positions = [_ for _ in zip(summed_steps, current_peaks)]
+            pairs = str(tuple([f"({x} . {y})" for x, y in zipped_peaks_and_positions]))
+            current_peaks = pairs.replace(",", "")
+            current_peaks = current_peaks.replace("'", "")
+            constructed_string = rf"\startBowSpan #'{current_peaks}"
+            start_indicator = abjad.StartTextSpan(
+                command=constructed_string,
+                left_broken_text=left_broken_text,
+                left_text=left_text,
+                right_padding=right_padding,
+                right_text=right_text,
+            )
+            bundle = abjad.bundle(
+                start_indicator,
+                abjad.Tweak(rf"- \tweak padding {padding}", tag=tag),
+                tag=tag,
+            )
+            stop_indicator = abjad.StopTextSpan(
+                command=r"\stopBowSpan",
+            )
+            abjad.attach(bundle, abjad.select.leaf(group, 0), tag=tag)
+            abjad.attach(stop_indicator, abjad.select.leaf(group, -1), tag=tag)
+
+    return returned_function

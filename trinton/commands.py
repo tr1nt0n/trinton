@@ -190,13 +190,14 @@ def parenthesize_notehead_command(selector=abjad.select.chords, head_indices=[0]
     return parenthesize
 
 
-def noteheads_only(selector=selectors.pleaves(), duration_log="2", no_ledgers=False):
+def noteheads_only(
+    selector=selectors.pleaves(), stem=False, duration_log="2", no_ledgers=False
+):
     def only_noteheads(argument):
         selections = selector(argument)
         logical_ties = abjad.select.logical_ties(selections, pitched=True)
         literal_strings = [
             r"\once \override RepeatTie.transparent = ##t",
-            r"\once \override Stem.stencil = ##f",
             r"\once \override Beam.stencil = ##f",
             r"\once \override Flag.stencil = ##f",
             r"\once \override Dots.stencil = ##f",
@@ -206,6 +207,9 @@ def noteheads_only(selector=selectors.pleaves(), duration_log="2", no_ledgers=Fa
 
         if no_ledgers is True:
             literal_strings.append(r"\once \override NoteHead.no-ledgers = ##t")
+
+        if stem is False:
+            literal_strings.append(r"\once \override Stem.stencil = ##f")
 
         for leaf in selections:
             abjad.attach(
@@ -445,6 +449,24 @@ def respell_accidentals_command(selector):
                     abjad.iterpitches.respell_with_flats(tie)
                 if tie[0].written_pitch.pitch_class == abjad.NamedPitchClass("eff"):
                     abjad.iterpitches.respell_with_sharps(tie)
+
+    return respell
+
+
+def respell_with_sharps(selector):
+    def respell(argument):
+        selections = selector(argument)
+        for selection in selections:
+            abjad.iterpitches.respell_with_sharps(selection)
+
+    return respell
+
+
+def respell_with_flats(selector):
+    def respell(argument):
+        selections = selector(argument)
+        for selection in selections:
+            abjad.iterpitches.respell_with_flats(selection)
 
     return respell
 

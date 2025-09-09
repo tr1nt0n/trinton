@@ -17,6 +17,8 @@ from .commands import (
     unbeam_quarters,
     fuse_tuplet_rests,
     respell_accidentals_command,
+    respell_with_sharps,
+    respell_with_flats,
     beam_durations,
     attachment_command,
     linear_attachment_command,
@@ -142,6 +144,7 @@ from .rhythm import (
     aftergrace_command,
     IntermittentVoiceHandler,
     duration_line,
+    respell_tuplets_by_hand,
 )
 
 from .selectors import (
@@ -202,6 +205,7 @@ from .spanners import (
     ottava_command,
     spanner_command,
     trill_span_command,
+    graphic_bow_pressure_spanner,
 )
 
 __all__ = [
