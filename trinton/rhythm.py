@@ -521,6 +521,7 @@ def aftergrace_command(
     glissando=False,
     invisible=False,
     pitch_matching=False,
+    fraction=None,
 ):
     def grace(argument):
         selections = selector(argument)
@@ -535,6 +536,14 @@ def aftergrace_command(
                     r'\once \override Flag.stroke-style = #"grace"',
                 )
 
+                abjad.attach(literal, container[0])
+
+        if fraction is not None:
+            for container in containers:
+                literal = abjad.LilyPondLiteral(
+                    rf"#(define afterGraceFraction (cons {fraction[0]} {fraction[-1]}))",
+                    site="absolute_before",
+                )
                 abjad.attach(literal, container[0])
 
         if invisible is True:
