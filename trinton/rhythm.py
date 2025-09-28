@@ -655,7 +655,13 @@ def duration_line(
                 )
 
                 for leaf in abjad.select.leaves(with_grace):
-                    abjad.detach(abjad.Tie, leaf)
+                    # abjad.detach(abjad.Tie, leaf)
+                    abjad.attach(
+                        abjad.LilyPondLiteral(
+                            r"\once \override Tie.transparent = ##t", site="before"
+                        ),
+                        leaf,
+                    )
 
             for leaf in abjad.select.leaves(with_grace):
                 abjad.attach(
@@ -733,7 +739,13 @@ def duration_line(
                     )
 
                     for leaf in abjad.select.leaves(with_grace):
-                        abjad.detach(abjad.Tie, leaf)
+                        # abjad.detach(abjad.Tie, leaf)
+                        abjad.attach(
+                            abjad.LilyPondLiteral(
+                                r"\once \override Tie.transparent = ##t", site="before"
+                            ),
+                            leaf,
+                        )
 
                 for leaf in abjad.select.leaves(with_grace):
                     abjad.attach(

@@ -123,14 +123,13 @@ def pitched_notehead_change(voice, pitches, notehead):
 def change_notehead_command(notehead, selector=selectors.pleaves()):
     def change(argument):
         selections = selector(argument)
-        leaves = abjad.select.leaves(selections, pitched=True)
         _overrides = {
             "highest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bb)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0bc)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0be)))))))",
             "lowest": r"\once \override NoteHead.stencil = #(lambda (grob) (let ((dur (ly:grob-property grob 'duration-log))) (if (= dur 0) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c4)) (if (= dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c5)) (if (> dur 1) (grob-interpret-markup grob (markup #:ekmelos-char #xe0c7)))))))",
             "cluster": [
                 r"\once \override NoteHead.X-offset = 0",
                 r"\once \override Staff.Accidental.stencil = ##f",
-                r"\once \override Staff.Glissando.thickness = #8.25",
+                r"\once \override Voice.Glissando.thickness = #8.25",
                 r"\once \override NoteHead.duration-log = 2",
             ],
         }
@@ -138,10 +137,10 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
         if notehead == "highest" or notehead == "lowest" or notehead == "cluster":
             notehead_literal = abjad.LilyPondLiteral(_overrides[notehead], "before")
             if notehead == "cluster":
-                for leaf in leaves:
-                    for head in leaf.note_heads:
+                for selection in selections:
+                    for head in selection.note_heads:
                         abjad.tweak(head, r"\tweak style #'la")
-                    abjad.attach(notehead_literal, leaf)
+                    abjad.attach(notehead_literal, selection)
 
             if notehead == "highest" or notehead == "lowest":
                 stem_literal = abjad.LilyPondLiteral(
@@ -163,17 +162,56 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                     accidental_literal,
                 ]
 
-                for leaf in leaves:
+                for selection in selections:
                     for literal in literals:
-                        abjad.attach(literal, leaf)
+                        abjad.attach(literal, selection)
 
         else:
-            for leaf in leaves:
-                if isinstance(leaf, abjad.Chord):
-                    for head in leaf.note_heads:
-                        abjad.tweak(head, rf"\tweak style #'{notehead}")
+            for selection in selections:
+                if isinstance(selection, abjad.Chord):
+                    chord_duration = abjad.get.duration(selection)
+                    if (
+                        chord_duration > abjad.Duration((15, 64))
+                        and chord_duration < abjad.Duration((15, 32))
+                        and notehead == "harmonic"
+                    ):
+                        new_notehead = "harmonic-mixed"
+                    else:
+                        new_notehead = notehead
+                    for head in selection.note_heads:
+                        abjad.tweak(head, rf"\tweak style #'{new_notehead}")
                 else:
-                    abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
+                    if isinstance(selection, abjad.Leaf):
+                        leaf_duration = abjad.get.duration(selection)
+                        if (
+                            leaf_duration > abjad.Duration((15, 64))
+                            and leaf_duration < abjad.Duration((15, 32))
+                            and notehead == "harmonic"
+                        ):
+                            new_notehead = "harmonic-mixed"
+                        else:
+                            new_notehead = notehead
+                        abjad.tweak(
+                            selection.note_head, rf"\tweak style #'{new_notehead}"
+                        )
+
+                    if isinstance(selection, abjad.LogicalTie):
+                        for leaf in abjad.select.leaves(selection):
+                            leaf_duration = abjad.get.duration(selection)
+                            if (
+                                leaf_duration > abjad.Duration((15, 64))
+                                and leaf_duration < abjad.Duration((15, 32))
+                                and notehead == "harmonic"
+                            ):
+                                new_notehead = "harmonic-mixed"
+                            else:
+                                new_notehead = notehead
+                            abjad.tweak(
+                                leaf.note_head, rf"\tweak style #'{new_notehead}"
+                            )
+
+                    if isinstance(selection, abjad.NoteHead):
+                        abjad.tweak(selection, rf"\tweak style #'{notehead}")
 
     return change
 
