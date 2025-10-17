@@ -169,7 +169,7 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
         else:
             for selection in selections:
                 if isinstance(selection, abjad.Chord):
-                    chord_duration = abjad.get.duration(selection)
+                    chord_duration = abjad.get.duration(selection, preprolated=True)
                     if (
                         chord_duration > abjad.Duration((15, 64))
                         and chord_duration < abjad.Duration((15, 32))
@@ -182,7 +182,7 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                         abjad.tweak(head, rf"\tweak style #'{new_notehead}")
                 else:
                     if isinstance(selection, abjad.Leaf):
-                        leaf_duration = abjad.get.duration(selection)
+                        leaf_duration = abjad.get.duration(selection, preprolated=True)
                         if (
                             leaf_duration > abjad.Duration((15, 64))
                             and leaf_duration < abjad.Duration((15, 32))
@@ -197,7 +197,9 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
 
                     if isinstance(selection, abjad.LogicalTie):
                         for leaf in abjad.select.leaves(selection):
-                            leaf_duration = abjad.get.duration(selection)
+                            leaf_duration = abjad.get.duration(
+                                selection, preprolated=True
+                            )
                             if (
                                 leaf_duration > abjad.Duration((15, 64))
                                 and leaf_duration < abjad.Duration((15, 32))
@@ -310,6 +312,7 @@ def change_lines(
     clef="treble",
     invisible_barlines=True,
     tag=abjad.Tag("+SCORE"),
+    force_clef=False,
 ):
     def change(argument):
 
@@ -334,6 +337,23 @@ def change_lines(
                         selection,
                         tag=tag,
                     )
+            if force_clef is True:
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\set Staff.forceClef = ##t",
+                        site="before",
+                    ),
+                    selection,
+                    tag=tag,
+                )
+                abjad.attach(
+                    abjad.LilyPondLiteral(
+                        r"\set Staff.forceClef = ##f",
+                        site="absolute_after",
+                    ),
+                    selection,
+                    tag=tag,
+                )
             abjad.attach(
                 abjad.LilyPondLiteral(
                     rf"\staff-line-count {lines}",

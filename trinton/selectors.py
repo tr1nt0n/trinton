@@ -212,7 +212,7 @@ def exclude_graces():
     return selector
 
 
-def pleaves(exclude=None, grace=None):
+def pleaves(exclude=None, grace=None, chords=True):
     def selector(argument):
         selections = abjad.select.leaves(argument, pitched=True, grace=grace)
         if grace is True or grace is None:
@@ -220,6 +220,16 @@ def pleaves(exclude=None, grace=None):
 
         if exclude is not None:
             selections = abjad.select.exclude(selections, exclude)
+
+        if chords is False:
+            new_selections = []
+            for selection in selections:
+                if isinstance(selection, abjad.Chord):
+                    pass
+                else:
+                    new_selections.append(selection)
+
+            selections = new_selections
 
         return selections
 

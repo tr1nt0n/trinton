@@ -129,6 +129,102 @@ ricochet = #(make-articulation 'multiplestaccato)
 
 % bowing articulations
 
+msp-markup = \markup {
+    \fontsize #2
+    \override #'(font-name . "Bodoni72 Book")
+    {
+        "MSP"
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(mspmarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,msp-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+msp = #(make-articulation 'mspmarkup)
+
+spz-markup = \markup {
+    \fontsize #2
+    \override #'(font-name . "Bodoni72 Book")
+    {
+        "Spz."
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(spzmarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,spz-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+spz = #(make-articulation 'spzmarkup)
+
+clb-markup = \markup {
+    \fontsize #2
+    \override #'(font-name . "Bodoni72 Book")
+    {
+        "CLB"
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(clbmarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,clb-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+clb = #(make-articulation 'clbmarkup)
+
+half-clb-markup = \markup {
+    \fontsize #2
+    \override #'(font-name . "Bodoni72 Book")
+    {
+        "1/2 CLB"
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(halfclbmarkup
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,half-clb-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+half-clb = #(make-articulation 'halfclbmarkup)
+
 au-talon-to-punta = \markup {
     \hspace #-0.5
     \override #'(font-name . "ekmelos")

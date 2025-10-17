@@ -296,12 +296,12 @@ def tempo_markup(
         if dotted is False:
             string = rf"""\markup \override #'(font-name . "Bodoni72 Book Italic") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{text_fontsize} {{ " {tempo_change} ( to " }} \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ "= {tempo} )" }} }} }}"""
         else:
-            string = rf"""\markup \override #'(font-name . "Bodoni72 Book Italic") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{text_fontsize} {{ " {tempo_change} ( to " }} \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ ". = {tempo} )" }} }} }}"""
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book Italic") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{text_fontsize} {{ " {tempo_change} ( to " }} \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ " . = {tempo} )" }} }} }}"""
     else:
         if dotted is False:
             string = rf"""\markup \override #'(font-name . "Bodoni72 Book") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ "= {tempo}" }} }} }}"""
         else:
-            string = rf"""\markup \override #'(font-name . "Bodoni72 Book") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ ". = {tempo}" }} }} }}"""
+            string = rf"""\markup \override #'(font-name . "Bodoni72 Book") {{ \hspace #{hspace} \raise #{padding} \with-dimensions-from \null \concat {{ \fontsize #{note_head_fontsize} {{ \note {{ {note_value} }} #{stem_length} }} \fontsize #{text_fontsize} {{ " . = {tempo}" }} }} }}"""
 
     if string_only is True:
         return string
