@@ -48,6 +48,7 @@ from .commands import (
     tweak_command,
     annotate_leaves_locally,
     manual_beam_positions,
+    tweak_command,
 )
 
 from .makers import (

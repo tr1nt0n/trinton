@@ -53,6 +53,17 @@ def attach_multiple(score, voice, attachments, leaves, direction=None, tag=None)
             )
 
 
+def tweak_command(selector, tweaks):
+    def tweak(argument):
+        selections = selector(argument)
+
+        for selection in selections:
+            for tweak in tweaks:
+                abjad.tweak(selection, tweak)
+
+    return tweak
+
+
 def attachment_command(attachments, selector, direction=None, tag=None):
     def command(argument):
         selections = selector(argument)
@@ -208,9 +219,14 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                                 new_notehead = "harmonic-mixed"
                             else:
                                 new_notehead = notehead
-                            abjad.tweak(
-                                leaf.note_head, rf"\tweak style #'{new_notehead}"
-                            )
+
+                            if isinstance(leaf, abjad.Chord):
+                                for head in leaf.note_heads:
+                                    abjad.tweak(head, rf"\tweak style #'{new_notehead}")
+                            else:
+                                abjad.tweak(
+                                    leaf.note_head, rf"\tweak style #'{new_notehead}"
+                                )
 
                     if isinstance(selection, abjad.NoteHead):
                         abjad.tweak(selection, rf"\tweak style #'{notehead}")

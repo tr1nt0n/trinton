@@ -595,6 +595,7 @@ def duration_line(
     sustained=False,
     visible_grace=False,
     on_beat_graces=False,
+    fraction=None,
 ):
     def line(argument):
         selections = selector(argument)
@@ -620,6 +621,13 @@ def duration_line(
             else:
                 tie_pitch = relevant_leaf.written_pitch.get_name()
                 container = abjad.AfterGraceContainer(f"{tie_pitch}16")
+
+            if fraction is not None:
+                literal = abjad.LilyPondLiteral(
+                    rf"#(define afterGraceFraction (cons {fraction[0]} {fraction[-1]}))",
+                    site="absolute_before",
+                )
+                abjad.attach(literal, container[0])
 
             abjad.attach(container, relevant_leaf)
 
@@ -704,6 +712,13 @@ def duration_line(
                 else:
                     tie_pitch = relevant_leaf.written_pitch.get_name()
                     container = abjad.AfterGraceContainer(f"{tie_pitch}16")
+
+                if fraction is not None:
+                    literal = abjad.LilyPondLiteral(
+                        rf"#(define afterGraceFraction (cons {fraction[0]} {fraction[-1]}))",
+                        site="absolute_before",
+                    )
+                    abjad.attach(literal, container[0])
 
                 abjad.attach(container, tie[-1])
 
