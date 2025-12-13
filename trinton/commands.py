@@ -119,7 +119,7 @@ def artificial_harmonics(selector=selectors.pleaves()):
 
             else:
                 noteheads = leaf.note_heads
-                abjad.tweak(noteheads[1], rf"\tweak style #'harmonic")
+                abjad.tweak(noteheads[-1], rf"\tweak style #'harmonic")
 
     return change_noteheads
 
@@ -561,7 +561,8 @@ def force_accidentals_command(selector, after_ties=False):
         if after_ties is True:
             selections = abjad.select.leaves(selections, pitched=True)
         else:
-            selections = abjad.select.logical_ties(selections, pitched=True)
+            # selections = abjad.select.logical_ties(selections, pitched=True)
+            selections = selections
 
         for sel in selections:
             if isinstance(sel, abjad.LogicalTie):
@@ -573,7 +574,10 @@ def force_accidentals_command(selector, after_ties=False):
                 for head in leaf.note_heads:
                     head.is_forced = True
             else:
-                leaf.note_head.is_forced = True
+                if isinstance(leaf, abjad.NoteHead):
+                    leaf.is_forced = True
+                else:
+                    leaf.note_head.is_forced = True
 
     return force
 
