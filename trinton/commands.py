@@ -1370,12 +1370,14 @@ def whiteout_empty_staves(
             multiplier = abjad.get.duration(shard)
             invisible_rest = abjad.MultimeasureRest(1, multiplier=(multiplier))
             rest_literal = abjad.LilyPondLiteral(
-                r"\once \override MultiMeasureRest.transparent = ##t", "opening"
+                r"\once \override MultiMeasureRest.transparent = ##t", site="opening"
             )
             bar_literal = abjad.LilyPondLiteral(
-                r"\once \override Staff.BarLine.transparent = ##f", "absolute_before"
+                r"\once \override Staff.BarLine.transparent = ##f",
+                site="absolute_before",
             )
             abjad.attach(bar_literal, invisible_rest, tag=tag)
+            abjad.attach(rest_literal, invisible_rest, tag=tag)
             for indicator in indicators:
                 abjad.attach(
                     indicator,
@@ -1486,11 +1488,14 @@ def annotate_leaves(score, prototype=abjad.Leaf):
 
 def annotate_leaves_locally(selector=abjad.select.leaves, direction=abjad.UP):
     def annotate(argument):
-        leaves = selector(argument)
-        amount = len(leaves)
+        selections = selector(argument)
+        amount = len(selections)
 
-        for leaf, i in zip(leaves, list(range(amount))):
-            abjad.attach(abjad.Markup(rf"\markup {i}"), leaf, direction=direction)
+        for selection, i in zip(selections, list(range(amount))):
+            if isinstance(selection, abjad.Tuplet):
+                selection = abjad.select.leaf(selection, 0)
+
+            abjad.attach(abjad.Markup(rf"\markup {i}"), selection, direction=direction)
 
     return annotate
 

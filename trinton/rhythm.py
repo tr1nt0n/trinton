@@ -216,6 +216,8 @@ def handwrite_nested_tuplets(
     triple_nested_vectors=None,
     triple_nested_period=None,
     extract_trivial_tuplets=True,
+    nested_selector=None,
+    triple_nested_selector=None,
 ):
     def make_figures(divisions):
 
@@ -227,14 +229,18 @@ def handwrite_nested_tuplets(
         rmakers.rewrite_sustained(container)
 
         if nested_ratios is not None:
-            period_selector = trinton.patterned_tie_index_selector(
-                nested_vectors, nested_period, pitched=True
-            )
+            if nested_selector is not None:
+                period_selector = nested_selector
+            else:
+                period_selector = trinton.patterned_tie_index_selector(
+                    nested_vectors, nested_period, pitched=True
+                )
             selections = period_selector(container)
 
             durations = [abjad.get.duration(_, preprolated=True) for _ in selections]
             tuplets = rmakers.tuplet(durations, nested_ratios)
             rmakers.rewrite_dots(tuplets)
+            trinton.respell_tuplets(tuplets, rewrite_brackets=False)
             rmakers.trivialize(tuplets)
             rmakers.rewrite_rest_filled(tuplets)
             rmakers.rewrite_sustained(tuplets)
@@ -249,14 +255,18 @@ def handwrite_nested_tuplets(
                 if isinstance(tuplet_parent, abjad.Tuplet):
                     second_layer_tuplets.append(tuplet)
 
-            period_selector = trinton.patterned_tie_index_selector(
-                triple_nested_vectors, triple_nested_period, pitched=True
-            )
+            if triple_nested_selector is not None:
+                period_selector = triple_nested_selector
+            else:
+                period_selector = trinton.patterned_tie_index_selector(
+                    triple_nested_vectors, triple_nested_period, pitched=True
+                )
             selections = period_selector(second_layer_tuplets)
 
             durations = [abjad.get.duration(_, preprolated=True) for _ in selections]
             tuplets = rmakers.tuplet(durations, triple_nested_ratios)
             rmakers.rewrite_dots(tuplets)
+            trinton.respell_tuplets(tuplets, rewrite_brackets=False)
             rmakers.trivialize(tuplets)
             rmakers.rewrite_rest_filled(tuplets)
             rmakers.rewrite_sustained(tuplets)

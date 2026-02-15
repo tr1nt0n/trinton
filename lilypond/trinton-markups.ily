@@ -291,6 +291,74 @@ punta-to-au-talon = \markup {
 
 punta-to-talon = #(make-articulation 'puntatotalon)
 
+half-downbow = \markup {
+    \hspace #-3
+    {
+        \raise #-0.5 \with-dimensions-from \null
+        \fontsize #2
+        \hspace #-0.77
+        \override #'(font-name . "Bodoni72 Book")
+        {
+            \fraction 1 2
+        }
+        \fontsize #8
+        \override #'(font-name . "ekmelos")
+        {
+            \char ##xe610
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(halfdownbow
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,half-downbow)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+half-down-bow = #(make-articulation 'halfdownbow)
+
+half-upbow = \markup {
+    \hspace #-3
+    {
+        \raise #-0.5 \with-dimensions-from \null
+        \fontsize #2
+        \hspace #-0.77
+        \override #'(font-name . "Bodoni72 Book")
+        {
+            \fraction 1 2
+        }
+        \fontsize #8
+        \override #'(font-name . "ekmelos")
+        {
+            \char ##xe612
+        }
+    }
+}
+
+#(append! default-script-alist
+   (list
+    `(halfupbow
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,half-upbow)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,UP)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.5)
+           ))))
+
+half-up-bow = #(make-articulation 'halfupbow)
+
 % woodwind articulations
 
 woodwind-open = \markup {
