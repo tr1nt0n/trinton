@@ -131,7 +131,9 @@ def pitched_notehead_change(voice, pitches, notehead):
                 abjad.tweak(leaf.note_head, rf"\tweak style #'{notehead}")
 
 
-def change_notehead_command(notehead, selector=selectors.pleaves()):
+def change_notehead_command(
+    notehead, selector=selectors.pleaves(), auto_harmonics=True
+):
     def change(argument):
         selections = selector(argument)
         _overrides = {
@@ -143,9 +145,15 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                 r"\once \override Voice.Glissando.thickness = #8.25",
                 r"\once \override NoteHead.duration-log = 2",
             ],
+            "half-harmonic": r"\big-half-harmonic",
         }
 
-        if notehead == "highest" or notehead == "lowest" or notehead == "cluster":
+        if (
+            notehead == "highest"
+            or notehead == "lowest"
+            or notehead == "cluster"
+            or notehead == "half-harmonic"
+        ):
             notehead_literal = abjad.LilyPondLiteral(_overrides[notehead], "before")
             if notehead == "cluster":
                 for selection in selections:
@@ -177,6 +185,24 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                     for literal in literals:
                         abjad.attach(literal, selection)
 
+            if notehead == "half-harmonic":
+                grace_notes = abjad.select.leaves(selections, grace=True, pitched=True)
+                nongrace_notes = abjad.select.leaves(
+                    selections, grace=False, pitched=True
+                )
+
+                for selection in grace_notes:
+                    literal = abjad.LilyPondLiteral(
+                        r"\grace-half-harmonic", site="before"
+                    )
+                    abjad.attach(literal, selection)
+
+                for selection in nongrace_notes:
+                    literal = abjad.LilyPondLiteral(
+                        r"\big-half-harmonic", site="before"
+                    )
+                    abjad.attach(literal, selection)
+
         else:
             for selection in selections:
                 if isinstance(selection, abjad.Chord):
@@ -185,6 +211,7 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
                         chord_duration > abjad.Duration((15, 64))
                         and chord_duration < abjad.Duration((15, 32))
                         and notehead == "harmonic"
+                        and auto_harmonics is True
                     ):
                         new_notehead = "harmonic-mixed"
                     else:
@@ -208,13 +235,12 @@ def change_notehead_command(notehead, selector=selectors.pleaves()):
 
                     if isinstance(selection, abjad.LogicalTie):
                         for leaf in abjad.select.leaves(selection):
-                            leaf_duration = abjad.get.duration(
-                                selection, preprolated=True
-                            )
+                            leaf_duration = abjad.get.duration(leaf, preprolated=True)
                             if (
                                 leaf_duration > abjad.Duration((15, 64))
                                 and leaf_duration < abjad.Duration((15, 32))
                                 and notehead == "harmonic"
+                                and auto_harmonics is True
                             ):
                                 new_notehead = "harmonic-mixed"
                             else:
@@ -966,12 +992,13 @@ def continuous_glissando(
 
             group = abjad.select.exclude(abjad.select.logical_ties(group), [-1])
 
-            if invisible_center is True:
+            if invisible_center is True and len(group) > 1:
                 abjad.attach(
                     abjad.LilyPondLiteral(
                         [
                             r"\override NoteHead.X-extent = #'(0 . 0)",
                             r"\override NoteHead.transparent = ##t",
+                            r"\override NoteHead.no-ledgers = ##t",
                         ],
                         site="before",
                     ),
@@ -980,7 +1007,11 @@ def continuous_glissando(
 
                 abjad.attach(
                     abjad.LilyPondLiteral(
-                        [r"\revert NoteHead.X-extent", r"\revert NoteHead.transparent"],
+                        [
+                            r"\revert NoteHead.X-extent",
+                            r"\revert NoteHead.transparent",
+                            r"\revert NoteHead.no-ledgers",
+                        ],
                         site="absolute_after",
                     ),
                     abjad.select.leaf(group, -1),

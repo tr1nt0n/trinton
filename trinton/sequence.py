@@ -2,6 +2,7 @@ import abjad
 import evans
 import itertools
 import trinton
+import copy
 import random
 from random import randint
 from itertools import combinations
@@ -158,3 +159,30 @@ def is_power_of(a, b):
     if a == 1:
         return True
     return False
+
+
+def random_permutation(x, seed=7):
+    if isinstance(x, int):
+        arr = list(range(x))
+    else:
+        arr = copy.deepcopy(list(x))
+
+    n = len(arr)
+    for i in range(n - 1, 0, -1):
+        random.seed(seed)
+        j = random.randint(0, i)
+        arr[i], arr[j] = arr[j], arr[i]
+
+    return arr
+
+
+def invert(chords, transposition=0):
+    out = []
+    for chord in chords:
+        new_chord = []
+        for pitch in chord:
+            inversion = (transposition - pitch) % 12
+            new_chord.append(inversion)
+        out.append(new_chord)
+
+    return out

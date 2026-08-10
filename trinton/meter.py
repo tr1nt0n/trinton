@@ -379,6 +379,28 @@ def beam_score_by_voice(score, voices):
             abjad.detach(abjad.StopBeam(), trem[-1])
 
 
+def change_time_signatures(
+    score, global_context, measure_range, replacement_signatures
+):
+    measures = trinton.select_target(score[global_context], measure_range)
+    replacement_signatures = [
+        abjad.TimeSignature(time_signature) for time_signature in replacement_signatures
+    ]
+    replacement_skips = [
+        abjad.Skip(1, multiplier=time_signature.duration)
+        for time_signature in replacement_signatures
+    ]
+
+    final_replacements = []
+    for replacement_skip, replacement_signature in zip(
+        replacement_skips, replacement_signatures
+    ):
+        abjad.attach(replacement_signature, replacement_skip)
+        final_replacements.append(replacement_skip)
+
+    abjad.mutate.replace(measures, final_replacements)
+
+
 def rebar(
     score,
     global_context,

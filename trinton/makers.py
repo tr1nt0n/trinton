@@ -494,8 +494,11 @@ def make_music(
             container = abjad.Container(nested_music)
 
             for indicator in indicators:
-                abjad.detach(indicator, abjad.select.leaf(target, 0))
-                abjad.attach(indicator, abjad.select.leaf(container, 0))
+                if isinstance(indicator, abjad.Tie):
+                    pass
+                else:
+                    abjad.detach(indicator, abjad.select.leaf(target, 0))
+                    abjad.attach(indicator, abjad.select.leaf(container, 0))
 
             selections = abjad.mutate.eject_contents(container)
             abjad.mutate.replace(target, selections)

@@ -116,25 +116,7 @@ def respell_tuplets(tuplets, rewrite_brackets=True):
 
             tuplet.multiplier = (denominator, numerator)
 
-        # if trinton.is_power_of(a=duration_denominator, b=denominator) is False:
-        #     denominator = denominator * duration_numerator
-        #     numerator = numerator * duration_numerator
-        #     # tuplet.multiplier = (denominator, numerator)
-        #     new_multiplier = Fraction(denominator, numerator)
-        #     tuplet.multiplier = (new_multiplier.numerator, new_multiplier.denominator)
-
         if numerator == 3 and denominator == 2:
-            # tuplet_contents = abjad.get.contents(tuplet)[1:]
-            # tuplet_duration_denominator = duration[-1]
-            # target_duration = abjad.Duration(1, tuplet_duration_denominator * 4)
-            # target_durations = []
-            # non_target_durations = []
-            #
-            # for item in tuplet_contents:
-            #     if abjad.get.duration(item, preprolated=True) <= target_duration:
-            #         target_durations.append(item)
-            #     else:
-            #         non_target_durations.append(item)
 
             def sextuplet_or_not(triplet):
                 dotted_duration = abjad.Duration(duration) / 2
@@ -174,6 +156,38 @@ def respell_tuplets(tuplets, rewrite_brackets=True):
             if smallest == double_difference:
                 rmakers.force_augmentation(tuplet)
 
+        if numerator == 4 and denominator == 5:
+            tuplet_ties = abjad.select.logical_ties(tuplet)
+            if len(tuplet_ties) == 2 and abjad.get.duration(
+                tuplet_ties[0]
+            ) == abjad.get.duration(tuplet_ties[-1]):
+                talea_denominator = duration_denominator * 2
+                talea_denominator = int(talea_denominator)
+                talea_counts = []
+                for tie in tuplet_ties:
+                    if isinstance(tie[0], abjad.Note):
+                        talea_counts.append(5)
+                    if isinstance(tie[0], abjad.Rest):
+                        talea_counts.append(-5)
+                new_leaves = rmakers.talea([duration], talea_counts, talea_denominator)
+                abjad.mutate.replace(tuplet, new_leaves)
+
+        if numerator == 8 and denominator == 7:
+            tuplet_ties = abjad.select.logical_ties(tuplet)
+            if len(tuplet_ties) == 2 and abjad.get.duration(
+                tuplet_ties[0]
+            ) == abjad.get.duration(tuplet_ties[-1]):
+                talea_denominator = duration_denominator * 2
+                talea_denominator = int(talea_denominator)
+                talea_counts = []
+                for tie in tuplet_ties:
+                    if isinstance(tie[0], abjad.Note):
+                        talea_counts.append(7)
+                    if isinstance(tie[0], abjad.Rest):
+                        talea_counts.append(-7)
+                new_leaves = rmakers.talea([duration], talea_counts, talea_denominator)
+                abjad.mutate.replace(tuplet, new_leaves)
+
         if rewrite_brackets is True:
             if abjad.Duration(duration) < abjad.Duration(3, 16):
                 abjad.attach(
@@ -194,14 +208,18 @@ def respell_tuplets_command(selector=abjad.select.tuplets, rewrite_brackets=True
     return respell
 
 
-def respell_tuplets_by_hand(tuplets, multipliers):
+def respell_tuplets_by_hand(tuplets, multipliers, as_markup=False):
     def respell(argument):
         selected_tuplets = [abjad.select.tuplet(argument, _) for _ in tuplets]
 
-        # for tuplet, multiplier in zip(selected_tuplets, multipliers):
-        #     abjad.override(tuplet).TupletNumber.text = rf"\markup {{ {multiplier[0]}:{multiplier[-1]} }}"
-        for tuplet, multiplier in zip(selected_tuplets, multipliers):
-            tuplet.multiplier = (multiplier[-1], multiplier[0])
+        if as_markup is True:
+            for tuplet, multiplier in zip(selected_tuplets, multipliers):
+                abjad.override(
+                    tuplet
+                ).TupletNumber.text = rf"\markup {{ {multiplier[0]}:{multiplier[-1]} }}"
+        else:
+            for tuplet, multiplier in zip(selected_tuplets, multipliers):
+                tuplet.multiplier = (multiplier[-1], multiplier[0])
 
     return respell
 
@@ -283,20 +301,6 @@ def handwrite_nested_tuplets(
         return selections
 
     return make_figures
-
-
-def intermittent_voice_with_selector(selector, rmaker, voice_name, direction=abjad.UP):
-    def make_voice(argument):
-        selections = selector(argument)
-        handler = evans.IntermittentVoiceHandler(
-            rhythm_handler=evans.RhythmHandler(rmaker),
-            direction=direction,
-            voice_name=voice_name,
-        )
-
-        handler(selections)
-
-    return make_voice
 
 
 class IntermittentVoiceHandler(evans.handlers.Handler):
@@ -522,6 +526,37 @@ class IntermittentVoiceHandler(evans.handlers.Handler):
             )
             abjad.attach(overrides, components)
         return components
+
+
+def intermittent_voice_with_selector(
+    rhythm_handler,
+    selector,
+    direction=abjad.UP,
+    cluster=False,
+    cluster_color="#(rgb-color 0.56 0.85 0.6)",
+    voice_name="intermittent_voice",
+    from_components=False,
+    preprocessor=None,
+    temp_name="temp",
+    tag=None,
+):
+    def make_voice(argument):
+        selections = selector(argument)
+        handler = IntermittentVoiceHandler(
+            rhythm_handler=rhythm_handler,
+            direction=direction,
+            cluster=cluster,
+            cluster_color=cluster_color,
+            voice_name=voice_name,
+            from_components=from_components,
+            preprocessor=preprocessor,
+            temp_name=temp_name,
+            tag=tag,
+        )
+
+        handler(selections)
+
+    return make_voice
 
 
 def aftergrace_command(

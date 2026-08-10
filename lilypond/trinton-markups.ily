@@ -127,6 +127,27 @@ twist-bow = #(make-articulation 'gridatotwistbow)
 
 ricochet = #(make-articulation 'multiplestaccato)
 
+harmonic = \markup {
+    \override #'(font-name . "ekmelos")
+    {
+        \char ##xe0d8
+    }
+}
+
+half-harmonic = \markup {
+    \override #'(font-name . "ekmelos")
+    {
+        \char ##xe0fc
+    }
+}
+
+full-pressure = \markup {
+    \override #'(font-name . "ekmelos")
+    {
+        \char ##xe0a3
+    }
+}
+
 % bowing articulations
 
 msp-markup = \markup {

@@ -106,6 +106,7 @@ from .meter import (
     rebar,
     remove_redundant_time_signatures,
     rewrite_meter_command,
+    change_time_signatures,
 )
 
 from .pitch import (
@@ -130,6 +131,7 @@ from .preprocessors import (
     fuse_eighths_preprocessor,
     fuse_sixteenths_preprocessor,
     fuse_thirty_seconds_preprocessor,
+    fuse_sixty_fourths_preprocessor,
 )
 
 from .rhythm import (
@@ -157,6 +159,7 @@ from .selectors import (
     select_leaves_by_index,
     patterned_leaf_index_selector,
     patterned_tie_index_selector,
+    patterned_index_selector,
     group_leaves_by_measure,
     group_logical_ties_by_measure,
     select_leaves_in_tie,
@@ -190,6 +193,8 @@ from .sequence import (
     get_intervals_from_numbers,
     shuffle,
     is_power_of,
+    random_permutation,
+    invert,
 )
 
 from .spanners import (

@@ -43,10 +43,13 @@ def select_leaves_in_tuplet(pairs, cycle_leaves=True):
     return selector
 
 
-def tuplets():
+def tuplets(exclude=None):
     def selector(argument):
 
         tuplets = abjad.select.tuplets(argument)
+
+        if exclude is not None:
+            tuplets = abjad.select.exclude(tuplets, exclude)
 
         return tuplets
 
@@ -152,6 +155,22 @@ def patterned_leaf_index_selector(
                 index.append(i)
         for i in index:
             out.append(leaves[i])
+        return out
+
+    return selector
+
+
+def patterned_index_selector(preselector, indices, period):
+    def selector(argument):
+        out = []
+        index = []
+        pattern = abjad.Pattern(indices=indices, period=period)
+        ties = preselector(argument)
+        for i in range(len(ties)):
+            if pattern.matches_index(i, len(ties)):
+                index.append(i)
+        for i in index:
+            out.append(ties[i])
         return out
 
     return selector
