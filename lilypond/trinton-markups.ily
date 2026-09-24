@@ -380,6 +380,34 @@ half-upbow = \markup {
 
 half-up-bow = #(make-articulation 'halfupbow)
 
+stop-on-string-markup =
+    \markup
+    \path #0.2
+    #'(
+        (moveto 0 0)
+        (rlineto 3 0)
+        (closepath)
+        (rmoveto 3 0.9)
+        (rlineto 0 -1.8)
+        (closepath)
+        )
+
+#(append! default-script-alist
+   (list
+    `(stoponstring
+       . (
+           (stencil . ,ly:text-interface::print)
+           (text . ,stop-on-string-markup)
+           (avoid-slur . around)
+           (padding . 0.20)
+           (script-priority . 150)
+           (side-relative-direction . ,DOWN)
+           (skyline-horizontal-padding . 0.20)
+           (toward-stem-shift . 0.4)
+           ))))
+
+stop-on-string = #(make-articulation 'stoponstring)
+
 % woodwind articulations
 
 woodwind-open = \markup {
