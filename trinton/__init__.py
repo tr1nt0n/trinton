@@ -121,6 +121,7 @@ from .pitch import (
     pitch_by_hand,
     pitch_with_selector_command,
     octavation,
+    transpose_command,
 )
 
 from .preprocessors import (

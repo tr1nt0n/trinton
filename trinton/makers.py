@@ -439,7 +439,10 @@ def replace_with_rhythm_selection(rhythmhandler, selector, preprolated=True):
         duration = abjad.get.duration(selection, preprolated=preprolated)
         rhythm_selections = rhythmhandler([duration])
         for indicator in indicators:
-            abjad.attach(indicator, abjad.select.leaf(rhythm_selections, 0))
+            if isinstance(indicator, abjad.Tie):
+                pass
+            else:
+                abjad.attach(indicator, abjad.select.leaf(rhythm_selections, 0))
         rmakers.unbeam(rhythm_selections)
         abjad.mutate.replace(selection, rhythm_selections)
 

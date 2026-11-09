@@ -419,7 +419,7 @@ def durational_selector(
     return selector
 
 
-def pitched_selector(pitches):
+def pitched_selector(pitches, octave_specific=False):
     def selector(argument):
         out = []
         for pitch in pitches:
@@ -427,10 +427,15 @@ def pitched_selector(pitches):
                 if isinstance(leaf, abjad.Chord):
                     pass
                 else:
-                    written_pitch = leaf.written_pitch
-                    pitch_class = written_pitch.pitch_class
-                    if pitch_class == abjad.NamedPitchClass(pitch):
-                        out.append(leaf)
+                    if octave_specific is True:
+                        written_pitch = leaf.written_pitch
+                        if written_pitch == pitch:
+                            out.append(leaf)
+                    if octave_specific is False:
+                        written_pitch = leaf.written_pitch
+                        pitch_class = written_pitch.pitch_class
+                        if pitch_class == abjad.NamedPitchClass(pitch):
+                            out.append(leaf)
         return out
 
     return selector
